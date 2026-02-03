@@ -1,12 +1,13 @@
 #!/usr/bin/env bun
 
+import { $ } from 'bun';
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { readEnvFile } from './utils/env';
 
 function usage() {
-  console.log(`\nUsage: bun run publish <game-slug> [--out <dir>] [--force]\n`);
+  console.log(`\nUsage: bun run publish <game-slug> [--out <dir>] [--source <dir>] [--build] [--force]\n`);
 }
 
 function titleCaseFromSlug(slug: string): string {
@@ -82,30 +83,33 @@ if (args.length === 0 || args.includes('--help')) {
 
 const gameSlug = args[0];
 const outIndex = args.indexOf('--out');
+const sourceIndex = args.indexOf('--source');
+const shouldBuild = args.includes('--build');
 const force = args.includes('--force');
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
-const studioRoot = path.resolve(scriptDir, '..');
-const repoRoot = path.resolve(studioRoot, '..');
-const frontendRoot = path.join(studioRoot, 'sgs_frontend');
-const gameDir = path.join(frontendRoot, 'src', 'games', gameSlug);
+const repoRoot = path.resolve(scriptDir, '..');
+const defaultSource = path.join(repoRoot, `${gameSlug}-frontend`);
+const sourceDir = sourceIndex >= 0
+  ? path.resolve(process.cwd(), args[sourceIndex + 1])
+  : defaultSource;
+const gameDir = path.join(sourceDir, 'src', 'games', gameSlug);
 
 if (!existsSync(gameDir)) {
-  const knownGames = existsSync(path.join(frontendRoot, 'src', 'games'))
-    ? readdirSync(path.join(frontendRoot, 'src', 'games')).filter((name) =>
-        statSync(path.join(frontendRoot, 'src', 'games', name)).isDirectory()
-      )
+  const knownFrontends = existsSync(repoRoot)
+    ? readdirSync(repoRoot).filter((name) => name.endsWith('-frontend'))
     : [];
   console.error(`\n❌ Game not found: ${gameSlug}`);
-  if (knownGames.length) {
-    console.error(`Available games: ${knownGames.join(', ')}`);
+  console.error(`Expected to find ${gameDir}`);
+  if (knownFrontends.length) {
+    console.error(`Available frontends: ${knownFrontends.join(', ')}`);
   }
   process.exit(1);
 }
 
 const outputDir = outIndex >= 0
   ? path.resolve(process.cwd(), args[outIndex + 1])
-  : path.join(repoRoot, gameSlug);
+  : path.join(repoRoot, 'dist', `${gameSlug}-frontend`);
 
 if (existsSync(outputDir)) {
   if (!force) {
@@ -117,7 +121,7 @@ if (existsSync(outputDir)) {
 }
 
 console.log(`\n📦 Publishing ${gameSlug}...`);
-copyDir(frontendRoot, outputDir);
+copyDir(sourceDir, outputDir);
 
 const { fileBase, component: componentName, isDefault } = findGameComponent(gameDir);
 const title = titleCaseFromSlug(gameSlug);
@@ -129,7 +133,7 @@ const importLine = isDefault
 
 const appTemplate = `import { config } from './config';
 import { LayoutStandalone } from './components/LayoutStandalone';
-import { useWalletStandalone } from './hooks/useWalletStandalone';
+import { useWallet } from './hooks/useWallet';
 ${importLine}
 
 const GAME_ID = '${gameSlug}';
@@ -137,7 +141,7 @@ const GAME_TITLE = import.meta.env.VITE_GAME_TITLE || '${title}';
 const GAME_TAGLINE = import.meta.env.VITE_GAME_TAGLINE || 'On-chain game on Stellar';
 
 export default function App() {
-  const { publicKey, isConnected, isConnecting, error, connect, isWalletAvailable } = useWalletStandalone();
+  const { publicKey, isConnected, isConnecting, error, connect, isWalletAvailable } = useWallet();
   const userAddress = publicKey ?? '';
   const contractId = config.contractIds[GAME_ID] || '';
   const hasContract = contractId && contractId !== 'YOUR_CONTRACT_ID';
@@ -147,7 +151,7 @@ export default function App() {
       {!hasContract ? (
         <div className="card">
           <h3 className="gradient-text">Contract Not Configured</h3>
-          <p style={{ color: 'var(--color-dim)', marginTop: '1rem' }}>
+          <p style={{ color: 'var(--color-ink-muted)', marginTop: '1rem' }}>
             Set the contract ID in <code>public/game-studio-config.js</code> (recommended) or in
             <code>VITE_${envKey}_CONTRACT_ID</code>.
           </p>
@@ -155,10 +159,10 @@ export default function App() {
       ) : !isConnected ? (
         <div className="card">
           <h3 className="gradient-text">Connect Wallet</h3>
-          <p style={{ color: 'var(--color-dim)', marginTop: '0.75rem' }}>
+          <p style={{ color: 'var(--color-ink-muted)', marginTop: '0.75rem' }}>
             Connect your wallet to start playing.
           </p>
-          {error && <div className="error" style={{ marginTop: '1rem' }}>{error}</div>}
+          {error && <div className="notice error" style={{ marginTop: '1rem' }}>{error}</div>}
           <div style={{ marginTop: '1.25rem' }}>
             <button
               onClick={() => connect().catch(() => undefined)}
@@ -171,10 +175,9 @@ export default function App() {
       ) : (
         <${componentName}
           userAddress={userAddress}
+          contractId={contractId}
           currentEpoch={1}
           availablePoints={1000000000n}
-          onBack={() => {}}
-          onStandingsRefresh={() => {}}
           onGameComplete={() => {}}
         />
       )}
@@ -220,7 +223,7 @@ if (existsSync(indexPath)) {
 }
 
 // Create runtime config file for easy updates post-deploy
-const env = await readEnvFile(path.join(studioRoot, '.env'));
+const env = await readEnvFile(path.join(repoRoot, '.env'));
 const fallbackRpc = 'https://soroban-mainnet.stellar.org';
 const fallbackPassphrase = 'Public Global Stellar Network ; September 2015';
 const rpcUrl = env.VITE_SOROBAN_RPC_URL || fallbackRpc;
@@ -245,9 +248,25 @@ if (!existsSync(publicDir)) {
 }
 writeFileSync(path.join(publicDir, 'game-studio-config.js'), configText);
 
+if (shouldBuild) {
+  const nodeModulesPath = path.join(outputDir, 'node_modules');
+  if (!existsSync(nodeModulesPath)) {
+    console.log('\n📦 Installing frontend dependencies...');
+    await $`bun install`.cwd(outputDir);
+  }
+
+  console.log('\n🏗️  Building production frontend...');
+  await $`bun run build`.cwd(outputDir);
+}
+
 console.log(`✅ Standalone frontend created at ${outputDir}`);
+if (shouldBuild) {
+  console.log(`✅ Production build ready at ${path.join(outputDir, 'dist')}`);
+}
 console.log('Next steps:');
 console.log(`  1) cd ${outputDir}`);
-console.log('  2) bun install');
-console.log('  3) bun run dev');
-console.log('  4) Update public/game-studio-config.js with your mainnet contract ID');
+console.log('  2) Update public/game-studio-config.js with your mainnet contract ID');
+if (!shouldBuild) {
+  console.log('  3) bun install');
+  console.log('  4) bun run build');
+}

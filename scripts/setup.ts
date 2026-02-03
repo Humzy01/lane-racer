@@ -7,9 +7,7 @@
  * 1. Builds contracts
  * 2. Deploys to testnet
  * 3. Generates TypeScript bindings
- * 4. Configures studio frontend
- * 5. Installs studio frontend dependencies
- * 6. Starts the dev server
+ * 4. Writes local testnet configuration
  */
 
 import { $ } from "bun";
@@ -22,13 +20,11 @@ console.log("This will:");
 console.log("  1. Build Soroban contracts");
 console.log("  2. Deploy to Stellar testnet");
 console.log("  3. Generate TypeScript bindings");
-console.log("  4. Configure studio frontend");
-console.log("  5. Install studio frontend dependencies");
-console.log("  6. Start dev server\n");
+console.log("  4. Write local testnet configuration\n");
 
 // Step 1: Build contracts
 console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-console.log("Step 1/6: Building contracts");
+console.log("Step 1/4: Building contracts");
 console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
 try {
   await $`bun run build`;
@@ -39,7 +35,7 @@ try {
 
 // Step 2: Deploy contracts
 console.log("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-console.log("Step 2/6: Deploying to testnet");
+console.log("Step 2/4: Deploying to testnet");
 console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
 try {
   await $`bun run deploy`;
@@ -50,7 +46,7 @@ try {
 
 // Step 3: Generate bindings
 console.log("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-console.log("Step 3/6: Generating TypeScript bindings");
+console.log("Step 3/4: Generating TypeScript bindings");
 console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
 try {
   await $`bun run bindings`;
@@ -61,7 +57,7 @@ try {
 
 // Step 4: Configure studio frontend
 console.log("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-console.log("Step 4/6: Configuring studio frontend");
+console.log("Step 4/4: Writing local configuration");
 console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
 
 let rpcUrl = 'https://soroban-testnet.stellar.org';
@@ -138,35 +134,12 @@ VITE_DEV_PLAYER2_SECRET=${walletSecrets.player2}
 await Bun.write(".env", envContent);
 console.log("✅ Root .env file created\n");
 
-// Step 5: Install studio frontend dependencies
-console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-console.log("Step 5/6: Installing studio frontend dependencies");
-console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
-
-try {
-  await $`bun install`.cwd("sgs_frontend");
-  console.log("✅ Dependencies installed\n");
-} catch (error) {
-  console.error("❌ Failed to install dependencies:", error);
-  process.exit(1);
-}
-
-// Step 6: Start dev server
-console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-console.log("Step 6/6: Starting dev server");
-console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
-
 console.log("🎉 Setup complete!\n");
 console.log("Contract IDs:");
 for (const contract of contracts) {
   console.log(`  ${contract.packageName}: ${contractIds[contract.packageName]}`);
 }
 console.log("");
-console.log("Starting studio frontend at http://localhost:3000...\n");
-
-try {
-  await $`bun run dev`.cwd("sgs_frontend");
-} catch (error) {
-  console.error("❌ Failed to start dev server:", error);
-  process.exit(1);
-}
+console.log("Next steps:");
+console.log("  1) bun run create <game-slug>");
+console.log("  2) bun run dev:game <game-slug>");
