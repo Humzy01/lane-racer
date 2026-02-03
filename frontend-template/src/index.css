@@ -161,3 +161,10 @@ select:focus {
 .notice.info {
   color: var(--color-info);
 }
+
+.gradient-text {
+  background: linear-gradient(120deg, var(--color-accent), var(--color-teal));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}

@@ -1,5 +1,15 @@
 import { useState } from 'react';
-import { ExternalLink } from 'lucide-react';
+import {
+  ExternalLink,
+  Rocket,
+  Sparkles,
+  Download,
+  UploadCloud,
+  GitBranch,
+  Terminal,
+  Wallet,
+  ShieldCheck,
+} from 'lucide-react';
 import './Resources.css';
 
 export type DocSection = 'quickstart' | 'create' | 'import' | 'publish';
@@ -37,7 +47,7 @@ export function Resources({ onBack }: ResourcesProps) {
               onClick={() => handleNavClick('quickstart')}
             >
               <span className="nav-icon" aria-hidden="true">
-                🚀
+                <Rocket size={16} />
               </span>
               Quickstart
             </button>
@@ -47,7 +57,7 @@ export function Resources({ onBack }: ResourcesProps) {
               onClick={() => handleNavClick('create')}
             >
               <span className="nav-icon" aria-hidden="true">
-                ✨
+                <Sparkles size={16} />
               </span>
               Create a Game
             </button>
@@ -57,7 +67,7 @@ export function Resources({ onBack }: ResourcesProps) {
               onClick={() => handleNavClick('import')}
             >
               <span className="nav-icon" aria-hidden="true">
-                📥
+                <Download size={16} />
               </span>
               Import a Game
             </button>
@@ -67,7 +77,7 @@ export function Resources({ onBack }: ResourcesProps) {
               onClick={() => handleNavClick('publish')}
             >
               <span className="nav-icon" aria-hidden="true">
-                📢
+                <UploadCloud size={16} />
               </span>
               Publish a Game
             </button>
@@ -80,12 +90,25 @@ export function Resources({ onBack }: ResourcesProps) {
           <nav className="sidebar-nav">
             <button
               className="nav-item external"
+              onClick={() => handleExternalLink('https://github.com/jamesbachini/Stellar-Game-Studio')}
+            >
+              <span className="nav-icon" aria-hidden="true">
+                <GitBranch size={16} />
+              </span>
+              <span className="nav-label">GitHub Repo</span>
+              <span className="external-icon" aria-hidden="true">
+                <ExternalLink size={16} />
+              </span>
+            </button>
+
+            <button
+              className="nav-item external"
               onClick={() => handleExternalLink('https://developers.stellar.org/')}
             >
               <span className="nav-icon" aria-hidden="true">
-                🪐
+                <ExternalLink size={16} />
               </span>
-              <span className="nav-label">Developer Docs</span>
+              <span className="nav-label">Stellar Developer Docs</span>
               <span className="external-icon" aria-hidden="true">
                 <ExternalLink size={16} />
               </span>
@@ -96,7 +119,7 @@ export function Resources({ onBack }: ResourcesProps) {
               onClick={() => handleExternalLink('https://docs.rs/soroban-sdk/latest/soroban_sdk/')}
             >
               <span className="nav-icon" aria-hidden="true">
-                📚
+                <ExternalLink size={16} />
               </span>
               <span className="nav-label">Soroban SDK</span>
               <span className="external-icon" aria-hidden="true">
@@ -109,22 +132,9 @@ export function Resources({ onBack }: ResourcesProps) {
               onClick={() => handleExternalLink('https://developers.stellar.org/docs/tools/developer-tools')}
             >
               <span className="nav-icon" aria-hidden="true">
-                🧰
-              </span>
-              <span className="nav-label">Developer Tools</span>
-              <span className="external-icon" aria-hidden="true">
                 <ExternalLink size={16} />
               </span>
-            </button>
-
-            <button
-              className="nav-item external"
-              onClick={() => handleExternalLink('https://soropg.com')}
-            >
-              <span className="nav-icon" aria-hidden="true">
-                📝
-              </span>
-              <span className="nav-label">Soroban Playground</span>
+              <span className="nav-label">Developer Tools</span>
               <span className="external-icon" aria-hidden="true">
                 <ExternalLink size={16} />
               </span>
@@ -149,9 +159,11 @@ export function DocumentationContent({ section }: { section: DocSection }) {
 
 function QuickstartSection() {
   return (
-    <div className="doc-section">
+    <div className="doc-section" id="quickstart">
       <h1 className="doc-title">Quickstart</h1>
-      <p className="doc-subtitle">Get Stellar Game Studio running locally in minutes.</p>
+      <p className="doc-subtitle">
+        Fork the repo, deploy contracts to testnet, and start building in a two-player sandbox.
+      </p>
 
       <div className="doc-content">
         <section className="content-block">
@@ -159,32 +171,13 @@ function QuickstartSection() {
           <p>Install the toolchain below before you begin.</p>
           <ul>
             <li>
-              <strong>
-                <a href="https://bun.sh/" target="_blank" rel="noreferrer">
-                  Bun
-                </a>
-              </strong>{' '}
-              (v1.0+)
+              <strong>Bun</strong> (v1.0+)
             </li>
             <li>
-              <strong>
-                <a href="https://www.rust-lang.org/" target="_blank" rel="noreferrer">
-                  Rust & Cargo
-                </a>
-              </strong>{' '}
-              (v1.84+)
+              <strong>Rust & Cargo</strong> (v1.84+)
             </li>
             <li>
-              <strong>
-                <a
-                  href="https://developers.stellar.org/docs/tools/developer-tools"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  Stellar CLI
-                </a>
-              </strong>{' '}
-              (v21.0+)
+              <strong>Stellar CLI</strong> (v21.0+)
             </li>
             <li>
               <strong>wasm32v1-none target</strong>
@@ -198,59 +191,65 @@ cargo install --locked stellar-cli --features opt
 rustup target add wasm32v1-none`}</code>
             </pre>
           </div>
-          <div className="info-box">
-            <div className="info-icon">🪟</div>
-            <div>
-              <strong>Windows note</strong>
-              <p>
-                Use WSL to run <code>bun</code>, <code>cargo</code>, and <code>stellar</code> reliably. The
-                commands in this guide assume a Unix-like shell.
-              </p>
-            </div>
+        </section>
+
+        <section className="content-block">
+          <h2>Fork + clone</h2>
+          <p>Start by forking the repository and cloning your fork locally.</p>
+          <div className="code-block">
+            <pre>
+              <code>{`git clone https://github.com/<your-handle>/Stellar-Game-Studio
+cd Stellar-Game-Studio
+bun install`}</code>
+            </pre>
           </div>
         </section>
 
         <section className="content-block">
           <h2>One-command setup</h2>
-          <p>Run the automated script to build, deploy, and start the dev server.</p>
+          <p>Build contracts, deploy to testnet, and generate bindings.</p>
           <div className="code-block">
             <pre>
               <code>{`bun run setup`}</code>
             </pre>
           </div>
           <div className="info-box">
-            <div className="info-icon">ℹ️</div>
+            <div className="info-icon">
+              <Terminal size={18} />
+            </div>
             <div>
               <strong>What happens during setup?</strong>
               <ol>
                 <li>Builds all Soroban contracts</li>
                 <li>Deploys contracts to Stellar testnet</li>
                 <li>Generates TypeScript bindings</li>
-                <li>Writes contract IDs to the root <code>.env</code></li>
-                <li>Installs studio frontend dependencies</li>
-                <li>Starts the studio dev server at localhost:3000</li>
+                <li>Writes contract IDs + dev wallet secrets to the root <code>.env</code></li>
               </ol>
             </div>
           </div>
         </section>
 
         <section className="content-block">
-          <h2>Manual commands</h2>
-          <p>Need to run steps independently? Use the scripts below.</p>
+          <h2>Start a game frontend</h2>
+          <p>Create a game and launch the dev wallet sandbox.</p>
           <div className="code-block">
             <pre>
-              <code>{`bun run build [game]       # Build all or one contract
-bun run deploy [game]      # Deploy all or one contract to testnet
-bun run bindings [game]    # Generate TS bindings
-bun run create my-game    # Scaffold contract + standalone frontend
-bun run publish my-game   # Export standalone frontend
-bun run dev               # Start studio frontend dev server`}</code>
+              <code>{`bun run create my-game
+bun run dev:game my-game`}</code>
             </pre>
           </div>
-          <p>
-            Contract IDs are written to <code>.env</code> and summarized in <code>deployment.json</code> after
-            deployment.
-          </p>
+          <div className="info-box">
+            <div className="info-icon">
+              <Wallet size={18} />
+            </div>
+            <div>
+              <strong>Dev wallet switching</strong>
+              <p>
+                The dev frontend auto-connects Player 1 and lets you switch to Player 2 instantly,
+                using the same wallet switcher as the original studio.
+              </p>
+            </div>
+          </div>
         </section>
       </div>
     </div>
@@ -259,19 +258,19 @@ bun run dev               # Start studio frontend dev server`}</code>
 
 function CreateGameSection() {
   return (
-    <div className="doc-section">
+    <div className="doc-section" id="create">
       <h1 className="doc-title">Create a New Game</h1>
       <p className="doc-subtitle">
-        Build a Soroban contract and a standalone frontend that integrates with Game Hub.
+        Scaffold a Soroban contract and a standalone frontend that integrates with Game Hub.
       </p>
 
       <div className="doc-content">
         <section className="content-block">
           <h2>Overview</h2>
           <p>
-            The create script scaffolds a Soroban contract and a standalone frontend in
-            <code>frontend/</code>. If you want the game listed in the studio, you can copy the game UI
-            into <code>sgs_frontend/</code> and add a catalog entry.
+            The create script produces a Soroban contract and a standalone frontend in
+            <code>&lt;game&gt;-frontend/</code>. You can host the frontend anywhere once you are ready to
+            publish.
           </p>
         </section>
 
@@ -282,16 +281,10 @@ function CreateGameSection() {
               <code>contracts/&lt;game-name&gt;/</code> - New contract source
             </li>
             <li>
-              <code>frontend/src/games/&lt;game-name&gt;/</code> - Standalone UI + service files
+              <code>&lt;game-name&gt;-frontend/src/games/&lt;game-name&gt;/</code> - Game UI + service files
             </li>
             <li>
-              <code>frontend/src/App.tsx</code> - Standalone game entry point
-            </li>
-            <li>
-              <code>sgs_frontend/src/games/&lt;game-name&gt;/</code> - Studio UI module (optional)
-            </li>
-            <li>
-              <code>sgs_frontend/src/components/GamesCatalog.tsx</code> - Studio catalog entry (optional)
+              <code>&lt;game-name&gt;-frontend/src/App.tsx</code> - Dev entry point
             </li>
           </ul>
         </section>
@@ -303,55 +296,11 @@ function CreateGameSection() {
               <code>{`bun run create my-game`}</code>
             </pre>
           </div>
-          <p>If <code>frontend/</code> already exists, add <code>--force</code> to overwrite it.</p>
+          <p>If <code>my-game-frontend/</code> already exists, add <code>--force</code> to overwrite it.</p>
         </section>
 
         <section className="content-block">
-          <h2>Step 2: Contract manifest (automatic)</h2>
-          <p>
-            The create script writes the package name in <code>contracts/my-game/Cargo.toml</code>. No
-            manual edits are required unless you want to rename the crate.
-          </p>
-          <div className="code-block">
-            <pre>
-              <code>{`[package]
-name = "my-game"
-version = "0.1.0"
-edition = "2021"
-publish = false
-
-[lib]
-crate-type = ["cdylib", "rlib"]
-doctest = false
-
-[dependencies]
-soroban-sdk = { workspace = true }`}</code>
-            </pre>
-          </div>
-        </section>
-
-        <section className="content-block">
-          <h2>Step 3: Workspace registration (automatic)</h2>
-          <p>
-            The create script adds your contract to the root <code>Cargo.toml</code>. No manual edits are
-            required unless you manage the workspace yourself.
-          </p>
-          <div className="code-block">
-            <pre>
-              <code>{`[workspace]
-resolver = "2"
-members = [
-  "contracts/mock-game-hub",
-  "contracts/twenty-one",
-  "contracts/number-guess",
-  "contracts/my-game",
-]`}</code>
-            </pre>
-          </div>
-        </section>
-
-        <section className="content-block">
-          <h2>Step 4: Implement Game Hub integration</h2>
+          <h2>Step 2: Implement Game Hub integration</h2>
           <p>
             Your contract must call <code>start_game</code> and <code>end_game</code> on the Game Hub contract.
             Use the client interface below.
@@ -375,89 +324,53 @@ pub trait GameHub {
             </pre>
           </div>
           <div className="info-box">
-            <div className="info-icon">🔐</div>
+            <div className="info-icon">
+              <ShieldCheck size={18} />
+            </div>
             <div>
-              <strong>Require player auth for points</strong>
+              <strong>Two-player constraint</strong>
               <p>
-                Enforce <code>require_auth_for_args</code> on start_game inputs so each player signs their
-                points commitment. Use <code>require_auth</code> for other player-driven actions.
+                Game Hub enforces two-player sessions. Require auth for both players when starting
+                the game.
               </p>
             </div>
           </div>
         </section>
 
         <section className="content-block">
-          <h2>Step 5: Store game state with TTL</h2>
-          <p>
-            Use temporary storage for session state and extend the TTL to roughly 30 days to keep
-            games recoverable without long-term storage costs.
-          </p>
-          <div className="info-box">
-            <div className="info-icon">🧊</div>
-            <div>
-              <strong>Deterministic randomness only</strong>
-              <p>Do not use ledger time or sequence as a random seed. Keep simulations deterministic.</p>
-            </div>
-          </div>
-        </section>
-
-        <section className="content-block">
-          <h2>Step 6: Add tests</h2>
-          <p>Use the mock Game Hub pattern in your unit tests.</p>
-          <div className="code-block">
-            <pre>
-              <code>{`let env = Env::default();
-env.mock_all_auths();
-
-let hub_addr = env.register(MockGameHub, ());
-let admin = Address::generate(&env);
-let game_id = env.register(MyGameContract, (&admin, &hub_addr));
-let client = MyGameContractClient::new(&env, &game_id);
-
-let game_hub = MockGameHubClient::new(&env, &hub_addr);
-game_hub.add_game(&game_id);`}</code>
-            </pre>
-          </div>
-        </section>
-
-        <section className="content-block">
-          <h2>Step 7: Build, deploy, and generate bindings</h2>
+          <h2>Step 3: Build, deploy, and generate bindings</h2>
           <p>Once your contract is listed in the workspace, the scripts handle the rest.</p>
           <div className="code-block">
             <pre>
-              <code>{`bun run setup`}</code>
-            </pre>
-          </div>
-          <p>
-            Example: a crate named <code>my-game</code> generates <code>bindings/my_game/</code> and writes
-            <code>VITE_MY_GAME_CONTRACT_ID</code> to the root <code>.env</code>.
-          </p>
-        </section>
-
-        <section className="content-block">
-          <h2>Step 8: Refine the standalone frontend</h2>
-          <p>
-            The create script generates a standalone UI in <code>frontend/</code>. Update the UI, service,
-            and bindings as you build gameplay.
-          </p>
-          <div className="code-block">
-            <pre>
-              <code>{`cd frontend
-bun install
-bun run dev`}</code>
+              <code>{`bun run setup
+# or
+bun run build my-game
+bun run deploy my-game
+bun run bindings my-game`}</code>
             </pre>
           </div>
         </section>
 
         <section className="content-block">
-          <h2>Optional: Add to the studio catalog</h2>
-          <p>
-            Copy your game module into the studio frontend and register it in the catalog.
-          </p>
+          <h2>Step 4: Run the dev frontend</h2>
           <div className="code-block">
             <pre>
-              <code>{`cp -r frontend/src/games/my-game sgs_frontend/src/games/
-# Then update sgs_frontend/src/components/GamesCatalog.tsx`}</code>
+              <code>{`bun run dev:game my-game`}</code>
+            </pre>
+          </div>
+          <p>
+            The dev frontend uses testnet wallets with a built-in player switcher so you can test
+            two-player flows quickly.
+          </p>
+        </section>
+
+        <section className="content-block">
+          <h2>Step 5: Update bindings in the frontend</h2>
+          <p>After regenerating bindings, copy them into your frontend module.</p>
+          <div className="code-block">
+            <pre>
+              <code>{`bun run bindings my-game
+cp bindings/my_game/src/index.ts my-game-frontend/src/games/my-game/bindings.ts`}</code>
             </pre>
           </div>
         </section>
@@ -468,21 +381,13 @@ bun run dev`}</code>
 
 function ImportGameSection() {
   return (
-    <div className="doc-section">
+    <div className="doc-section" id="import">
       <h1 className="doc-title">Import a Game</h1>
       <p className="doc-subtitle">
-        Bring an existing Soroban game into Stellar Game Studio with minimal wiring.
+        Bring an existing Soroban game into the workflow with minimal wiring.
       </p>
 
       <div className="doc-content">
-        <section className="content-block">
-          <h2>Overview</h2>
-          <p>
-            Importing a game means copying the contract + UI, adding the contract to the workspace, and
-            registering it in the catalog. No script changes are required.
-          </p>
-        </section>
-
         <section className="content-block">
           <h2>Step 1: Add contract files</h2>
           <div className="code-block">
@@ -501,82 +406,28 @@ members = [
   "contracts/mock-game-hub",
   "contracts/twenty-one",
   "contracts/number-guess",
-  "contracts/imported-game",  # Add this
+  "contracts/imported-game",
 ]`}</code>
             </pre>
           </div>
         </section>
 
         <section className="content-block">
-          <h2>Step 3: Build, deploy, and generate bindings</h2>
+          <h2>Step 3: Scaffold a frontend shell</h2>
           <div className="code-block">
             <pre>
-              <code>{`bun run setup`}</code>
-            </pre>
-          </div>
-          <p>
-            Example: a crate named <code>imported-game</code> generates <code>bindings/imported_game/</code> and
-            writes <code>VITE_IMPORTED_GAME_CONTRACT_ID</code> to the root <code>.env</code>.
-          </p>
-        </section>
-
-        <section className="content-block">
-          <h2>Step 4: Add the frontend module</h2>
-          <p>Copy the game UI into the studio frontend.</p>
-          <div className="code-block">
-            <pre>
-              <code>{`cp -r /path/to/game/frontend/src/games/imported-game sgs_frontend/src/games/`}</code>
-            </pre>
-          </div>
-          <div className="info-box">
-            <div className="info-icon">💡</div>
-            <div>
-              <strong>Service pattern for portability</strong>
-              <p>Make sure the service accepts a <code>contractId</code> so you can reuse it elsewhere.</p>
-            </div>
-          </div>
-          <div className="code-block">
-            <pre>
-              <code>{`import { Client as ImportedGameClient } from 'imported-game';
-import { NETWORK_PASSPHRASE, RPC_URL } from '@/utils/constants';
-
-export class ImportedGameService {
-  private contractId: string;
-  private baseClient: ImportedGameClient;
-
-  constructor(contractId: string) {
-    this.contractId = contractId;
-    this.baseClient = new ImportedGameClient({
-      contractId: this.contractId,
-      networkPassphrase: NETWORK_PASSPHRASE,
-      rpcUrl: RPC_URL,
-    });
-  }
-}`}</code>
+              <code>{`bun run create imported-game`}</code>
             </pre>
           </div>
         </section>
 
         <section className="content-block">
-          <h2>Step 5: Register in the catalog</h2>
-          <p>Update <code>sgs_frontend/src/components/GamesCatalog.tsx</code>:</p>
-          <ul>
-            <li>Import your game component</li>
-            <li>Add a render branch for the new game</li>
-            <li>Add a game card in the grid</li>
-          </ul>
-        </section>
-
-        <section className="content-block">
-          <h2>Step 6: Verify locally</h2>
+          <h2>Step 4: Copy in your UI + bindings</h2>
+          <p>Drop your UI module into the generated frontend and update bindings.</p>
           <div className="code-block">
             <pre>
-              <code>{`bun run setup
-# or individually:
-bun run build my-game
-bun run deploy my-game
-bun run bindings my-game
-cd sgs_frontend && bun run dev`}</code>
+              <code>{`cp -r /path/to/game-ui src/games/imported-game
+bun run bindings imported-game`}</code>
             </pre>
           </div>
         </section>
@@ -587,46 +438,25 @@ cd sgs_frontend && bun run dev`}</code>
 
 function PublishGameSection() {
   return (
-    <div className="doc-section">
+    <div className="doc-section" id="publish">
       <h1 className="doc-title">Publish a Game</h1>
-      <p className="doc-subtitle">Deploy on mainnet and host your game on your own domain.</p>
+      <p className="doc-subtitle">Deploy on mainnet and ship a production-ready frontend.</p>
 
       <div className="doc-content">
-        <section className="content-block">
-          <h2>Overview</h2>
-          <p>
-            Stellar Game Studio does not host third-party games. To publish, you deploy your contract
-            to mainnet and host a standalone frontend on your own infrastructure.
-          </p>
-        </section>
-
         <section className="content-block">
           <h2>Step 1: Deploy your contract to mainnet</h2>
           <div className="code-block">
             <pre>
-              <code>{`# Build optimized WASM
-bun run build my-game
-
-# Install + deploy on mainnet
+              <code>{`bun run build my-game
 stellar contract install --wasm target/wasm32v1-none/release/my_game.wasm --source <ADMIN> --network mainnet
 stellar contract deploy --wasm-hash <WASM_HASH> --source <ADMIN> --network mainnet -- \\
   --admin <ADMIN_ADDRESS> --game-hub <GAME_HUB_MAINNET_CONTRACT_ID>`}</code>
             </pre>
           </div>
-          <div className="info-box">
-            <div className="info-icon">✅</div>
-            <div>
-              <strong>Use the correct Game Hub mainnet ID</strong>
-              <p>
-                Ask the Game Hub admin for the current mainnet contract ID and ensure your admin key is
-                funded for deployment.
-              </p>
-            </div>
-          </div>
         </section>
 
         <section className="content-block">
-          <h2>Step 2: Register your game (whitelist)</h2>
+          <h2>Step 2: Register your game with Game Hub</h2>
           <p>
             The mainnet Game Hub only accepts outcomes from approved games. The admin must call
             <code>add_game</code> with your contract ID and developer address.
@@ -640,17 +470,15 @@ stellar contract deploy --wasm-hash <WASM_HASH> --source <ADMIN> --network mainn
         </section>
 
         <section className="content-block">
-          <h2>Step 3: Generate a standalone frontend</h2>
+          <h2>Step 3: Build the production frontend</h2>
           <p>
-            The publish script creates a production-ready frontend that renders only your game and
-            swaps in the standalone wallet hook.
+            The publish script exports a standalone container and swaps in CreitTech's wallet kit v2.
           </p>
           <div className="code-block">
             <pre>
-              <code>{`bun run publish my-game
-
+              <code>{`bun run publish my-game --build
 # Optional: choose a custom output directory
-bun run publish my-game --out ../my-game-frontend`}</code>
+bun run publish my-game --out ../my-game-frontend --build`}</code>
             </pre>
           </div>
         </section>
@@ -658,8 +486,7 @@ bun run publish my-game --out ../my-game-frontend`}</code>
         <section className="content-block">
           <h2>Step 4: Configure runtime settings</h2>
           <p>
-            Update <code>public/game-studio-config.js</code> in the standalone output with your mainnet
-            values.
+            Update <code>public/game-studio-config.js</code> in the published output with mainnet values.
           </p>
           <div className="code-block">
             <pre>
@@ -673,22 +500,15 @@ bun run publish my-game --out ../my-game-frontend`}</code>
 };`}</code>
             </pre>
           </div>
-          <p>This file is loaded at runtime so you can update contract IDs without rebuilding.</p>
         </section>
 
         <section className="content-block">
           <h2>Step 5: Deploy the frontend</h2>
-          <p>Build the standalone site and deploy to any static host.</p>
+          <p>Build output lives in <code>dist/</code>. Deploy it to any static host.</p>
           <div className="code-block">
             <pre>
-              <code>{`bun install
-bun run build
-
-# Vercel
+              <code>{`# Vercel
 vercel --prod
-
-# Surge
-npx surge dist
 
 # Cloudflare Pages
 wrangler pages deploy dist`}</code>

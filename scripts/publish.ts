@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 
 import { $ } from 'bun';
-import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { readEnvFile } from './utils/env';
@@ -86,6 +86,18 @@ const outIndex = args.indexOf('--out');
 const sourceIndex = args.indexOf('--source');
 const shouldBuild = args.includes('--build');
 const force = args.includes('--force');
+
+if (outIndex >= 0 && !args[outIndex + 1]) {
+  console.error('\n❌ Missing value for --out');
+  usage();
+  process.exit(1);
+}
+
+if (sourceIndex >= 0 && !args[sourceIndex + 1]) {
+  console.error('\n❌ Missing value for --source');
+  usage();
+  process.exit(1);
+}
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(scriptDir, '..');
