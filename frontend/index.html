@@ -1,0 +1,1419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lane Racer - ZK Gaming on Stellar</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --stellar-cyan: #00d4ff;
+            --stellar-purple: #6b4aff;
+            --dark-bg: #0a0a1a;
+            --card-bg: #1a1a2e;
+            --border-color: #4a4a6e;
+            --gold: #ffd700;
+            --red: #ff6b6b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Orbitron', sans-serif;
+            background: linear-gradient(180deg, var(--dark-bg) 0%, #1a1a2e 50%, var(--dark-bg) 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+            overflow-y: auto;
+            color: #fff;
+            position: relative;
+            padding: 0;
+            margin: 0;
+        }
+
+        /* Hamburger Menu Button */
+        .menu-toggle {
+            position: fixed;
+            top: 14px;
+            left: 14px;
+            z-index: 1001;
+            width: 28px;
+            height: 28px;
+            background: rgba(26, 26, 46, 0.95);
+            border: 1.5px solid var(--border-color);
+            border-radius: 7px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .menu-toggle:hover {
+            background: rgba(107, 74, 255, 0.2);
+            border-color: var(--stellar-purple);
+            transform: scale(1.05);
+        }
+
+        .menu-toggle span {
+            width: 14px;
+            height: 1.5px;
+            background: var(--stellar-cyan);
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+
+        .menu-toggle.active span:nth-child(1) {
+            transform: rotate(45deg) translate(4px, 4px);
+        }
+
+        .menu-toggle.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .menu-toggle.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(4px, -4px);
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(107, 74, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 50%, rgba(0, 212, 255, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .main-container {
+            width: 100%;
+            height: 100vh;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .sidebar {
+            position: fixed;
+            left: -380px;
+            top: 0;
+            height: 100vh;
+            width: 360px;
+            background: rgba(26, 26, 46, 0.98);
+            backdrop-filter: blur(10px);
+            border-right: 3px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            padding: 60px 16px 16px 16px;
+            z-index: 1000;
+            transition: left 0.4s cubic-bezier(0.4, 0.0, 0.2, 1);
+            box-shadow: 4px 0 30px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+        }
+
+        .sidebar.open {
+            left: 0;
+        }
+
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .wallet-section {
+            background: rgba(74, 74, 110, 0.15);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 14px;
+        }
+
+        .wallet-header {
+            display: none;
+        }
+
+        .stellar-logo {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--stellar-cyan), var(--stellar-purple));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 18px;
+        }
+
+        .wallet-title {
+            font-size: 18px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--stellar-cyan), var(--stellar-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .wallet-status {
+            padding: 16px;
+            background: rgba(107, 74, 255, 0.1);
+            border-radius: 8px;
+            border: 2px solid var(--stellar-purple);
+            margin-bottom: 16px;
+            font-size: 12px;
+            text-align: center;
+            color: #888;
+            transition: all 0.3s ease;
+        }
+
+        .wallet-status.connected {
+            background: rgba(0, 212, 255, 0.15);
+            border-color: var(--stellar-cyan);
+            color: var(--stellar-cyan);
+        }
+
+        .wallet-status .status-text {
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .wallet-address {
+            font-family: 'Courier New', monospace;
+            font-size: 10px;
+            word-break: break-all;
+            color: #aaa;
+            margin-top: 4px;
+        }
+
+        .connect-wallet-btn {
+            width: 100%;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--stellar-purple), var(--stellar-cyan));
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 20px rgba(107, 74, 255, 0.4);
+        }
+
+        .connect-wallet-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 30px rgba(107, 74, 255, 0.6);
+        }
+
+        .connect-wallet-btn:disabled {
+            background: #333;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .leaderboard-section {
+            background: rgba(74, 74, 110, 0.15);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .leaderboard-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .leaderboard-title {
+            font-size: 18px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--gold), #ffed4e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .zk-badge {
+            background: rgba(107, 74, 255, 0.2);
+            border: 2px solid var(--stellar-purple);
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--stellar-purple);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .leaderboard-list {
+            flex: 1;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--stellar-purple) var(--card-bg);
+            padding-right: 8px;
+        }
+
+        .leaderboard-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .leaderboard-list::-webkit-scrollbar-track {
+            background: rgba(26, 26, 46, 0.5);
+            border-radius: 3px;
+        }
+
+        .leaderboard-list::-webkit-scrollbar-thumb {
+            background: var(--stellar-purple);
+            border-radius: 3px;
+        }
+
+        .leaderboard-list::-webkit-scrollbar-thumb:hover {
+            background: var(--stellar-cyan);
+        }
+
+        .leaderboard-entry {
+            display: grid;
+            grid-template-columns: 50px 1fr 100px;
+            gap: 12px;
+            align-items: center;
+            padding: 16px;
+            margin-bottom: 8px;
+            background: rgba(74, 74, 110, 0.1);
+            border: 2px solid transparent;
+            border-radius: 12px;
+            transition: all 0.3s;
+        }
+
+        .leaderboard-entry:hover {
+            background: rgba(74, 74, 110, 0.2);
+            border-color: var(--stellar-cyan);
+            transform: translateX(4px);
+        }
+
+        .leaderboard-entry.top-1 {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 215, 0, 0.05));
+            border-color: var(--gold);
+        }
+
+        .leaderboard-entry.top-2 {
+            background: linear-gradient(135deg, rgba(192, 192, 192, 0.1), rgba(192, 192, 192, 0.05));
+            border-color: #c0c0c0;
+        }
+
+        .leaderboard-entry.top-3 {
+            background: linear-gradient(135deg, rgba(205, 127, 50, 0.1), rgba(205, 127, 50, 0.05));
+            border-color: #cd7f32;
+        }
+
+        .rank {
+            font-size: 24px;
+            font-weight: 900;
+            text-align: center;
+            font-family: 'Press Start 2P', cursive;
+        }
+
+        .top-1 .rank { color: var(--gold); text-shadow: 0 0 10px var(--gold); }
+        .top-2 .rank { color: #c0c0c0; text-shadow: 0 0 10px #c0c0c0; }
+        .top-3 .rank { color: #cd7f32; text-shadow: 0 0 10px #cd7f32; }
+
+        .player-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .player-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .player-address {
+            font-family: 'Courier New', monospace;
+            font-size: 10px;
+            color: #888;
+        }
+
+        .player-score {
+            font-size: 20px;
+            font-weight: 900;
+            text-align: right;
+            background: linear-gradient(135deg, var(--stellar-cyan), var(--stellar-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .verified-icon {
+            color: var(--stellar-cyan);
+            font-size: 10px;
+            margin-left: 4px;
+        }
+
+        .empty-leaderboard {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+            font-size: 13px;
+        }
+
+        .game-container {
+            position: relative;
+            width: 600px;
+            background: var(--card-bg);
+            border: 4px solid var(--border-color);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 0 50px rgba(107, 74, 255, 0.5),
+                        inset 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .game-header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #2a2a3e 100%);
+            padding: 20px;
+            border-bottom: 4px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .score-display {
+            font-size: 14px;
+            font-family: 'Press Start 2P', cursive;
+            color: var(--gold);
+            text-shadow: 2px 2px 0 #8b6914, 0 0 10px var(--gold);
+        }
+
+        .speed-display {
+            font-size: 12px;
+            font-family: 'Press Start 2P', cursive;
+            color: var(--red);
+            text-shadow: 2px 2px 0 #8b1414, 0 0 10px var(--red);
+        }
+
+        canvas {
+            display: block;
+            background: #1a1a2e;
+        }
+
+        .game-over-screen {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(10, 10, 26, 0.98);
+            padding: 40px;
+            border: 6px solid var(--red);
+            border-radius: 16px;
+            text-align: center;
+            display: none;
+            box-shadow: 0 0 60px rgba(255, 107, 107, 0.8),
+                        inset 0 0 30px rgba(0, 0, 0, 0.8);
+            animation: popIn 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            z-index: 100;
+        }
+
+        @keyframes popIn {
+            0% {
+                transform: translate(-50%, -50%) scale(0.5);
+                opacity: 0;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+        }
+
+        .game-over-screen.active {
+            display: block;
+        }
+
+        .game-over-title {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 32px;
+            color: var(--red);
+            margin-bottom: 20px;
+            text-shadow: 4px 4px 0 #8b1414, 0 0 20px var(--red);
+        }
+
+        .final-score {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 20px;
+            color: var(--gold);
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 0 #8b6914;
+        }
+
+        .zk-proof-status {
+            background: rgba(107, 74, 255, 0.2);
+            border: 2px solid var(--stellar-purple);
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            font-size: 11px;
+            color: var(--stellar-cyan);
+        }
+
+        .zk-proof-status.generating {
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .game-over-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .restart-btn, .submit-score-btn {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #4a4a6e 0%, #6a6a8e 100%);
+            border: 3px solid #8a8aae;
+            border-radius: 8px;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 0 #2a2a3e, 0 0 20px rgba(138, 138, 174, 0.5);
+        }
+
+        .submit-score-btn {
+            background: linear-gradient(135deg, var(--stellar-purple), var(--stellar-cyan));
+            border-color: var(--stellar-cyan);
+        }
+
+        .restart-btn:hover, .submit-score-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0 #2a2a3e, 0 0 30px rgba(138, 138, 174, 0.8);
+        }
+
+        .submit-score-btn:hover {
+            box-shadow: 0 6px 0 #2a2a3e, 0 0 30px rgba(107, 74, 255, 0.8);
+        }
+
+        .restart-btn:active, .submit-score-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #2a2a3e;
+        }
+
+        .submit-score-btn:disabled {
+            background: #333;
+            border-color: #555;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .start-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(10, 10, 26, 0.98);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        .start-screen.hidden {
+            display: none;
+        }
+
+        .game-title {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 48px;
+            background: linear-gradient(135deg, var(--gold), #ffed4e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 20px;
+            text-shadow: 4px 4px 0 rgba(139, 105, 20, 0.5);
+            animation: titlePulse 2s ease-in-out infinite;
+        }
+
+        @keyframes titlePulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .game-subtitle {
+            font-size: 14px;
+            color: var(--stellar-cyan);
+            margin-bottom: 40px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+
+        .start-instructions {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 11px;
+            color: #8a8aae;
+            text-align: center;
+            line-height: 2.2;
+            margin-bottom: 40px;
+            max-width: 450px;
+        }
+
+        .start-btn {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+            padding: 20px 50px;
+            background: linear-gradient(135deg, var(--stellar-purple), var(--stellar-cyan));
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            box-shadow: 0 6px 30px rgba(107, 74, 255, 0.5);
+            animation: bounce 1s ease-in-out infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .start-btn:hover {
+            animation: none;
+            transform: translateY(-4px);
+            box-shadow: 0 10px 40px rgba(107, 74, 255, 0.8);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .stellar-footer {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 10px;
+            color: #666;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stellar-footer-logo {
+            width: 16px;
+            height: 16px;
+            background: linear-gradient(135deg, var(--stellar-cyan), var(--stellar-purple));
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body>
+    <!-- Hamburger Menu Button -->
+    <div class="menu-toggle" id="menuToggle">
+        <span></span>
+        <span></span>
+        <span></span>
+    </div>
+
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <div class="main-container">
+        <!-- Sidebar -->
+        <div class="sidebar" id="sidebar">
+            <!-- Wallet Section -->
+            <div class="wallet-section">
+                <div class="wallet-header">
+                    <div class="stellar-logo">S</div>
+                    <div class="wallet-title">Stellar Wallet</div>
+                </div>
+                <div class="wallet-status" id="walletStatus">
+                    Not Connected
+                </div>
+                <button class="connect-wallet-btn" id="connectWalletBtn">
+                    Connect Wallet
+                </button>
+            </div>
+
+            <!-- Leaderboard Section -->
+            <div class="leaderboard-section">
+                <div class="leaderboard-header">
+                    <div class="leaderboard-title">
+                        🏆 Leaderboard
+                    </div>
+                    <div class="zk-badge">ZK Verified</div>
+                </div>
+                <div class="leaderboard-list" id="leaderboardList">
+                    <div class="empty-leaderboard">
+                        No scores yet. Be the first to play!
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Container -->
+        <div class="game-container">
+            <div class="start-screen" id="startScreen">
+                <div class="game-title">LANE RACER</div>
+                <div class="game-subtitle">ZK Gaming on Stellar</div>
+                <div class="start-instructions">
+                    Use ← → Arrow Keys to Switch Lanes<br>
+                    Dodge Barricades (2 pts) • Collect Gems (10 pts)<br>
+                    Speed Increases Every 15 Obstacles!<br>
+                    Connect Wallet to Submit Scores
+                </div>
+                <button class="start-btn" id="startBtn">START GAME</button>
+            </div>
+
+            <div class="game-header">
+                <div class="score-display">SCORE: <span id="score">0</span></div>
+                <div class="speed-display">SPEED: <span id="speed">1.00</span>x</div>
+            </div>
+            <canvas id="gameCanvas" width="600" height="600"></canvas>
+            
+            <div class="game-over-screen" id="gameOverScreen">
+                <div class="game-over-title">GAME OVER!</div>
+                <div class="final-score">FINAL SCORE: <span id="finalScore">0</span></div>
+                <div class="zk-proof-status" id="zkProofStatus" style="display: none;">
+                    Generating ZK Proof...
+                </div>
+                <div class="game-over-buttons">
+                    <button class="restart-btn" id="restartBtn">PLAY AGAIN</button>
+                    <button class="submit-score-btn" id="submitScoreBtn">SUBMIT SCORE</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="stellar-footer">
+        <div class="stellar-footer-logo"></div>
+        <span>Powered by Stellar Network</span>
+    </div>
+
+    <script>
+        // ========================================
+        // SIDEBAR TOGGLE
+        // ========================================
+        const menuToggle = document.getElementById('menuToggle');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+        function toggleSidebar() {
+            sidebar.classList.toggle('open');
+            sidebarOverlay.classList.toggle('active');
+            menuToggle.classList.toggle('active');
+        }
+
+        menuToggle.addEventListener('click', toggleSidebar);
+        sidebarOverlay.addEventListener('click', toggleSidebar);
+
+        // Close sidebar on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && sidebar.classList.contains('open')) {
+                toggleSidebar();
+            }
+        });
+
+        // ========================================
+        // WALLET MANAGEMENT
+        // ========================================
+        let walletState = {
+            connected: false,
+            address: null,
+            publicKey: null
+        };
+
+        const connectWalletBtn = document.getElementById('connectWalletBtn');
+        const walletStatus = document.getElementById('walletStatus');
+
+        // Simulated wallet connection (replace with actual Stellar wallet integration)
+        async function connectWallet() {
+            try {
+                connectWalletBtn.textContent = 'Connecting...';
+                connectWalletBtn.disabled = true;
+
+                // Simulate wallet connection delay
+                await new Promise(resolve => setTimeout(resolve, 1000));
+
+                // Check if Freighter wallet is available
+                if (typeof window.freighterApi !== 'undefined') {
+                    // Actual Freighter integration
+                    const isAllowed = await window.freighterApi.isConnected();
+                    if (isAllowed) {
+                        const publicKey = await window.freighterApi.getPublicKey();
+                        walletState.connected = true;
+                        walletState.address = publicKey;
+                        walletState.publicKey = publicKey;
+                        updateWalletUI();
+                    } else {
+                        // Freighter found but not connected — re-enable button
+                        connectWalletBtn.textContent = 'Connect Wallet';
+                        connectWalletBtn.disabled = false;
+                    }
+                } else {
+                    // Simulated connection for demo purposes
+                    const simulatedAddress = 'G' + Array(55).fill(0).map(() => 
+                        'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'[Math.floor(Math.random() * 32)]
+                    ).join('');
+                    
+                    walletState.connected = true;
+                    walletState.address = simulatedAddress;
+                    walletState.publicKey = simulatedAddress;
+                    updateWalletUI();
+                }
+
+            } catch (error) {
+                console.error('Wallet connection error:', error);
+                alert('Failed to connect wallet. Please install Freighter or try again.');
+                connectWalletBtn.textContent = 'Connect Wallet';
+                connectWalletBtn.disabled = false;
+            }
+        }
+
+        function updateWalletUI() {
+            if (walletState.connected) {
+                walletStatus.classList.add('connected');
+                walletStatus.innerHTML = `
+                    <div>✓ Connected</div>
+                    <div class="wallet-address">${shortenAddress(walletState.address)}</div>
+                `;
+                connectWalletBtn.textContent = '✕ Disconnect';
+                connectWalletBtn.style.background = 'linear-gradient(135deg, #3a2a2a, #5a3a3a)';
+                connectWalletBtn.style.boxShadow = '0 4px 20px rgba(255, 107, 107, 0.3)';
+            } else {
+                walletStatus.classList.remove('connected');
+                walletStatus.textContent = 'Not Connected';
+                connectWalletBtn.textContent = 'Connect Wallet';
+                connectWalletBtn.style.background = 'linear-gradient(135deg, var(--stellar-purple), var(--stellar-cyan))';
+                connectWalletBtn.style.boxShadow = '0 4px 20px rgba(107, 74, 255, 0.4)';
+                connectWalletBtn.disabled = false;
+            }
+        }
+
+        function disconnectWallet() {
+            walletState.connected = false;
+            walletState.address = null;
+            walletState.publicKey = null;
+            updateWalletUI();
+        }
+
+        function shortenAddress(address) {
+            if (!address) return '';
+            return `${address.substring(0, 8)}...${address.substring(address.length - 8)}`;
+        }
+
+        connectWalletBtn.addEventListener('click', () => {
+            if (walletState.connected) {
+                disconnectWallet();
+            } else {
+                connectWallet();
+            }
+        });
+
+        // ========================================
+        // LEADERBOARD MANAGEMENT
+        // ========================================
+        let leaderboard = [
+            // Sample data - will be replaced with blockchain data
+            { rank: 1, name: 'Player1', address: 'GABC...XYZ1', score: 1250, verified: true },
+            { rank: 2, name: 'Player2', address: 'GDEF...XYZ2', score: 980, verified: true },
+            { rank: 3, name: 'Player3', address: 'GHIJ...XYZ3', score: 875, verified: true },
+            { rank: 4, name: 'Player4', address: 'GKLM...XYZ4', score: 720, verified: true },
+            { rank: 5, name: 'Player5', address: 'GNOP...XYZ5', score: 650, verified: true }
+        ];
+
+        function renderLeaderboard() {
+            const leaderboardList = document.getElementById('leaderboardList');
+            
+            if (leaderboard.length === 0) {
+                leaderboardList.innerHTML = '<div class="empty-leaderboard">No scores yet. Be the first to play!</div>';
+                return;
+            }
+
+            leaderboardList.innerHTML = leaderboard.map((entry, index) => {
+                const topClass = index === 0 ? 'top-1' : index === 1 ? 'top-2' : index === 2 ? 'top-3' : '';
+                const rankDisplay = index < 3 ? ['🥇', '🥈', '🥉'][index] : `#${index + 1}`;
+                
+                return `
+                    <div class="leaderboard-entry ${topClass}">
+                        <div class="rank">${rankDisplay}</div>
+                        <div class="player-info">
+                            <div class="player-name">
+                                ${entry.name}
+                                ${entry.verified ? '<span class="verified-icon">✓</span>' : ''}
+                            </div>
+                            <div class="player-address">${entry.address}</div>
+                        </div>
+                        <div class="player-score">${entry.score}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function submitScore(score) {
+            if (!walletState.connected) {
+                alert('Please connect your wallet first!');
+                return;
+            }
+
+            const zkProofStatus = document.getElementById('zkProofStatus');
+            const submitBtn = document.getElementById('submitScoreBtn');
+            
+            try {
+                // Show ZK proof generation
+                zkProofStatus.style.display = 'block';
+                zkProofStatus.classList.add('generating');
+                zkProofStatus.textContent = 'Generating ZK Proof...';
+                submitBtn.disabled = true;
+
+                // Simulate ZK proof generation
+                await new Promise(resolve => setTimeout(resolve, 2000));
+
+                zkProofStatus.textContent = 'Proof Generated ✓ Submitting to Stellar...';
+                
+                // Simulate blockchain submission
+                await new Promise(resolve => setTimeout(resolve, 1500));
+
+                // Add score to leaderboard (use full address, not already-shortened one)
+                const newEntry = {
+                    rank: 0,
+                    name: `Player${leaderboard.length + 1}`,
+                    address: shortenAddress(walletState.address),
+                    score: score,
+                    verified: true
+                };
+
+                leaderboard.push(newEntry);
+                leaderboard.sort((a, b) => b.score - a.score);
+                leaderboard = leaderboard.slice(0, 10); // Keep top 10
+                
+                // Update ranks
+                leaderboard.forEach((entry, index) => {
+                    entry.rank = index + 1;
+                });
+
+                renderLeaderboard();
+
+                zkProofStatus.classList.remove('generating');
+                zkProofStatus.textContent = 'Score Submitted Successfully! ✓';
+                
+                setTimeout(() => {
+                    zkProofStatus.style.display = 'none';
+                    submitBtn.disabled = false;
+                }, 2000);
+
+            } catch (error) {
+                console.error('Score submission error:', error);
+                zkProofStatus.classList.remove('generating');
+                zkProofStatus.textContent = 'Submission Failed. Please try again.';
+                submitBtn.disabled = false;
+            }
+        }
+
+        // ========================================
+        // GAME CODE
+        // ========================================
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreElement = document.getElementById('score');
+        const speedElement = document.getElementById('speed');
+        const gameOverScreen = document.getElementById('gameOverScreen');
+        const finalScoreElement = document.getElementById('finalScore');
+        const restartBtn = document.getElementById('restartBtn');
+        const submitScoreBtn = document.getElementById('submitScoreBtn');
+        const startScreen = document.getElementById('startScreen');
+        const startBtn = document.getElementById('startBtn');
+
+        // Game constants
+        const LANES = 3;
+        const LANE_WIDTH = canvas.width / LANES;
+        const LANE_POSITIONS = [
+            LANE_WIDTH / 2,
+            canvas.width / 2,
+            canvas.width - LANE_WIDTH / 2
+        ];
+
+        // Game state
+        let gameState = {
+            isRunning: false,
+            score: 0,
+            obstaclesDodged: 0,
+            speed: 1,
+            baseSpeed: 6,
+            playerLane: 1,
+            obstacles: [],
+            gems: [],
+            roadOffset: 0,
+            animationId: null,
+            lastObstacleSpawn: 0,
+            minObstacleGap: 200
+        };
+
+        // Player car
+        const player = {
+            width: 60,
+            height: 100,
+            y: canvas.height - 200,
+            targetX: LANE_POSITIONS[1],
+            currentX: LANE_POSITIONS[1],
+            moveSpeed: 8
+        };
+
+        // Draw pixel-style car
+        function drawCar(x, y) {
+            ctx.save();
+            
+            // Car body - vibrant blue
+            ctx.fillStyle = '#3498db';
+            ctx.fillRect(x - 25, y, 50, 70);
+            
+            // Car roof
+            ctx.fillStyle = '#2c3e50';
+            ctx.fillRect(x - 20, y + 10, 40, 30);
+            
+            // Windshield
+            ctx.fillStyle = '#5dade2';
+            ctx.fillRect(x - 15, y + 15, 30, 20);
+            
+            // Wheels
+            ctx.fillStyle = '#1a1a1a';
+            ctx.fillRect(x - 30, y + 15, 10, 15);
+            ctx.fillRect(x + 20, y + 15, 10, 15);
+            ctx.fillRect(x - 30, y + 55, 10, 15);
+            ctx.fillRect(x + 20, y + 55, 10, 15);
+            
+            // Headlights
+            ctx.fillStyle = '#f1c40f';
+            ctx.fillRect(x - 20, y + 65, 10, 8);
+            ctx.fillRect(x + 10, y + 65, 10, 8);
+            
+            // Racing stripe
+            ctx.fillStyle = '#e74c3c';
+            ctx.fillRect(x - 5, y, 10, 70);
+            
+            ctx.restore();
+        }
+
+        // Draw pixel-style barricade
+        function drawBarricade(x, y) {
+            const width = 80;
+            const height = 40;
+            const stripeWidth = 10;
+            
+            ctx.save();
+            
+            // Draw orange and black stripes
+            for (let i = 0; i < width; i += stripeWidth) {
+                ctx.fillStyle = (Math.floor(i / stripeWidth) % 2 === 0) ? '#ff6b00' : '#1a1a1a';
+                ctx.fillRect(x - width/2 + i, y, stripeWidth, height);
+            }
+            
+            // Support posts
+            ctx.fillStyle = '#4a4a4a';
+            ctx.fillRect(x - width/2 - 5, y, 5, height + 10);
+            ctx.fillRect(x + width/2, y, 5, height + 10);
+            
+            // Reflective strips
+            ctx.fillStyle = '#ffcc00';
+            ctx.fillRect(x - width/2, y + 2, width, 4);
+            ctx.fillRect(x - width/2, y + height - 6, width, 4);
+            
+            ctx.restore();
+        }
+
+        // Draw pixel-style diamond gem
+        function drawGem(x, y) {
+            ctx.save();
+            
+            const size = 20;
+            
+            // Outer glow
+            ctx.shadowColor = '#00ffff';
+            ctx.shadowBlur = 15;
+            
+            // Diamond shape
+            ctx.fillStyle = '#00ffff';
+            ctx.beginPath();
+            ctx.moveTo(x, y - size);
+            ctx.lineTo(x + size * 0.6, y);
+            ctx.lineTo(x, y + size);
+            ctx.lineTo(x - size * 0.6, y);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Inner highlight
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.moveTo(x, y - size * 0.6);
+            ctx.lineTo(x + size * 0.3, y - size * 0.2);
+            ctx.lineTo(x, y + size * 0.2);
+            ctx.lineTo(x - size * 0.3, y - size * 0.2);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Facets
+            ctx.strokeStyle = '#006666';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(x, y - size);
+            ctx.lineTo(x, y + size);
+            ctx.moveTo(x - size * 0.6, y);
+            ctx.lineTo(x + size * 0.6, y);
+            ctx.stroke();
+            
+            ctx.restore();
+        }
+
+        // Draw animated road
+        function drawRoad() {
+            // Road base
+            ctx.fillStyle = '#2c2c3c';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Lane dividers
+            ctx.strokeStyle = '#ffd700';
+            ctx.lineWidth = 4;
+            ctx.setLineDash([30, 20]);
+            ctx.lineDashOffset = -gameState.roadOffset;
+            
+            for (let i = 1; i < LANES; i++) {
+                ctx.beginPath();
+                ctx.moveTo(LANE_WIDTH * i, 0);
+                ctx.lineTo(LANE_WIDTH * i, canvas.height);
+                ctx.stroke();
+            }
+            
+            ctx.setLineDash([]);
+            
+            // Road edges
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 6;
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(0, canvas.height);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(canvas.width, 0);
+            ctx.lineTo(canvas.width, canvas.height);
+            ctx.stroke();
+            
+            // Update road animation only when game is running
+            if (gameState.isRunning) {
+                gameState.roadOffset += gameState.baseSpeed * gameState.speed;
+                if (gameState.roadOffset > 50) {
+                    gameState.roadOffset = 0;
+                }
+            }
+        }
+
+        // Improved obstacle spawning with guaranteed path
+        function spawnObstacle() {
+            const currentTime = Date.now();
+            
+            // Check minimum time gap between spawns
+            if (currentTime - gameState.lastObstacleSpawn < gameState.minObstacleGap / gameState.speed) {
+                return;
+            }
+
+            // Get lanes that don't have recent obstacles
+            const availableLanes = [];
+            for (let i = 0; i < LANES; i++) {
+                const hasRecentObstacle = gameState.obstacles.some(obs => 
+                    obs.lane === i && obs.y > -350
+                );
+                if (!hasRecentObstacle) {
+                    availableLanes.push(i);
+                }
+            }
+
+            // Always ensure at least one lane is clear
+            if (availableLanes.length === 0) {
+                return; // Skip this spawn if all lanes are blocked
+            }
+
+            // Spawn in 1-2 lanes max — always leave at least one lane clear
+            const numToSpawn = Math.min(availableLanes.length - 1, Math.random() > 0.6 ? 2 : 1);
+            const shuffled = availableLanes.sort(() => Math.random() - 0.5);
+            
+            for (let i = 0; i < numToSpawn; i++) {
+                const lane = shuffled[i];
+                gameState.obstacles.push({
+                    x: LANE_POSITIONS[lane],
+                    y: -50,
+                    lane: lane,
+                    passed: false
+                });
+            }
+
+            gameState.lastObstacleSpawn = currentTime;
+        }
+
+        // Spawn gem
+        function spawnGem() {
+            const lane = Math.floor(Math.random() * LANES);
+            // Check if there's already an obstacle in this lane nearby
+            const hasNearbyObstacle = gameState.obstacles.some(obs => 
+                obs.lane === lane && obs.y > -200 && obs.y < 100
+            );
+            
+            if (!hasNearbyObstacle) {
+                gameState.gems.push({
+                    x: LANE_POSITIONS[lane],
+                    y: -50,
+                    lane: lane,
+                    collected: false,
+                    pulse: 0
+                });
+            }
+        }
+
+        // Update game objects
+        function update() {
+            if (!gameState.isRunning) return;
+
+            // Smooth player movement
+            const diff = player.targetX - player.currentX;
+            if (Math.abs(diff) > 1) {
+                player.currentX += diff * 0.3;
+            } else {
+                player.currentX = player.targetX;
+            }
+
+            // Update obstacles — collect collision flag, avoid splice-during-iteration
+            let collided = false;
+            gameState.obstacles.forEach(obstacle => {
+                obstacle.y += gameState.baseSpeed * gameState.speed;
+
+                // Check collision
+                if (
+                    !obstacle.passed &&
+                    obstacle.y + 20 > player.y &&
+                    obstacle.y - 20 < player.y + player.height &&
+                    obstacle.lane === gameState.playerLane &&
+                    Math.abs(player.currentX - obstacle.x) < 50
+                ) {
+                    collided = true;
+                }
+
+                // Check if passed
+                if (!obstacle.passed && obstacle.y > player.y + player.height) {
+                    obstacle.passed = true;
+                    gameState.obstaclesDodged++;
+                    gameState.score += 2;
+                    scoreElement.textContent = gameState.score;
+
+                    // Increase speed every 15 obstacles
+                    if (gameState.obstaclesDodged % 15 === 0) {
+                        gameState.speed += 0.25;
+                        speedElement.textContent = gameState.speed.toFixed(2);
+                        
+                        // Visual feedback for speed increase
+                        speedElement.parentElement.style.animation = 'none';
+                        setTimeout(() => {
+                            speedElement.parentElement.style.animation = 'pulse 0.5s';
+                        }, 10);
+                    }
+                }
+            });
+
+            // Trigger game over once after loop to prevent multiple calls
+            if (collided) {
+                gameOver();
+                return;
+            }
+
+            // Remove off-screen obstacles safely
+            gameState.obstacles = gameState.obstacles.filter(o => o.y <= canvas.height + 50);
+
+            // Update gems — avoid splice-during-iteration
+            gameState.gems.forEach(gem => {
+                gem.y += gameState.baseSpeed * gameState.speed;
+                gem.pulse += 0.1;
+
+                // Check collection
+                if (
+                    !gem.collected &&
+                    gem.y + 20 > player.y &&
+                    gem.y - 20 < player.y + player.height &&
+                    gem.lane === gameState.playerLane &&
+                    Math.abs(player.currentX - gem.x) < 40
+                ) {
+                    gem.collected = true;
+                    gameState.score += 10;
+                    scoreElement.textContent = gameState.score;
+                    
+                    // Visual feedback for gem collection
+                    scoreElement.parentElement.style.animation = 'none';
+                    setTimeout(() => {
+                        scoreElement.parentElement.style.animation = 'pulse 0.3s';
+                    }, 10);
+                }
+            });
+
+            // Remove collected or off-screen gems safely
+            gameState.gems = gameState.gems.filter(g => !g.collected && g.y <= canvas.height + 50);
+
+            // Spawn new obstacles with improved logic
+            if (Math.random() < 0.015 * gameState.speed) {
+                spawnObstacle();
+            }
+
+            // Spawn new gems
+            if (Math.random() < 0.008) {
+                spawnGem();
+            }
+        }
+
+        // Draw game
+        function draw() {
+            drawRoad();
+
+            // Draw obstacles
+            gameState.obstacles.forEach(obstacle => {
+                drawBarricade(obstacle.x, obstacle.y);
+            });
+
+            // Draw gems
+            gameState.gems.forEach(gem => {
+                if (!gem.collected) {
+                    ctx.save();
+                    ctx.translate(gem.x, gem.y);
+                    ctx.scale(1 + Math.sin(gem.pulse) * 0.1, 1 + Math.sin(gem.pulse) * 0.1);
+                    drawGem(0, 0);
+                    ctx.restore();
+                }
+            });
+
+            // Draw player
+            drawCar(player.currentX, player.y);
+        }
+
+        // Game loop
+        function gameLoop() {
+            update();
+            draw();
+            if (gameState.isRunning) {
+                gameState.animationId = requestAnimationFrame(gameLoop);
+            }
+        }
+
+        // Start game
+        function startGame() {
+            // Cancel any existing animation loop before starting a new one
+            if (gameState.animationId) {
+                cancelAnimationFrame(gameState.animationId);
+                gameState.animationId = null;
+            }
+
+            startScreen.classList.add('hidden');
+            gameState.isRunning = true;
+            gameState.score = 0;
+            gameState.obstaclesDodged = 0;
+            gameState.speed = 1;
+            gameState.playerLane = 1;
+            gameState.obstacles = [];
+            gameState.gems = [];
+            gameState.roadOffset = 0;
+            gameState.lastObstacleSpawn = 0;
+            player.currentX = LANE_POSITIONS[1];
+            player.targetX = LANE_POSITIONS[1];
+            
+            scoreElement.textContent = '0';
+            speedElement.textContent = '1.00';
+            gameOverScreen.classList.remove('active');
+            
+            gameLoop();
+        }
+
+        // Game over
+        function gameOver() {
+            gameState.isRunning = false;
+            finalScoreElement.textContent = gameState.score;
+            gameOverScreen.classList.add('active');
+            
+            // Enable/disable submit button based on wallet connection
+            submitScoreBtn.disabled = !walletState.connected;
+            if (!walletState.connected) {
+                submitScoreBtn.title = 'Connect wallet to submit score';
+            }
+            
+            if (gameState.animationId) {
+                cancelAnimationFrame(gameState.animationId);
+            }
+        }
+
+        // Keyboard controls
+        document.addEventListener('keydown', (e) => {
+            if (!gameState.isRunning) return;
+            
+            if (e.key === 'ArrowLeft' && gameState.playerLane > 0) {
+                gameState.playerLane--;
+                player.targetX = LANE_POSITIONS[gameState.playerLane];
+            } else if (e.key === 'ArrowRight' && gameState.playerLane < LANES - 1) {
+                gameState.playerLane++;
+                player.targetX = LANE_POSITIONS[gameState.playerLane];
+            }
+        });
+
+        // Event listeners
+        startBtn.addEventListener('click', startGame);
+        restartBtn.addEventListener('click', startGame);
+        submitScoreBtn.addEventListener('click', () => submitScore(gameState.score));
+
+        // Initialize
+        renderLeaderboard();
+        drawRoad();
+        drawCar(player.currentX, player.y);
+    </script>
+</body>
+</html>

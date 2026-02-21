@@ -837,6 +837,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "lane-racer"
+version = "0.1.0"
+dependencies = [
+ "soroban-sdk",
+]
+
+[[package]]
 name = "libc"
 version = "0.2.178"
 source = "registry+https://github.com/rust-lang/crates.io-index"
