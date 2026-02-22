@@ -1,0 +1,11 @@
+cargo:warning===========================================
+cargo:warning=RISC Zero Groth16 Verifier Parameters
+cargo:warning===========================================
+cargo:warning=SELECTOR:            73c457ba
+cargo:warning=CONTROL_ROOT:        a54dc85ac99f851c92d7c96d7318af41dbe7c0194edfcc37eb4d422a998c1f56
+cargo:warning=CONTROL_ROOT_0:      41af18736dc9d7921c859fc95ac84da5
+cargo:warning=CONTROL_ROOT_1:      561f8c992a424deb37ccdf4e19c0e7db
+cargo:warning=BN254_CONTROL_ID:    04446e66d300eb7fb45c9726bb53c793dda407a62e9601618bb43c5c14657ac0
+cargo:warning=VERIFIER_KEY_DIGEST: 21c5fdd9b4d576b17581f50b755482ba7a2134a3b5186e8e454acfa1f69511ab
+cargo:warning=VERSION:             3.0.0
+cargo:warning===========================================

@@ -1,0 +1,14 @@
+/home/zyrick/Stellar-Game-Studio/contracts/stellar-risc0-verifier/target/release/deps/serde-46f09579c6ec7456.d: /home/zyrick/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /home/zyrick/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /home/zyrick/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /home/zyrick/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /home/zyrick/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /home/zyrick/Stellar-Game-Studio/contracts/stellar-risc0-verifier/target/release/build/serde-aefa9ec47cd09ba6/out/private.rs
+
+/home/zyrick/Stellar-Game-Studio/contracts/stellar-risc0-verifier/target/release/deps/libserde-46f09579c6ec7456.rlib: /home/zyrick/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /home/zyrick/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /home/zyrick/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /home/zyrick/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /home/zyrick/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /home/zyrick/Stellar-Game-Studio/contracts/stellar-risc0-verifier/target/release/build/serde-aefa9ec47cd09ba6/out/private.rs
+
+/home/zyrick/Stellar-Game-Studio/contracts/stellar-risc0-verifier/target/release/deps/libserde-46f09579c6ec7456.rmeta: /home/zyrick/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /home/zyrick/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /home/zyrick/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /home/zyrick/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /home/zyrick/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /home/zyrick/Stellar-Game-Studio/contracts/stellar-risc0-verifier/target/release/build/serde-aefa9ec47cd09ba6/out/private.rs
+
+/home/zyrick/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs:
+/home/zyrick/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs:
+/home/zyrick/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs:
+/home/zyrick/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs:
+/home/zyrick/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs:
+/home/zyrick/Stellar-Game-Studio/contracts/stellar-risc0-verifier/target/release/build/serde-aefa9ec47cd09ba6/out/private.rs:
+
+# env-dep:OUT_DIR=/home/zyrick/Stellar-Game-Studio/contracts/stellar-risc0-verifier/target/release/build/serde-aefa9ec47cd09ba6/out

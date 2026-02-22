@@ -1,0 +1,9 @@
+/home/zyrick/Stellar-Game-Studio/contracts/stellar-risc0-verifier/target/release/deps/stellar_macros-4e1a643c39b96e73.d: /home/zyrick/.cargo/git/checkouts/stellar-contracts-23b9f8e80f2c4738/63167bb/packages/macros/src/lib.rs /home/zyrick/.cargo/git/checkouts/stellar-contracts-23b9f8e80f2c4738/63167bb/packages/macros/src/access_control.rs /home/zyrick/.cargo/git/checkouts/stellar-contracts-23b9f8e80f2c4738/63167bb/packages/macros/src/helpers.rs /home/zyrick/.cargo/git/checkouts/stellar-contracts-23b9f8e80f2c4738/63167bb/packages/macros/src/pausable.rs /home/zyrick/.cargo/git/checkouts/stellar-contracts-23b9f8e80f2c4738/63167bb/packages/macros/src/upgradeable.rs
+
+/home/zyrick/Stellar-Game-Studio/contracts/stellar-risc0-verifier/target/release/deps/libstellar_macros-4e1a643c39b96e73.so: /home/zyrick/.cargo/git/checkouts/stellar-contracts-23b9f8e80f2c4738/63167bb/packages/macros/src/lib.rs /home/zyrick/.cargo/git/checkouts/stellar-contracts-23b9f8e80f2c4738/63167bb/packages/macros/src/access_control.rs /home/zyrick/.cargo/git/checkouts/stellar-contracts-23b9f8e80f2c4738/63167bb/packages/macros/src/helpers.rs /home/zyrick/.cargo/git/checkouts/stellar-contracts-23b9f8e80f2c4738/63167bb/packages/macros/src/pausable.rs /home/zyrick/.cargo/git/checkouts/stellar-contracts-23b9f8e80f2c4738/63167bb/packages/macros/src/upgradeable.rs
+
+/home/zyrick/.cargo/git/checkouts/stellar-contracts-23b9f8e80f2c4738/63167bb/packages/macros/src/lib.rs:
+/home/zyrick/.cargo/git/checkouts/stellar-contracts-23b9f8e80f2c4738/63167bb/packages/macros/src/access_control.rs:
+/home/zyrick/.cargo/git/checkouts/stellar-contracts-23b9f8e80f2c4738/63167bb/packages/macros/src/helpers.rs:
+/home/zyrick/.cargo/git/checkouts/stellar-contracts-23b9f8e80f2c4738/63167bb/packages/macros/src/pausable.rs:
+/home/zyrick/.cargo/git/checkouts/stellar-contracts-23b9f8e80f2c4738/63167bb/packages/macros/src/upgradeable.rs:
