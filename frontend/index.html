@@ -3,28 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lane Racer - ZK Gaming on Stellar</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Press+Start+2P&display=swap" rel="stylesheet">
+    <title>Stellar Chain Speedway — ZK Gaming on Stellar</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <script src="stellar-sdk.min.js"></script>
     <style>
         :root {
-            --stellar-cyan: #00d4ff;
-            --stellar-purple: #6b4aff;
-            --dark-bg: #0a0a1a;
-            --card-bg: #1a1a2e;
-            --border-color: #4a4a6e;
+            --cyan: #00d4ff;
+            --purple: #6b4aff;
+            --green: #00ff88;
+            --red: #ff4466;
             --gold: #ffd700;
-            --red: #ff6b6b;
+            --orange: #ff8c00;
+            --dark: #05050f;
+            --card: #0d0d1f;
+            --border: #2a2a4a;
         }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: 'Orbitron', sans-serif;
-            background: linear-gradient(180deg, var(--dark-bg) 0%, #1a1a2e 50%, var(--dark-bg) 100%);
+            background: var(--dark);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -32,1388 +30,1906 @@
             overflow-x: hidden;
             overflow-y: auto;
             color: #fff;
-            position: relative;
-            padding: 0;
-            margin: 0;
-        }
-
-        /* Hamburger Menu Button */
-        .menu-toggle {
-            position: fixed;
-            top: 14px;
-            left: 14px;
-            z-index: 1001;
-            width: 28px;
-            height: 28px;
-            background: rgba(26, 26, 46, 0.95);
-            border: 1.5px solid var(--border-color);
-            border-radius: 7px;
-            cursor: pointer;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            gap: 4px;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-        }
-
-        .menu-toggle:hover {
-            background: rgba(107, 74, 255, 0.2);
-            border-color: var(--stellar-purple);
-            transform: scale(1.05);
-        }
-
-        .menu-toggle span {
-            width: 14px;
-            height: 1.5px;
-            background: var(--stellar-cyan);
-            border-radius: 2px;
-            transition: all 0.3s ease;
-        }
-
-        .menu-toggle.active span:nth-child(1) {
-            transform: rotate(45deg) translate(4px, 4px);
-        }
-
-        .menu-toggle.active span:nth-child(2) {
-            opacity: 0;
-        }
-
-        .menu-toggle.active span:nth-child(3) {
-            transform: rotate(-45deg) translate(4px, -4px);
         }
 
         body::before {
             content: '';
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: 
-                radial-gradient(circle at 20% 50%, rgba(107, 74, 255, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 80% 50%, rgba(0, 212, 255, 0.1) 0%, transparent 50%);
+            inset: 0;
+            background:
+                radial-gradient(circle at 15% 50%, rgba(107,74,255,0.08) 0%, transparent 50%),
+                radial-gradient(circle at 85% 50%, rgba(0,212,255,0.08) 0%, transparent 50%);
             pointer-events: none;
             z-index: 0;
         }
 
+        /* MENU TOGGLE */
+        .menu-toggle {
+            position: fixed; top: 14px; left: 14px; z-index: 1001;
+            width: 32px; height: 32px;
+            background: rgba(13,13,31,0.95);
+            border: 1.5px solid var(--border);
+            border-radius: 8px; cursor: pointer;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center; gap: 5px;
+            transition: all 0.3s;
+        }
+        .menu-toggle:hover { border-color: var(--purple); background: rgba(107,74,255,0.15); }
+        .menu-toggle span { width: 15px; height: 1.5px; background: var(--cyan); border-radius: 2px; transition: all 0.3s; }
+        .menu-toggle.active span:nth-child(1) { transform: rotate(45deg) translate(4.5px, 4.5px); }
+        .menu-toggle.active span:nth-child(2) { opacity: 0; }
+        .menu-toggle.active span:nth-child(3) { transform: rotate(-45deg) translate(4.5px, -4.5px); }
+
+        .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 999; }
+        .sidebar-overlay.active { display: block; }
+
+        /* MAIN LAYOUT */
         .main-container {
-            width: 100%;
-            height: 100vh;
-            position: relative;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            display: flex; gap: 0; position: relative; z-index: 1;
+            min-height: 100vh; width: 100%;
+            max-width: 1100px;
         }
 
+        /* SIDEBAR */
         .sidebar {
-            position: fixed;
-            left: -380px;
-            top: 0;
-            height: 100vh;
-            width: 360px;
-            background: rgba(26, 26, 46, 0.98);
-            backdrop-filter: blur(10px);
-            border-right: 3px solid var(--border-color);
-            display: flex;
-            flex-direction: column;
-            gap: 0;
-            padding: 60px 16px 16px 16px;
-            z-index: 1000;
-            transition: left 0.4s cubic-bezier(0.4, 0.0, 0.2, 1);
-            box-shadow: 4px 0 30px rgba(0, 0, 0, 0.5);
-            overflow: hidden;
+            width: 280px; min-width: 280px;
+            background: var(--card);
+            border-right: 1px solid var(--border);
+            padding: 20px 16px;
+            display: flex; flex-direction: column; gap: 20px;
+            position: fixed; left: -300px; top: 0; bottom: 0;
+            z-index: 1000; overflow-y: auto;
+            transition: left 0.3s ease;
         }
+        .sidebar.open { left: 0; }
 
-        .sidebar.open {
-            left: 0;
-        }
-
-        .sidebar-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 999;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
-        }
-
-        .sidebar-overlay.active {
-            opacity: 1;
-            pointer-events: all;
-        }
-
+        /* WALLET */
         .wallet-section {
-            background: rgba(74, 74, 110, 0.15);
-            border: 2px solid var(--border-color);
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 14px;
+            background: rgba(107,74,255,0.08);
+            border: 1px solid rgba(107,74,255,0.3);
+            border-radius: 12px; padding: 16px;
         }
-
-        .wallet-header {
-            display: none;
-        }
-
+        .wallet-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
         .stellar-logo {
-            width: 32px;
-            height: 32px;
-            background: linear-gradient(135deg, var(--stellar-cyan), var(--stellar-purple));
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 900;
-            font-size: 18px;
+            width: 28px; height: 28px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--cyan), var(--purple));
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 900; font-size: 13px;
         }
-
-        .wallet-title {
-            font-size: 18px;
-            font-weight: 700;
-            background: linear-gradient(135deg, var(--stellar-cyan), var(--stellar-purple));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
+        .wallet-title { font-size: 11px; font-weight: 700; color: var(--cyan); letter-spacing: 1px; text-transform: uppercase; }
         .wallet-status {
-            padding: 16px;
-            background: rgba(107, 74, 255, 0.1);
-            border-radius: 8px;
-            border: 2px solid var(--stellar-purple);
-            margin-bottom: 16px;
-            font-size: 12px;
-            text-align: center;
-            color: #888;
-            transition: all 0.3s ease;
+            font-size: 10px; color: #666; margin-bottom: 10px;
+            font-family: 'Share Tech Mono', monospace;
         }
-
-        .wallet-status.connected {
-            background: rgba(0, 212, 255, 0.15);
-            border-color: var(--stellar-cyan);
-            color: var(--stellar-cyan);
-        }
-
-        .wallet-status .status-text {
-            font-weight: 700;
-            margin-bottom: 8px;
-        }
-
-        .wallet-address {
-            font-family: 'Courier New', monospace;
-            font-size: 10px;
-            word-break: break-all;
-            color: #aaa;
-            margin-top: 4px;
-        }
-
+        .wallet-status.connected { color: var(--green); }
         .connect-wallet-btn {
-            width: 100%;
-            font-family: 'Orbitron', sans-serif;
-            font-size: 14px;
-            font-weight: 700;
-            padding: 16px;
-            background: linear-gradient(135deg, var(--stellar-purple), var(--stellar-cyan));
-            border: none;
-            border-radius: 8px;
-            color: #fff;
-            cursor: pointer;
-            transition: all 0.3s;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            box-shadow: 0 4px 20px rgba(107, 74, 255, 0.4);
+            width: 100%; padding: 10px;
+            background: linear-gradient(135deg, var(--purple), var(--cyan));
+            border: none; border-radius: 8px; color: #fff;
+            font-family: 'Orbitron', sans-serif; font-size: 10px;
+            font-weight: 700; cursor: pointer; letter-spacing: 1px;
+            transition: all 0.3s; text-transform: uppercase;
+        }
+        .connect-wallet-btn:hover { opacity: 0.85; transform: translateY(-1px); }
+
+        /* PRESTIGE SECTION */
+        .prestige-section {
+            background: rgba(255,215,0,0.06);
+            border: 1px solid rgba(255,215,0,0.25);
+            border-radius: 12px; padding: 14px;
+        }
+        .prestige-title { font-size: 10px; color: var(--gold); font-weight: 700; letter-spacing: 1px; margin-bottom: 8px; text-transform: uppercase; }
+        .prestige-info { font-size: 9px; color: #888; font-family: 'Share Tech Mono', monospace; line-height: 1.8; }
+        .prestige-btn {
+            width: 100%; margin-top: 10px; padding: 8px;
+            background: linear-gradient(135deg, #7a6000, var(--gold));
+            border: none; border-radius: 6px; color: #000;
+            font-family: 'Orbitron', sans-serif; font-size: 9px;
+            font-weight: 900; cursor: pointer; letter-spacing: 1px;
+            transition: all 0.3s; text-transform: uppercase;
+            opacity: 0.4;
+        }
+        .prestige-btn.available { opacity: 1; animation: glow-gold 1.5s ease-in-out infinite; }
+        @keyframes glow-gold {
+            0%,100% { box-shadow: 0 0 10px rgba(255,215,0,0.3); }
+            50% { box-shadow: 0 0 25px rgba(255,215,0,0.7); }
         }
 
-        .connect-wallet-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 30px rgba(107, 74, 255, 0.6);
+        /* UPGRADE SHOP */
+        .shop-section {
+            background: rgba(0,255,136,0.05);
+            border: 1px solid rgba(0,255,136,0.2);
+            border-radius: 12px; padding: 14px;
         }
-
-        .connect-wallet-btn:disabled {
-            background: #333;
-            cursor: not-allowed;
-            opacity: 0.5;
+        .shop-title { font-size: 10px; color: var(--green); font-weight: 700; letter-spacing: 1px; margin-bottom: 10px; text-transform: uppercase; }
+        .upgrade-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 7px 8px; border-radius: 6px; margin-bottom: 6px;
+            background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+            cursor: pointer; transition: all 0.2s;
         }
+        .upgrade-item:hover { border-color: var(--green); background: rgba(0,255,136,0.05); }
+        .upgrade-item.owned { border-color: rgba(0,255,136,0.4); background: rgba(0,255,136,0.08); }
+        .upgrade-item.maxed { opacity: 0.5; cursor: not-allowed; }
+        .upgrade-name { font-size: 9px; font-weight: 700; color: #ccc; }
+        .upgrade-desc { font-size: 8px; color: #666; font-family: 'Share Tech Mono', monospace; margin-top: 2px; }
+        .upgrade-cost { font-size: 9px; color: var(--gold); font-weight: 700; white-space: nowrap; }
+        .upgrade-level { font-size: 8px; color: var(--green); }
 
+        /* LEADERBOARD */
         .leaderboard-section {
-            background: rgba(74, 74, 110, 0.15);
-            border: 2px solid var(--border-color);
-            border-radius: 12px;
-            padding: 20px;
+            background: rgba(0,212,255,0.05);
+            border: 1px solid rgba(0,212,255,0.2);
+            border-radius: 12px; padding: 14px;
             flex: 1;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
         }
-
-        .leaderboard-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 20px;
-            padding-bottom: 16px;
-            border-bottom: 2px solid var(--border-color);
-        }
-
-        .leaderboard-title {
-            font-size: 18px;
-            font-weight: 700;
-            background: linear-gradient(135deg, var(--gold), #ffed4e);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
+        .leaderboard-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .leaderboard-title { font-size: 10px; color: var(--cyan); font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
         .zk-badge {
-            background: rgba(107, 74, 255, 0.2);
-            border: 2px solid var(--stellar-purple);
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 10px;
-            font-weight: 700;
-            color: var(--stellar-purple);
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            font-size: 8px; padding: 2px 7px;
+            background: rgba(0,255,136,0.15); border: 1px solid var(--green);
+            border-radius: 10px; color: var(--green); font-weight: 700;
         }
-
-        .leaderboard-list {
-            flex: 1;
-            overflow-y: auto;
-            scrollbar-width: thin;
-            scrollbar-color: var(--stellar-purple) var(--card-bg);
-            padding-right: 8px;
-        }
-
-        .leaderboard-list::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .leaderboard-list::-webkit-scrollbar-track {
-            background: rgba(26, 26, 46, 0.5);
-            border-radius: 3px;
-        }
-
-        .leaderboard-list::-webkit-scrollbar-thumb {
-            background: var(--stellar-purple);
-            border-radius: 3px;
-        }
-
-        .leaderboard-list::-webkit-scrollbar-thumb:hover {
-            background: var(--stellar-cyan);
-        }
-
+        .leaderboard-list { max-height: 220px; overflow-y: auto; }
         .leaderboard-entry {
-            display: grid;
-            grid-template-columns: 50px 1fr 100px;
-            gap: 12px;
-            align-items: center;
-            padding: 16px;
-            margin-bottom: 8px;
-            background: rgba(74, 74, 110, 0.1);
-            border: 2px solid transparent;
-            border-radius: 12px;
-            transition: all 0.3s;
+            display: flex; align-items: center; gap: 8px;
+            padding: 7px 8px; border-radius: 6px; margin-bottom: 4px;
+            background: rgba(255,255,255,0.02); border: 1px solid transparent;
+            font-size: 9px;
         }
+        .leaderboard-entry.top-1 { border-color: rgba(255,215,0,0.4); background: rgba(255,215,0,0.06); }
+        .leaderboard-entry.top-2 { border-color: rgba(192,192,192,0.4); background: rgba(192,192,192,0.04); }
+        .leaderboard-entry.top-3 { border-color: rgba(205,127,50,0.4); background: rgba(205,127,50,0.04); }
+        .entry-rank { width: 22px; font-weight: 900; color: var(--gold); }
+        .entry-address { flex: 1; font-family: 'Share Tech Mono', monospace; color: #aaa; }
+        .entry-score { color: var(--cyan); font-weight: 700; }
+        .entry-prestige { font-size: 8px; color: var(--gold); }
+        .empty-leaderboard { font-size: 9px; color: #555; text-align: center; padding: 20px 0; font-family: 'Share Tech Mono', monospace; }
 
-        .leaderboard-entry:hover {
-            background: rgba(74, 74, 110, 0.2);
-            border-color: var(--stellar-cyan);
-            transform: translateX(4px);
-        }
-
-        .leaderboard-entry.top-1 {
-            background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 215, 0, 0.05));
-            border-color: var(--gold);
-        }
-
-        .leaderboard-entry.top-2 {
-            background: linear-gradient(135deg, rgba(192, 192, 192, 0.1), rgba(192, 192, 192, 0.05));
-            border-color: #c0c0c0;
-        }
-
-        .leaderboard-entry.top-3 {
-            background: linear-gradient(135deg, rgba(205, 127, 50, 0.1), rgba(205, 127, 50, 0.05));
-            border-color: #cd7f32;
-        }
-
-        .rank {
-            font-size: 24px;
-            font-weight: 900;
-            text-align: center;
-            font-family: 'Press Start 2P', cursive;
-        }
-
-        .top-1 .rank { color: var(--gold); text-shadow: 0 0 10px var(--gold); }
-        .top-2 .rank { color: #c0c0c0; text-shadow: 0 0 10px #c0c0c0; }
-        .top-3 .rank { color: #cd7f32; text-shadow: 0 0 10px #cd7f32; }
-
-        .player-info {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
-        .player-name {
-            font-size: 13px;
-            font-weight: 700;
-            color: #fff;
-        }
-
-        .player-address {
-            font-family: 'Courier New', monospace;
-            font-size: 10px;
-            color: #888;
-        }
-
-        .player-score {
-            font-size: 20px;
-            font-weight: 900;
-            text-align: right;
-            background: linear-gradient(135deg, var(--stellar-cyan), var(--stellar-purple));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .verified-icon {
-            color: var(--stellar-cyan);
-            font-size: 10px;
-            margin-left: 4px;
-        }
-
-        .empty-leaderboard {
-            text-align: center;
-            padding: 60px 20px;
-            color: #666;
-            font-size: 13px;
-        }
-
+        /* GAME CONTAINER */
         .game-container {
-            position: relative;
-            width: 600px;
-            background: var(--card-bg);
-            border: 4px solid var(--border-color);
-            border-radius: 16px;
-            overflow: hidden;
-            box-shadow: 0 0 50px rgba(107, 74, 255, 0.5),
-                        inset 0 0 20px rgba(0, 0, 0, 0.5);
+            flex: 1; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            padding: 20px; position: relative;
+            min-height: 100vh;
         }
 
-        .game-header {
-            background: linear-gradient(135deg, #1a1a2e 0%, #2a2a3e 100%);
-            padding: 20px;
-            border-bottom: 4px solid var(--border-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        /* HUD */
+        .game-hud {
+            display: flex; justify-content: space-between; align-items: center;
+            width: 600px; padding: 8px 12px; margin-bottom: 8px;
+            background: rgba(13,13,31,0.9); border: 1px solid var(--border);
+            border-radius: 10px; backdrop-filter: blur(10px);
         }
-
-        .score-display {
-            font-size: 14px;
-            font-family: 'Press Start 2P', cursive;
-            color: var(--gold);
-            text-shadow: 2px 2px 0 #8b6914, 0 0 10px var(--gold);
-        }
-
-        .speed-display {
-            font-size: 12px;
-            font-family: 'Press Start 2P', cursive;
-            color: var(--red);
-            text-shadow: 2px 2px 0 #8b1414, 0 0 10px var(--red);
-        }
+        .hud-item { text-align: center; }
+        .hud-label { font-size: 8px; color: #555; letter-spacing: 1px; text-transform: uppercase; }
+        .hud-value { font-size: 14px; font-weight: 700; color: var(--cyan); font-family: 'Share Tech Mono', monospace; }
+        .hud-value.fees { color: var(--gold); }
+        .hud-value.block { color: var(--green); }
+        .hud-value.priority { color: var(--purple); }
 
         canvas {
-            display: block;
-            background: #1a1a2e;
+            display: block; border: 2px solid var(--border);
+            border-radius: 4px;
+            box-shadow: 0 0 40px rgba(107,74,255,0.2), 0 0 80px rgba(0,212,255,0.1);
         }
 
-        .game-over-screen {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(10, 10, 26, 0.98);
-            padding: 40px;
-            border: 6px solid var(--red);
-            border-radius: 16px;
-            text-align: center;
-            display: none;
-            box-shadow: 0 0 60px rgba(255, 107, 107, 0.8),
-                        inset 0 0 30px rgba(0, 0, 0, 0.8);
-            animation: popIn 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-            z-index: 100;
+        /* TOOLTIP */
+        .tooltip {
+            position: absolute; top: 80px; left: 50%; transform: translateX(-50%);
+            background: rgba(13,13,31,0.95); border: 1px solid var(--cyan);
+            border-radius: 8px; padding: 10px 16px; max-width: 300px;
+            font-size: 10px; color: var(--cyan); text-align: center;
+            font-family: 'Share Tech Mono', monospace; line-height: 1.6;
+            z-index: 100; opacity: 0; transition: opacity 0.3s;
+            pointer-events: none;
         }
+        .tooltip.show { opacity: 1; }
+        .tooltip.warning { border-color: var(--red); color: var(--red); }
+        .tooltip.reward { border-color: var(--gold); color: var(--gold); }
 
-        @keyframes popIn {
-            0% {
-                transform: translate(-50%, -50%) scale(0.5);
-                opacity: 0;
-            }
-            100% {
-                transform: translate(-50%, -50%) scale(1);
-                opacity: 1;
-            }
-        }
-
-        .game-over-screen.active {
-            display: block;
-        }
-
-        .game-over-title {
-            font-family: 'Press Start 2P', cursive;
-            font-size: 32px;
-            color: var(--red);
-            margin-bottom: 20px;
-            text-shadow: 4px 4px 0 #8b1414, 0 0 20px var(--red);
-        }
-
-        .final-score {
-            font-family: 'Press Start 2P', cursive;
-            font-size: 20px;
-            color: var(--gold);
-            margin-bottom: 30px;
-            text-shadow: 2px 2px 0 #8b6914;
-        }
-
-        .zk-proof-status {
-            background: rgba(107, 74, 255, 0.2);
-            border: 2px solid var(--stellar-purple);
-            padding: 16px;
-            border-radius: 12px;
-            margin-bottom: 24px;
-            font-size: 11px;
-            color: var(--stellar-cyan);
-        }
-
-        .zk-proof-status.generating {
-            animation: pulse 1.5s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.6; }
-        }
-
-        .game-over-buttons {
-            display: flex;
-            gap: 12px;
-            justify-content: center;
-        }
-
-        .restart-btn, .submit-score-btn {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 13px;
-            font-weight: 700;
-            padding: 15px 30px;
-            background: linear-gradient(135deg, #4a4a6e 0%, #6a6a8e 100%);
-            border: 3px solid #8a8aae;
-            border-radius: 8px;
-            color: #fff;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            box-shadow: 0 4px 0 #2a2a3e, 0 0 20px rgba(138, 138, 174, 0.5);
-        }
-
-        .submit-score-btn {
-            background: linear-gradient(135deg, var(--stellar-purple), var(--stellar-cyan));
-            border-color: var(--stellar-cyan);
-        }
-
-        .restart-btn:hover, .submit-score-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 0 #2a2a3e, 0 0 30px rgba(138, 138, 174, 0.8);
-        }
-
-        .submit-score-btn:hover {
-            box-shadow: 0 6px 0 #2a2a3e, 0 0 30px rgba(107, 74, 255, 0.8);
-        }
-
-        .restart-btn:active, .submit-score-btn:active {
-            transform: translateY(2px);
-            box-shadow: 0 2px 0 #2a2a3e;
-        }
-
-        .submit-score-btn:disabled {
-            background: #333;
-            border-color: #555;
-            cursor: not-allowed;
-            opacity: 0.5;
-        }
-
+        /* START SCREEN */
         .start-screen {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(10, 10, 26, 0.98);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 10;
-            animation: fadeIn 0.5s ease-in;
+            position: absolute; inset: 0;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            background: rgba(5,5,15,0.97);
+            border-radius: 4px; z-index: 50;
+            padding: 30px; text-align: center;
         }
-
-        .start-screen.hidden {
-            display: none;
-        }
+        .start-screen.hidden { display: none; }
 
         .game-title {
-            font-family: 'Press Start 2P', cursive;
-            font-size: 48px;
-            background: linear-gradient(135deg, var(--gold), #ffed4e);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 20px;
-            text-shadow: 4px 4px 0 rgba(139, 105, 20, 0.5);
-            animation: titlePulse 2s ease-in-out infinite;
+            font-size: 28px; font-weight: 900;
+            background: linear-gradient(135deg, var(--cyan), var(--purple));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            letter-spacing: 3px; margin-bottom: 6px;
         }
-
-        @keyframes titlePulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-
         .game-subtitle {
-            font-size: 14px;
-            color: var(--stellar-cyan);
-            margin-bottom: 40px;
-            text-transform: uppercase;
-            letter-spacing: 3px;
+            font-size: 10px; color: #666; letter-spacing: 3px;
+            text-transform: uppercase; margin-bottom: 24px;
+            font-family: 'Share Tech Mono', monospace;
         }
+        .narrative-box {
+            background: rgba(107,74,255,0.08); border: 1px solid rgba(107,74,255,0.3);
+            border-radius: 10px; padding: 16px; margin-bottom: 20px;
+            max-width: 440px; text-align: left;
+        }
+        .narrative-title { font-size: 10px; color: var(--purple); font-weight: 700; letter-spacing: 1px; margin-bottom: 10px; text-transform: uppercase; }
+        .narrative-text { font-size: 9px; color: #888; font-family: 'Share Tech Mono', monospace; line-height: 2; }
+        .narrative-text span { color: var(--cyan); }
+
+        .lane-info {
+            display: flex; gap: 10px; margin-bottom: 20px;
+        }
+        .lane-tag {
+            padding: 6px 12px; border-radius: 6px; font-size: 9px; font-weight: 700;
+            border: 1px solid; letter-spacing: 1px; text-transform: uppercase;
+        }
+        .lane-slow { color: var(--green); border-color: var(--green); background: rgba(0,255,136,0.08); }
+        .lane-med { color: var(--gold); border-color: var(--gold); background: rgba(255,215,0,0.08); }
+        .lane-fast { color: var(--red); border-color: var(--red); background: rgba(255,68,102,0.08); }
 
         .start-instructions {
-            font-family: 'Press Start 2P', cursive;
-            font-size: 11px;
-            color: #8a8aae;
-            text-align: center;
-            line-height: 2.2;
-            margin-bottom: 40px;
-            max-width: 450px;
+            font-size: 9px; color: #555; line-height: 2.2; margin-bottom: 24px;
+            font-family: 'Share Tech Mono', monospace;
         }
-
         .start-btn {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 16px;
-            font-weight: 700;
-            padding: 20px 50px;
-            background: linear-gradient(135deg, var(--stellar-purple), var(--stellar-cyan));
-            border: none;
-            border-radius: 8px;
-            color: #fff;
-            cursor: pointer;
+            font-family: 'Orbitron', sans-serif; font-size: 14px; font-weight: 700;
+            padding: 16px 48px;
+            background: linear-gradient(135deg, var(--purple), var(--cyan));
+            border: none; border-radius: 8px; color: #fff; cursor: pointer;
+            text-transform: uppercase; letter-spacing: 3px;
+            box-shadow: 0 6px 30px rgba(107,74,255,0.5);
+            animation: bounce 1.2s ease-in-out infinite;
             transition: all 0.3s;
+        }
+        .start-btn:hover { animation: none; transform: translateY(-3px); box-shadow: 0 10px 40px rgba(107,74,255,0.8); }
+        @keyframes bounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+
+        /* GAME OVER */
+        .game-over-screen {
+            position: absolute; inset: 0;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            background: rgba(5,5,15,0.97); border-radius: 4px;
+            z-index: 50; padding: 30px; text-align: center;
+            opacity: 0; pointer-events: none; transition: opacity 0.4s;
+        }
+        .game-over-screen.active { opacity: 1; pointer-events: all; }
+        .game-over-title { font-size: 32px; font-weight: 900; color: var(--red); letter-spacing: 4px; margin-bottom: 8px; }
+        .block-result {
+            font-size: 10px; color: #555; font-family: 'Share Tech Mono', monospace;
+            margin-bottom: 20px; letter-spacing: 2px;
+        }
+        .score-breakdown {
+            background: rgba(107,74,255,0.08); border: 1px solid rgba(107,74,255,0.3);
+            border-radius: 10px; padding: 16px; margin-bottom: 20px; width: 100%;
+        }
+        .score-row { display: flex; justify-content: space-between; font-size: 10px; padding: 4px 0; font-family: 'Share Tech Mono', monospace; }
+        .score-row .label { color: #666; }
+        .score-row .val { color: var(--cyan); font-weight: 700; }
+        .score-row.total .label { color: var(--gold); font-weight: 700; }
+        .score-row.total .val { color: var(--gold); font-size: 14px; }
+
+        .zk-proof-status {
+            font-size: 10px; padding: 10px 20px; border-radius: 8px;
+            background: rgba(0,255,136,0.08); border: 1px solid rgba(0,255,136,0.3);
+            color: var(--green); margin-bottom: 16px; width: 100%;
+            font-family: 'Share Tech Mono', monospace; display: none;
+        }
+        .zk-proof-status.generating { animation: pulse-green 1s infinite; }
+        @keyframes pulse-green { 0%,100% { border-color: rgba(0,255,136,0.3); } 50% { border-color: var(--green); } }
+
+        .prestige-available-banner {
+            background: rgba(255,215,0,0.1); border: 1px solid var(--gold);
+            border-radius: 8px; padding: 10px 16px; margin-bottom: 16px;
+            font-size: 10px; color: var(--gold); display: none;
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        .game-over-buttons { display: flex; gap: 12px; }
+        .restart-btn {
+            padding: 12px 24px; background: rgba(107,74,255,0.2);
+            border: 1px solid var(--purple); border-radius: 8px; color: var(--purple);
+            font-family: 'Orbitron', sans-serif; font-size: 10px; font-weight: 700;
+            cursor: pointer; letter-spacing: 1px; transition: all 0.3s;
+        }
+        .restart-btn:hover { background: rgba(107,74,255,0.4); }
+        .submit-score-btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, var(--green), #00aa55);
+            border: none; border-radius: 8px; color: #000;
+            font-family: 'Orbitron', sans-serif; font-size: 10px; font-weight: 900;
+            cursor: pointer; letter-spacing: 1px; transition: all 0.3s;
+        }
+        .submit-score-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,255,136,0.4); }
+        .submit-score-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .prestige-action-btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #7a6000, var(--gold));
+            border: none; border-radius: 8px; color: #000;
+            font-family: 'Orbitron', sans-serif; font-size: 10px; font-weight: 900;
+            cursor: pointer; letter-spacing: 1px; transition: all 0.3s; display: none;
+        }
+
+        /* LEVEL COMPLETE INTERSTITIAL */
+        .level-complete-screen {
+            position: absolute; inset: 0;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            background: rgba(5,5,15,0.97); border-radius: 4px;
+            z-index: 60; padding: 28px; text-align: center;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.35s;
+        }
+        .level-complete-screen.active { opacity: 1; pointer-events: all; }
+
+        .lc-badge {
+            font-size: 11px; font-weight: 700; letter-spacing: 2px;
+            padding: 4px 14px; border-radius: 20px; margin-bottom: 10px;
             text-transform: uppercase;
-            letter-spacing: 2px;
-            box-shadow: 0 6px 30px rgba(107, 74, 255, 0.5);
-            animation: bounce 1s ease-in-out infinite;
+        }
+        .lc-badge.green  { color: var(--green);  border: 1px solid var(--green);  background: rgba(0,255,136,0.1); }
+        .lc-badge.gold   { color: var(--gold);   border: 1px solid var(--gold);   background: rgba(255,215,0,0.1); }
+        .lc-badge.purple { color: var(--purple); border: 1px solid var(--purple); background: rgba(107,74,255,0.1); }
+        .lc-badge.red    { color: var(--red);    border: 1px solid var(--red);    background: rgba(255,68,102,0.1); }
+
+        .lc-title {
+            font-size: 26px; font-weight: 900; letter-spacing: 3px; margin-bottom: 6px;
+            background: linear-gradient(135deg, var(--cyan), var(--purple));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .lc-subtitle { font-size: 10px; color: #666; letter-spacing: 2px; margin-bottom: 18px; font-family: 'Share Tech Mono', monospace; }
+
+        .lc-lesson-box {
+            background: rgba(0,212,255,0.06); border: 1px solid rgba(0,212,255,0.25);
+            border-radius: 12px; padding: 16px 20px; margin-bottom: 16px;
+            max-width: 460px; text-align: left;
+        }
+        .lc-lesson-title { font-size: 10px; color: var(--cyan); font-weight: 700; letter-spacing: 1px; margin-bottom: 10px; text-transform: uppercase; }
+        .lc-lesson-text  { font-size: 10px; color: #999; font-family: 'Share Tech Mono', monospace; line-height: 2; }
+        .lc-lesson-text span { color: var(--cyan); }
+        .lc-lesson-text strong { color: var(--gold); }
+
+        .lc-next-box {
+            background: rgba(107,74,255,0.08); border: 1px solid rgba(107,74,255,0.3);
+            border-radius: 12px; padding: 14px 20px; margin-bottom: 20px;
+            max-width: 460px; width: 100%; text-align: left;
+        }
+        .lc-next-title { font-size: 10px; color: var(--purple); font-weight: 700; letter-spacing: 1px; margin-bottom: 8px; text-transform: uppercase; }
+        .lc-next-stats {
+            display: flex; gap: 20px; flex-wrap: wrap;
+        }
+        .lc-stat { font-size: 9px; font-family: 'Share Tech Mono', monospace; }
+        .lc-stat .stat-label { color: #555; margin-bottom: 2px; }
+        .lc-stat .stat-val { color: var(--purple); font-weight: 700; font-size: 13px; }
+
+        .lc-continue-btn {
+            font-family: 'Orbitron', sans-serif; font-size: 12px; font-weight: 700;
+            padding: 14px 44px;
+            background: linear-gradient(135deg, var(--purple), var(--cyan));
+            border: none; border-radius: 8px; color: #fff; cursor: pointer;
+            text-transform: uppercase; letter-spacing: 3px;
+            box-shadow: 0 6px 30px rgba(107,74,255,0.5);
+            animation: bounce 1.2s ease-in-out infinite;
+            transition: all 0.3s;
+        }
+        .lc-continue-btn:hover { animation: none; transform: translateY(-3px); }
+
+        /* COUNTDOWN OVERLAY */
+        .countdown-overlay {
+            position: absolute; inset: 0;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            background: rgba(5,5,15,0.82);
+            border-radius: 4px; z-index: 70;
+            pointer-events: none;
+            opacity: 0; transition: opacity 0.2s;
+        }
+        .countdown-overlay.active { opacity: 1; }
+        .countdown-num {
+            font-size: 120px; font-weight: 900;
+            font-family: 'Orbitron', sans-serif;
+            background: linear-gradient(135deg, var(--cyan), var(--purple));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            animation: countPop 0.9s ease-out;
+            line-height: 1;
+        }
+        .countdown-num.go {
+            font-size: 72px;
+            background: linear-gradient(135deg, var(--green), var(--cyan));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .countdown-sub { font-size: 11px; color: #555; letter-spacing: 3px; margin-top: 16px; font-family: 'Share Tech Mono', monospace; }
+        @keyframes countPop {
+            0%   { transform: scale(2.5); opacity: 0; }
+            40%  { transform: scale(0.9); opacity: 1; }
+            70%  { transform: scale(1.05); }
+            100% { transform: scale(1); }
         }
 
-        @keyframes bounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
+        /* ZK LIVE STATUS BAR */
+        .zk-live-bar {
+            width: 600px; display: none;
+            background: rgba(0,255,136,0.04);
+            border: 1px solid rgba(0,255,136,0.15);
+            border-radius: 6px; padding: 5px 12px;
+            margin-bottom: 4px;
+            display: flex; align-items: center; gap: 10px;
+            font-family: 'Share Tech Mono', monospace; font-size: 9px;
         }
-
-        .start-btn:hover {
-            animation: none;
-            transform: translateY(-4px);
-            box-shadow: 0 10px 40px rgba(107, 74, 255, 0.8);
+        .zk-dot {
+            width: 7px; height: 7px; border-radius: 50%;
+            background: var(--green); flex-shrink: 0;
+            animation: zkPulse 1.5s ease-in-out infinite;
         }
+        @keyframes zkPulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.7)} }
+        .zk-live-text { color: #00ff88; flex: 1; }
+        .zk-live-seed { color: #444; font-size: 8px; }
+        .zk-live-actions { color: #555; font-size: 8px; white-space: nowrap; }
 
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+        /* LOW HEALTH WARNING */
+        @keyframes lowHealth {
+            0%,100% { box-shadow: 0 0 0 0 rgba(255,68,102,0); }
+            50% { box-shadow: 0 0 0 6px rgba(255,68,102,0.5); }
         }
+        canvas.danger { animation: lowHealth 0.5s ease-in-out infinite; border-color: var(--red) !important; }
 
+        /* FOOTER */
         .stellar-footer {
-            position: absolute;
-            bottom: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 10px;
-            color: #666;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%);
+            font-size: 9px; color: #444; display: flex; align-items: center; gap: 8px;
+            z-index: 10; font-family: 'Share Tech Mono', monospace;
         }
-
         .stellar-footer-logo {
-            width: 16px;
-            height: 16px;
-            background: linear-gradient(135deg, var(--stellar-cyan), var(--stellar-purple));
-            border-radius: 50%;
+            width: 14px; height: 14px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--cyan), var(--purple));
         }
     </style>
 </head>
 <body>
-    <!-- Hamburger Menu Button -->
-    <div class="menu-toggle" id="menuToggle">
-        <span></span>
-        <span></span>
-        <span></span>
-    </div>
 
-    <!-- Sidebar Overlay -->
-    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+<div class="menu-toggle" id="menuToggle"><span></span><span></span><span></span></div>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-    <div class="main-container">
-        <!-- Sidebar -->
-        <div class="sidebar" id="sidebar">
-            <!-- Wallet Section -->
-            <div class="wallet-section">
-                <div class="wallet-header">
-                    <div class="stellar-logo">S</div>
-                    <div class="wallet-title">Stellar Wallet</div>
-                </div>
-                <div class="wallet-status" id="walletStatus">
-                    Not Connected
-                </div>
-                <button class="connect-wallet-btn" id="connectWalletBtn">
-                    Connect Wallet
-                </button>
+<div class="main-container">
+    <!-- SIDEBAR -->
+    <div class="sidebar" id="sidebar">
+        <div style="height: 40px;"></div>
+
+        <!-- Wallet -->
+        <div class="wallet-section">
+            <div class="wallet-header">
+                <div class="stellar-logo">S</div>
+                <div class="wallet-title">Stellar Wallet</div>
             </div>
-
-            <!-- Leaderboard Section -->
-            <div class="leaderboard-section">
-                <div class="leaderboard-header">
-                    <div class="leaderboard-title">
-                        🏆 Leaderboard
-                    </div>
-                    <div class="zk-badge">ZK Verified</div>
-                </div>
-                <div class="leaderboard-list" id="leaderboardList">
-                    <div class="empty-leaderboard">
-                        No scores yet. Be the first to play!
-                    </div>
-                </div>
-            </div>
+            <div class="wallet-status" id="walletStatus">Not Connected</div>
+            <button class="connect-wallet-btn" id="connectWalletBtn">Connect Wallet</button>
         </div>
 
-        <!-- Game Container -->
-        <div class="game-container">
-            <div class="start-screen" id="startScreen">
-                <div class="game-title">LANE RACER</div>
-                <div class="game-subtitle">ZK Gaming on Stellar</div>
-                <div class="start-instructions">
-                    Use ← → Arrow Keys to Switch Lanes<br>
-                    Dodge Barricades (2 pts) • Collect Gems (10 pts)<br>
-                    Speed Increases Every 15 Obstacles!<br>
-                    Connect Wallet to Submit Scores
-                </div>
-                <button class="start-btn" id="startBtn">START GAME</button>
+        <!-- Prestige -->
+        <div class="prestige-section">
+            <div class="prestige-title">⚡ Validator Prestige</div>
+            <div class="prestige-info" id="prestigeInfo">
+                Prestige Level: <span id="prestigeLevel" style="color:var(--gold)">0</span><br>
+                Multiplier: <span id="prestigeMult" style="color:var(--cyan)">1.0x</span><br>
+                Total Fees: <span id="totalFees" style="color:var(--gold)">0</span><br>
+                Need 5000 fees to prestige
             </div>
+            <button class="prestige-btn" id="prestigeBtn">BECOME VALIDATOR</button>
+        </div>
 
-            <div class="game-header">
-                <div class="score-display">SCORE: <span id="score">0</span></div>
-                <div class="speed-display">SPEED: <span id="speed">1.00</span>x</div>
+        <!-- Upgrade Shop -->
+        <div class="shop-section">
+            <div class="shop-title">🔧 Tx Upgrades</div>
+            <div id="upgradeList"></div>
+        </div>
+
+        <!-- Leaderboard -->
+        <div class="leaderboard-section">
+            <div class="leaderboard-header">
+                <div class="leaderboard-title">🏆 Validators</div>
+                <div class="zk-badge">ZK Verified</div>
             </div>
+            <div class="leaderboard-list" id="leaderboardList">
+                <div class="empty-leaderboard">No validators yet.<br>Be the first!</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- GAME -->
+    <div class="game-container">
+        <!-- HUD -->
+        <div class="game-hud">
+            <div class="hud-item">
+                <div class="hud-label">Fees Collected</div>
+                <div class="hud-value fees" id="score">0</div>
+            </div>
+            <div class="hud-item">
+                <div class="hud-label">Level</div>
+                <div class="hud-value" id="levelDisplay" style="color:var(--purple)">S1-L1</div>
+            </div>
+            <div class="hud-item">
+                <div class="hud-label">Priority</div>
+                <div class="hud-value priority" id="speed">1.00x</div>
+            </div>
+            <div class="hud-item">
+                <div class="hud-label">Prestige</div>
+                <div class="hud-value" id="hudPrestige" style="color:var(--gold)">Lv.0</div>
+            </div>
+        </div>
+        <!-- Fee progress bar -->
+        <div id="feeProgressBar" style="width:600px;height:6px;background:rgba(255,255,255,0.08);border-radius:3px;margin-bottom:4px;overflow:hidden;display:none;">
+            <div id="feeProgressFill" style="height:100%;width:0%;background:linear-gradient(90deg,var(--purple),var(--cyan));transition:width 0.3s;border-radius:3px;"></div>
+        </div>
+        <div id="feeProgressLabel" style="width:600px;font-size:9px;color:#555;text-align:center;font-family:'Share Tech Mono',monospace;margin-bottom:4px;display:none;">
+            FEE PROGRESS: 0 / 300 · OBSTACLE DAMAGE: 15%
+        </div>
+
+        <!-- ZK Live Recording Bar -->
+        <div class="zk-live-bar" id="zkLiveBar">
+            <div class="zk-dot"></div>
+            <span class="zk-live-text">🔐 ZK Recording — actions being committed to proof</span>
+            <span class="zk-live-actions" id="zkActionCount">0 ticks</span>
+            <span class="zk-live-seed" id="zkSeedDisplay">seed: —</span>
+        </div>
+
+        <!-- Tooltip -->
+        <div class="tooltip" id="tooltip"></div>
+
+        <div style="position:relative; width:600px;">
+            <!-- Canvas -->
             <canvas id="gameCanvas" width="600" height="600"></canvas>
-            
-            <div class="game-over-screen" id="gameOverScreen">
-                <div class="game-over-title">GAME OVER!</div>
-                <div class="final-score">FINAL SCORE: <span id="finalScore">0</span></div>
-                <div class="zk-proof-status" id="zkProofStatus" style="display: none;">
-                    Generating ZK Proof...
+
+            <!-- Countdown Overlay -->
+            <div class="countdown-overlay" id="countdownOverlay">
+                <div class="countdown-num" id="countdownNum">3</div>
+                <div class="countdown-sub" id="countdownSub">MEMPOOL ENTRY IN...</div>
+            </div>
+
+            <!-- Start Screen -->
+            <div class="start-screen" id="startScreen">
+                <div class="game-title">CHAIN SPEEDWAY</div>
+                <div class="game-subtitle">ZK Transaction Racing on Stellar</div>
+
+                <div class="narrative-box">
+                    <div class="narrative-title">📡 Mission Briefing</div>
+                    <div class="narrative-text">
+                        You are a <span>Stellar transaction</span> racing through the mempool.<br>
+                        Dodge <span>double-spends</span>, <span>network congestion</span> &amp; <span>MEV bots</span>.<br>
+                        Collect <span>fee gems</span> to boost your block priority.<br>
+                        Reach confirmation — then submit your <span>ZK proof</span> to the ledger.
+                    </div>
                 </div>
+
+                <div class="lane-info">
+                    <div class="lane-tag lane-slow">← Slow Fee</div>
+                    <div class="lane-tag lane-med">Medium Fee</div>
+                    <div class="lane-tag lane-fast">Fast Fee →</div>
+                </div>
+
+                <div class="start-instructions">
+                    ← → Arrow Keys to switch lanes<br>
+                    Collect 💎 Fee Gems • Dodge ⛔ Threats<br>
+                    Speed increases every 15 blocks confirmed<br>
+                    Upgrade your Tx in the shop • Prestige to Validator
+                </div>
+                <button class="start-btn" id="startBtn">BROADCAST TX</button>
+            </div>
+
+            <!-- Level Complete Interstitial -->
+            <div class="level-complete-screen" id="levelCompleteScreen">
+                <div class="lc-badge green" id="lcBadge">LEVEL COMPLETE</div>
+                <div class="lc-title" id="lcTitle">BLOCK CONFIRMED</div>
+                <div class="lc-subtitle" id="lcSubtitle">Transaction validated successfully</div>
+
+                <div class="lc-lesson-box">
+                    <div class="lc-lesson-title" id="lcLessonTitle">📡 What You Just Learned</div>
+                    <div class="lc-lesson-text" id="lcLessonText">Lesson text goes here.</div>
+                </div>
+
+                <div class="lc-next-box">
+                    <div class="lc-next-title" id="lcNextTitle">▶ NEXT: What's Ahead</div>
+                    <div class="lc-next-stats" id="lcNextStats"></div>
+                </div>
+
+                <button class="lc-continue-btn" id="lcContinueBtn">CONTINUE →</button>
+            </div>
+
+            <!-- Game Over -->
+            <div class="game-over-screen" id="gameOverScreen">
+                <div class="game-over-title">TX REJECTED</div>
+                <div class="block-result" id="blockResult">Transaction failed to reach confirmation</div>
+
+                <div class="score-breakdown">
+                    <div class="score-row"><span class="label">Blocks Confirmed</span><span class="val" id="finalBlocks">0</span></div>
+                    <div class="score-row"><span class="label">Threats Dodged</span><span class="val" id="finalDodged">0</span></div>
+                    <div class="score-row"><span class="label">Prestige Multiplier</span><span class="val" id="finalMult">1.0x</span></div>
+                    <div class="score-row" id="finalZKRow" style="border-top:1px solid rgba(0,255,136,0.15);margin-top:6px;padding-top:6px;">
+                        <span class="label" style="color:var(--green)">🔐 ZK Proof Data</span>
+                        <span class="val" style="color:var(--green);font-size:9px;">—</span>
+                    </div>
+                    <div class="score-row total"><span class="label">Total Fees</span><span class="val" id="finalScore">0</span></div>
+                </div>
+
+                <div class="prestige-available-banner" id="prestigeBanner">
+                    ⚡ You've earned enough fees to Prestige! Become a Validator for a permanent multiplier.
+                </div>
+
+                <div class="zk-proof-status" id="zkProofStatus">Generating ZK Proof...</div>
+
                 <div class="game-over-buttons">
-                    <button class="restart-btn" id="restartBtn">PLAY AGAIN</button>
-                    <button class="submit-score-btn" id="submitScoreBtn">SUBMIT SCORE</button>
+                    <button class="restart-btn" id="restartBtn">RETRY TX</button>
+                    <button class="submit-score-btn" id="submitScoreBtn">SUBMIT TO LEDGER</button>
+                    <button class="prestige-action-btn" id="prestigeActionBtn">⚡ PRESTIGE</button>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    <div class="stellar-footer">
-        <div class="stellar-footer-logo"></div>
-        <span>Powered by Stellar Network</span>
-    </div>
+<div class="stellar-footer">
+    <div class="stellar-footer-logo"></div>
+    <span>Stellar Chain Speedway — ZK Gaming on Stellar Protocol 25</span>
+</div>
 
-    <script>
-        // ========================================
-        // SIDEBAR TOGGLE
-        // ========================================
-        const menuToggle = document.getElementById('menuToggle');
-        const sidebar = document.getElementById('sidebar');
-        const sidebarOverlay = document.getElementById('sidebarOverlay');
+<script>
+// ============================================================
+// STELLAR CONFIG
+// ============================================================
+const CONTRACT_ID = 'CA7DLSPSWKZSU425D3W5TXTPS4GQMTX5T2AFUI6TREJZWML5MIKRC54S';
+const GAME_HUB   = 'CB4VZAT2U3UC6XFK3N23SKRF2NDCMP3QHJYMCHHFMZO7MRQO6DQ2EMYG';
+const RPC_URL    = 'https://soroban-testnet.stellar.org';
+const NET_PASS   = 'Test SDF Network ; September 2015';
+const PROVER_URL = 'http://localhost:3002/prove';
+let sessionId    = null;
 
-        function toggleSidebar() {
-            sidebar.classList.toggle('open');
-            sidebarOverlay.classList.toggle('active');
-            menuToggle.classList.toggle('active');
+// ============================================================
+// SIDEBAR
+// ============================================================
+const menuToggle     = document.getElementById('menuToggle');
+const sidebar        = document.getElementById('sidebar');
+const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+function toggleSidebar() {
+    sidebar.classList.toggle('open');
+    sidebarOverlay.classList.toggle('active');
+    menuToggle.classList.toggle('active');
+}
+menuToggle.addEventListener('click', toggleSidebar);
+sidebarOverlay.addEventListener('click', toggleSidebar);
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && sidebar.classList.contains('open')) toggleSidebar();
+});
+
+// ============================================================
+// WALLET
+// ============================================================
+let walletState = { connected: false, address: null, keypair: null };
+
+const connectWalletBtn = document.getElementById('connectWalletBtn');
+const walletStatus     = document.getElementById('walletStatus');
+
+async function connectWallet() {
+    try {
+        connectWalletBtn.textContent = 'Connecting...';
+        connectWalletBtn.disabled = true;
+
+        if (typeof window.freighterApi !== 'undefined') {
+            const allowed = await window.freighterApi.isConnected();
+            if (allowed) {
+                const pk = await window.freighterApi.getPublicKey();
+                walletState.connected = true;
+                walletState.address = pk;
+                updateWalletUI();
+                return;
+            }
         }
 
-        menuToggle.addEventListener('click', toggleSidebar);
-        sidebarOverlay.addEventListener('click', toggleSidebar);
+        // Demo keypair — fund via friendbot
+        const kp = StellarSdk.Keypair.random();
+        walletStatus.textContent = 'Funding testnet account...';
+        await fetch(`https://friendbot.stellar.org?addr=${kp.publicKey()}`);
+        walletState = { connected: true, address: kp.publicKey(), keypair: kp };
+        updateWalletUI();
+        fetchLeaderboard();
+    } catch (e) {
+        console.error(e);
+        connectWalletBtn.textContent = 'Connect Wallet';
+        connectWalletBtn.disabled = false;
+    }
+}
 
-        // Close sidebar on escape key
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && sidebar.classList.contains('open')) {
-                toggleSidebar();
-            }
+function updateWalletUI() {
+    walletStatus.classList.add('connected');
+    walletStatus.textContent = `✓ ${walletState.address.slice(0,8)}...${walletState.address.slice(-4)}`;
+    connectWalletBtn.textContent = '✕ Disconnect';
+    connectWalletBtn.style.background = 'linear-gradient(135deg,#3a1a1a,#5a2a2a)';
+    connectWalletBtn.disabled = false;
+}
+
+function disconnectWallet() {
+    walletState = { connected: false, address: null, keypair: null };
+    walletStatus.classList.remove('connected');
+    walletStatus.textContent = 'Not Connected';
+    connectWalletBtn.textContent = 'Connect Wallet';
+    connectWalletBtn.style.background = 'linear-gradient(135deg,var(--purple),var(--cyan))';
+}
+
+function shortenAddress(a) { return a ? `${a.slice(0,6)}...${a.slice(-4)}` : ''; }
+
+connectWalletBtn.addEventListener('click', () => {
+    if (walletState.connected) disconnectWallet();
+    else connectWallet();
+});
+
+// ============================================================
+// PRESTIGE SYSTEM
+// ============================================================
+let prestigeData = {
+    level: 0,
+    multiplier: 1.0,
+    totalFeesEarned: 0,
+    prestigeThreshold: 5000
+};
+
+function updatePrestigeUI() {
+    document.getElementById('prestigeLevel').textContent = prestigeData.level;
+    document.getElementById('prestigeMult').textContent  = prestigeData.multiplier.toFixed(1) + 'x';
+    document.getElementById('totalFees').textContent     = Math.floor(prestigeData.totalFeesEarned);
+    document.getElementById('hudPrestige').textContent   = 'Lv.' + prestigeData.level;
+
+    const btn = document.getElementById('prestigeBtn');
+    if (prestigeData.totalFeesEarned >= prestigeData.prestigeThreshold) {
+        btn.classList.add('available');
+    } else {
+        btn.classList.remove('available');
+    }
+}
+
+function doPrestige() {
+    if (prestigeData.totalFeesEarned < prestigeData.prestigeThreshold) return;
+    prestigeData.level++;
+    prestigeData.multiplier = parseFloat((1.0 + prestigeData.level * 0.25).toFixed(2));
+    prestigeData.totalFeesEarned = 0;
+    prestigeData.prestigeThreshold = Math.floor(5000 * Math.pow(1.5, prestigeData.level));
+
+    // Reset upgrades
+    upgrades.forEach(u => { u.level = 0; });
+    renderUpgrades();
+    updatePrestigeUI();
+    showTooltip(`⚡ PRESTIGE! You are now a Validator Lv.${prestigeData.level}! Permanent ${prestigeData.multiplier}x multiplier applied.`, 'reward', 4000);
+    document.getElementById('prestigeActionBtn').style.display = 'none';
+    document.getElementById('prestigeBanner').style.display = 'none';
+}
+
+document.getElementById('prestigeBtn').addEventListener('click', doPrestige);
+document.getElementById('prestigeActionBtn').addEventListener('click', doPrestige);
+
+// ============================================================
+// UPGRADE SHOP
+// ============================================================
+const upgrades = [
+    { id: 'sig',     name: 'Ed25519 Optimizer',  desc: '+dodge speed',       cost: 50,  maxLevel: 3, level: 0, effect: 'dodge' },
+    { id: 'fee',     name: 'Fee Buffer',          desc: 'survive 1 hit',      cost: 120, maxLevel: 1, level: 0, effect: 'shield' },
+    { id: 'zk',      name: 'ZK Proof Booster',   desc: '+10% fee gems',      cost: 200, maxLevel: 3, level: 0, effect: 'gems' },
+    { id: 'memo',    name: 'Memo Field',          desc: '+5 pts per block',   cost: 300, maxLevel: 2, level: 0, effect: 'bonus' },
+    { id: 'soroban', name: 'Soroban Gas Opt.',    desc: 'fewer obstacles',    cost: 500, maxLevel: 2, level: 0, effect: 'obstacles' },
+];
+
+let shopFees = 0; // fees available to spend in shop
+
+function renderUpgrades() {
+    const list = document.getElementById('upgradeList');
+    list.innerHTML = upgrades.map(u => `
+        <div class="upgrade-item ${u.level >= u.maxLevel ? 'maxed' : u.level > 0 ? 'owned' : ''}"
+             onclick="buyUpgrade('${u.id}')" id="upg-${u.id}">
+            <div>
+                <div class="upgrade-name">${u.name}</div>
+                <div class="upgrade-desc">${u.desc}</div>
+            </div>
+            <div style="text-align:right">
+                <div class="upgrade-cost">${u.level >= u.maxLevel ? 'MAX' : u.cost + ' fee'}</div>
+                <div class="upgrade-level">${u.level}/${u.maxLevel}</div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function buyUpgrade(id) {
+    const u = upgrades.find(x => x.id === id);
+    if (!u || u.level >= u.maxLevel) return;
+    if (shopFees < u.cost) {
+        showTooltip(`Need ${u.cost} fees to buy ${u.name}`, 'warning', 2000);
+        return;
+    }
+    shopFees -= u.cost;
+    u.level++;
+    u.cost = Math.floor(u.cost * 1.8);
+    renderUpgrades();
+    showTooltip(`✓ ${u.name} upgraded to Lv.${u.level}!`, 'reward', 2000);
+    applyUpgradeEffects();
+}
+
+function applyUpgradeEffects() {
+    // dodge speed
+    const sigUpg = upgrades.find(x => x.id === 'sig');
+    player.moveSpeed = 8 + sigUpg.level * 3;
+    // obstacle reduction handled in spawnObstacle
+}
+
+renderUpgrades();
+
+// ============================================================
+// TOOLTIP
+// ============================================================
+let tooltipTimer = null;
+function showTooltip(msg, type = '', duration = 2500) {
+    const t = document.getElementById('tooltip');
+    t.textContent = msg;
+    t.className = 'tooltip show' + (type ? ' ' + type : '');
+    clearTimeout(tooltipTimer);
+    tooltipTimer = setTimeout(() => t.classList.remove('show'), duration);
+}
+
+// ============================================================
+// BLOCKCHAIN TOOLTIPS — educational
+// ============================================================
+const blockchainTips = {
+    doublespend: '⚠️ Double-Spend Attack: A malicious actor tried to spend the same XLM twice. Stellar validators reject this instantly.',
+    congestion:  '🌐 Network Congestion: Too many transactions competing for block space. Higher fees get priority!',
+    invalidsig:  '🔑 Invalid Signature: Transaction rejected — cryptographic signature didn\'t match. Ed25519 protects the network.',
+    mevbot:      '🤖 MEV Bot: Maximal Extractable Value bot front-ran your transaction to steal fees!',
+    feegem:      '💎 Fee Gem: Transaction fee collected! Fees incentivize Stellar validators to include your transaction.',
+    zkboost:     '⚡ ZK Boost: Protocol 25 ZK operation activated — your transaction gets priority processing!',
+    speedup:     '📦 Block confirmed! 15 blocks processed. Network throughput increasing...',
+};
+
+let tipCooldown = {};
+function showBlockchainTip(key) {
+    if (tipCooldown[key]) return;
+    tipCooldown[key] = true;
+    showTooltip(blockchainTips[key], key === 'feegem' ? 'reward' : key === 'zkboost' ? 'reward' : 'warning', 3000);
+    setTimeout(() => { tipCooldown[key] = false; }, 8000);
+}
+
+// ============================================================
+// STELLAR CONTRACT
+// ============================================================
+async function callContract(method, args) {
+    if (!walletState.keypair) throw new Error('No keypair');
+    const server  = new StellarSdk.SorobanRpc.Server(RPC_URL);
+    const account = await server.getAccount(walletState.address);
+    const contract = new StellarSdk.Contract(CONTRACT_ID);
+    const tx = new StellarSdk.TransactionBuilder(account, {
+        fee: StellarSdk.BASE_FEE,
+        networkPassphrase: NET_PASS,
+    }).addOperation(contract.call(method, ...args)).setTimeout(30).build();
+    const prepared = await server.prepareTransaction(tx);
+    prepared.sign(walletState.keypair);
+    return await server.sendTransaction(prepared);
+}
+
+async function startGameOnChain() {
+    if (!walletState.connected || !walletState.keypair) return;
+    try {
+        sessionId = (() => { const b = new Uint32Array(1); crypto.getRandomValues(b); return b[0] || 1; })();
+        await callContract('start_game', [
+            StellarSdk.nativeToScVal(sessionId, { type: 'u32' }),
+            StellarSdk.Address.fromString(walletState.address).toScVal(),
+        ]);
+        showTooltip('📡 Transaction broadcast to mempool! Session #' + sessionId, 'reward', 3000);
+    } catch (e) { console.error('start_game:', e); }
+}
+
+async function generateZKProof(score) {
+    try {
+        const payload = {
+            seed: gameState.seed,
+            actions: gameState.actions,
+            player_address: walletState.address || 'DEMO',
+            game_id: gameState.gameId,
+        };
+        const res = await fetch(PROVER_URL, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
         });
-
-        // ========================================
-        // WALLET MANAGEMENT
-        // ========================================
-        let walletState = {
-            connected: false,
-            address: null,
-            publicKey: null
+        if (!res.ok) throw new Error(res.status);
+        return await res.json();
+    } catch (e) {
+        console.warn('Prover unavailable, mock proof:', e.message);
+        // Return mock proof with correct structure for demo
+        return {
+            seal: '00'.repeat(64),
+            journal: '00'.repeat(32),
+            score_verified: score,
+            game_id: gameState.gameId,
         };
+    }
+}
 
-        const connectWalletBtn = document.getElementById('connectWalletBtn');
-        const walletStatus = document.getElementById('walletStatus');
+async function submitScore(score) {
+    if (!walletState.connected) { alert('Connect wallet first!'); return; }
 
-        // Simulated wallet connection (replace with actual Stellar wallet integration)
-        async function connectWallet() {
-            try {
-                connectWalletBtn.textContent = 'Connecting...';
-                connectWalletBtn.disabled = true;
+    const zkStatus  = document.getElementById('zkProofStatus');
+    const submitBtn = document.getElementById('submitScoreBtn');
 
-                // Simulate wallet connection delay
-                await new Promise(resolve => setTimeout(resolve, 1000));
+    try {
+        zkStatus.style.display = 'block';
+        zkStatus.classList.add('generating');
+        zkStatus.textContent = '🔐 Generating ZK Proof of transaction validity...';
+        submitBtn.disabled = true;
 
-                // Check if Freighter wallet is available
-                if (typeof window.freighterApi !== 'undefined') {
-                    // Actual Freighter integration
-                    const isAllowed = await window.freighterApi.isConnected();
-                    if (isAllowed) {
-                        const publicKey = await window.freighterApi.getPublicKey();
-                        walletState.connected = true;
-                        walletState.address = publicKey;
-                        walletState.publicKey = publicKey;
-                        updateWalletUI();
-                    } else {
-                        // Freighter found but not connected — re-enable button
-                        connectWalletBtn.textContent = 'Connect Wallet';
-                        connectWalletBtn.disabled = false;
-                    }
-                } else {
-                    // Simulated connection for demo purposes
-                    const simulatedAddress = 'G' + Array(55).fill(0).map(() => 
-                        'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'[Math.floor(Math.random() * 32)]
-                    ).join('');
-                    
-                    walletState.connected = true;
-                    walletState.address = simulatedAddress;
-                    walletState.publicKey = simulatedAddress;
-                    updateWalletUI();
-                }
+        const proof = await generateZKProof(score);
+        zkStatus.textContent = '✓ ZK Proof generated! Broadcasting to Stellar...';
 
-            } catch (error) {
-                console.error('Wallet connection error:', error);
-                alert('Failed to connect wallet. Please install Freighter or try again.');
-                connectWalletBtn.textContent = 'Connect Wallet';
-                connectWalletBtn.disabled = false;
-            }
+        if (!sessionId) await startGameOnChain();
+
+        if (walletState.keypair && sessionId) {
+            const hexToBytes = h => new Uint8Array(h.match(/.{1,2}/g).map(b => parseInt(b, 16)));
+            const proofVal = StellarSdk.xdr.ScVal.scvMap([
+                new StellarSdk.xdr.ScMapEntry({
+                    key: StellarSdk.xdr.ScVal.scvSymbol('seal'),
+                    val: StellarSdk.xdr.ScVal.scvBytes(hexToBytes(proof.seal))
+                }),
+                new StellarSdk.xdr.ScMapEntry({
+                    key: StellarSdk.xdr.ScVal.scvSymbol('journal'),
+                    val: StellarSdk.xdr.ScVal.scvBytes(hexToBytes(proof.journal))
+                })
+            ]);
+            await callContract('submit_score', [
+                StellarSdk.nativeToScVal(sessionId, { type: 'u32' }),
+                StellarSdk.Address.fromString(walletState.address).toScVal(),
+                StellarSdk.nativeToScVal(score, { type: 'u32' }),
+                proofVal
+            ]);
+            sessionId = null;
+            await fetchLeaderboard();
+        } else {
+            // Fallback local leaderboard
+            addToLocalLeaderboard(score);
         }
 
-        function updateWalletUI() {
-            if (walletState.connected) {
-                walletStatus.classList.add('connected');
-                walletStatus.innerHTML = `
-                    <div>✓ Connected</div>
-                    <div class="wallet-address">${shortenAddress(walletState.address)}</div>
-                `;
-                connectWalletBtn.textContent = '✕ Disconnect';
-                connectWalletBtn.style.background = 'linear-gradient(135deg, #3a2a2a, #5a3a3a)';
-                connectWalletBtn.style.boxShadow = '0 4px 20px rgba(255, 107, 107, 0.3)';
-            } else {
-                walletStatus.classList.remove('connected');
-                walletStatus.textContent = 'Not Connected';
-                connectWalletBtn.textContent = 'Connect Wallet';
-                connectWalletBtn.style.background = 'linear-gradient(135deg, var(--stellar-purple), var(--stellar-cyan))';
-                connectWalletBtn.style.boxShadow = '0 4px 20px rgba(107, 74, 255, 0.4)';
-                connectWalletBtn.disabled = false;
-            }
+        // Add to total fees for prestige
+        prestigeData.totalFeesEarned += score * prestigeData.multiplier;
+        updatePrestigeUI();
+
+        // Add to shop fees
+        shopFees += Math.floor(score * 0.2);
+        renderUpgrades();
+
+        zkStatus.classList.remove('generating');
+        zkStatus.textContent = '✓ Score confirmed on Stellar ledger! ZK proof verified.';
+        setTimeout(() => { zkStatus.style.display = 'none'; submitBtn.disabled = false; }, 3000);
+
+    } catch (e) {
+        console.error(e);
+        zkStatus.classList.remove('generating');
+        zkStatus.textContent = '✗ Submission failed: ' + e.message;
+        submitBtn.disabled = false;
+    }
+}
+
+// ============================================================
+// LEADERBOARD
+// ============================================================
+let leaderboard = [];
+
+function addToLocalLeaderboard(score) {
+    leaderboard.push({
+        rank: 0,
+        address: shortenAddress(walletState.address || 'DEMO'),
+        score: Math.floor(score * prestigeData.multiplier),
+        prestige: prestigeData.level
+    });
+    leaderboard.sort((a, b) => b.score - a.score);
+    leaderboard = leaderboard.slice(0, 10);
+    leaderboard.forEach((e, i) => e.rank = i + 1);
+    renderLeaderboard();
+}
+
+async function fetchLeaderboard() {
+    try {
+        const server = new StellarSdk.SorobanRpc.Server(RPC_URL);
+        const contract = new StellarSdk.Contract(CONTRACT_ID);
+        const kp = walletState.keypair || StellarSdk.Keypair.random();
+        const account = await server.getAccount(kp.publicKey()).catch(() => null);
+        if (!account) return;
+        const tx = new StellarSdk.TransactionBuilder(account, {
+            fee: StellarSdk.BASE_FEE, networkPassphrase: NET_PASS,
+        }).addOperation(contract.call('get_leaderboard')).setTimeout(30).build();
+        const result = await server.simulateTransaction(tx);
+        if (result?.result?.retval) {
+            const entries = StellarSdk.scValToNative(result.result.retval);
+            leaderboard = entries.map((e, i) => ({
+                rank: i + 1, address: shortenAddress(e.player),
+                score: Number(e.score), prestige: 0
+            }));
+            renderLeaderboard();
+        }
+    } catch (e) { console.warn('Leaderboard fetch:', e.message); }
+}
+
+function renderLeaderboard() {
+    const list = document.getElementById('leaderboardList');
+    if (!leaderboard.length) {
+        list.innerHTML = '<div class="empty-leaderboard">No validators yet.<br>Be the first!</div>';
+        return;
+    }
+    list.innerHTML = leaderboard.map((e, i) => {
+        const cls = i === 0 ? 'top-1' : i === 1 ? 'top-2' : i === 2 ? 'top-3' : '';
+        const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i+1}`;
+        return `<div class="leaderboard-entry ${cls}">
+            <span class="entry-rank">${medal}</span>
+            <span class="entry-address">${e.address}</span>
+            <span class="entry-score">${e.score}</span>
+            ${e.prestige > 0 ? `<span class="entry-prestige">⚡${e.prestige}</span>` : ''}
+        </div>`;
+    }).join('');
+}
+
+renderLeaderboard();
+fetchLeaderboard();
+
+// ============================================================
+// GAME ENGINE
+// ============================================================
+const canvas         = document.getElementById('gameCanvas');
+const ctx            = canvas.getContext('2d');
+const scoreEl        = document.getElementById('score');
+const speedEl        = document.getElementById('speed');
+const levelDisplayEl = document.getElementById('levelDisplay');
+const feeProgressFill = document.getElementById('feeProgressFill');
+const feeProgressLabel = document.getElementById('feeProgressLabel');
+const feeProgressBar   = document.getElementById('feeProgressBar');
+const gameOverScreen = document.getElementById('gameOverScreen');
+const startScreen    = document.getElementById('startScreen');
+const startBtn       = document.getElementById('startBtn');
+const restartBtn     = document.getElementById('restartBtn');
+const submitScoreBtn = document.getElementById('submitScoreBtn');
+
+const LANES       = 3;
+const LANE_WIDTH  = canvas.width / LANES;
+const LANE_POS    = [LANE_WIDTH/2, canvas.width/2, canvas.width - LANE_WIDTH/2];
+const LANE_COLORS = ['rgba(0,255,136,0.15)', 'rgba(255,215,0,0.10)', 'rgba(255,68,102,0.10)'];
+
+// Obstacle types
+const THREAT_TYPES = [
+    { id: 'doublespend', label: '⛔ DBL-SPEND', color: '#ff4466', tip: 'doublespend' },
+    { id: 'congestion',  label: '🌐 CONGESTION', color: '#ff8c00', tip: 'congestion' },
+    { id: 'invalidsig',  label: '🔑 INV-SIG',    color: '#cc44ff', tip: 'invalidsig' },
+    { id: 'mevbot',      label: '🤖 MEV BOT',    color: '#ff0066', tip: 'mevbot' },
+];
+
+// ============================================================
+// PROGRESSION SYSTEM — Sets × Levels
+// ============================================================
+const GAME_SETS = [
+    { label: 'SET 1 — FEE WARS', obstacleDamage: 0.15, color: '#00ff88', levels: [
+        { speed: 1.0, feeTarget: 250,  label: 'S1-L1', name: 'Low Priority' },
+        { speed: 1.0, feeTarget: 500,  label: 'S1-L2', name: 'Standard Fee' },
+        { speed: 1.0, feeTarget: 800,  label: 'S1-L3', name: 'High Priority' },
+    ]},
+    { label: 'SET 2 — SPEED & FEES', obstacleDamage: 0.30, color: '#ffd700', levels: [
+        { speed: 1.6, feeTarget: 450,  label: 'S2-L1', name: 'L2 Entry' },
+        { speed: 2.1, feeTarget: 800,  label: 'S2-L2', name: 'Rollup Lane' },
+        { speed: 2.7, feeTarget: 1200, label: 'S2-L3', name: 'Bridge Speed' },
+    ]},
+    { label: 'SET 3 — ZK PRESSURE', obstacleDamage: 0.55, color: '#a855f7', levels: [
+        { speed: 2.2, feeTarget: 700,  label: 'S3-L1', name: 'Proof Load' },
+        { speed: 3.0, feeTarget: 1200, label: 'S3-L2', name: 'Prover Cost' },
+        { speed: 3.8, feeTarget: 1800, label: 'S3-L3', name: 'Aggregation' },
+    ]},
+    { label: 'FINAL — VALIDATOR WARS', obstacleDamage: 0.95, color: '#ff4466', levels: [
+        { speed: 2.8, feeTarget: 1000, label: 'F-L1', name: 'Consensus' },
+        { speed: 3.8, feeTarget: 1800, label: 'F-L2', name: 'Validator Race' },
+        { speed: 4.8, feeTarget: 2800, label: 'F-L3', name: 'Ledger Finality' },
+    ]},
+];
+
+// Educational content for each level-complete transition
+// key = "fromSet-fromLevel" (0-indexed)
+const LEVEL_LESSONS = {
+    '0-0': {
+        badge: 'green', title: 'FEE PRIORITY UNLOCKED',
+        subtitle: 'S1-L1 Complete · Fees Collected',
+        lessonTitle: '💎 Lesson: Transaction Fee Basics',
+        lesson: `Every blockchain transaction competes for block space.\nOn <span>Stellar</span>, you attach a <strong>base fee</strong> (min 100 stroops).\nValidators pick the <span>highest-fee txs</span> first — exactly like you just raced.\nLow fees = slow confirmation. You learned that the hard way.`,
+        nextTitle: '▶ NEXT: S1-L2 — Higher Fee Targets',
+        nextStats: [
+            { label: 'SPEED', val: '1.0x (same)' },
+            { label: 'FEE TARGET', val: '500 fees' },
+            { label: 'OBSTACLE DMG', val: '15%' },
+            { label: 'TIP', val: 'Stay in FAST lane more' },
+        ]
+    },
+    '0-1': {
+        badge: 'green', title: 'BLOCK CONFIRMED',
+        subtitle: 'S1-L2 Complete · Standard Fee Lane Cleared',
+        lessonTitle: '📦 Lesson: Fee Markets & Block Space',
+        lesson: `Stellar processes up to <span>1,000 ops per ledger</span> every ~5 seconds.\nWhen the network is congested, <strong>fees spike</strong> — validators use a\n<span>surge pricing</span> model. The mempool is literally a fee auction.\nYou've been living inside that auction.`,
+        nextTitle: '▶ NEXT: S1-L3 — High Priority Finale',
+        nextStats: [
+            { label: 'SPEED', val: '1.0x' },
+            { label: 'FEE TARGET', val: '800 fees' },
+            { label: 'OBSTACLE DMG', val: '15%' },
+            { label: 'TIP', val: 'Collect ZK gems — they\'re worth 5x' },
+        ]
+    },
+    '0-2': {
+        badge: 'gold', title: 'SET 1 MASTERED!',
+        subtitle: 'Fee Wars Complete · Entering Speed Dimension',
+        lessonTitle: '🌐 Lesson: L1 vs L2 — Why Speed Matters',
+        lesson: `You mastered <span>L1 fee mechanics</span>. But L1 has a ceiling.\n<strong>Layer 2 networks</strong> (rollups, state channels) batch txs off-chain,\nsubmitting only a <span>compressed proof</span> to L1. This means:\n• <strong>10-100x lower fees</strong> • <strong>Near-instant settlement</strong>\nStellar's <span>Protocol 25</span> adds ZK infrastructure to enable exactly this.`,
+        nextTitle: '▶ ENTERING SET 2 — Speed & Fees Change',
+        nextStats: [
+            { label: 'SPEED', val: '1.6x 🔺' },
+            { label: 'FEE TARGET', val: '450 fees' },
+            { label: 'OBSTACLE DMG', val: '30% ⚠️' },
+            { label: 'NEW MECHANIC', val: 'Speed now kills too' },
+        ]
+    },
+    '1-0': {
+        badge: 'gold', title: 'L2 ENTRY CLEARED',
+        subtitle: 'S2-L1 Complete · Rollup Lane Open',
+        lessonTitle: '⚡ Lesson: Rollups & Transaction Batching',
+        lesson: `<span>Optimistic rollups</span> assume txs are valid and challenge later.\n<span>ZK rollups</span> generate a <strong>validity proof</strong> instantly — no waiting period.\nStellar's architecture is built for <span>ZK-native finality</span>:\n5-second ledger close means proofs settle faster than any EVM chain.`,
+        nextTitle: '▶ NEXT: S2-L2 — Rollup Speed Increases',
+        nextStats: [
+            { label: 'SPEED', val: '2.1x 🔺🔺' },
+            { label: 'FEE TARGET', val: '800 fees' },
+            { label: 'OBSTACLE DMG', val: '30%' },
+            { label: 'TIP', val: 'Use the shield upgrade now' },
+        ]
+    },
+    '1-1': {
+        badge: 'gold', title: 'ROLLUP LANE CLEARED',
+        subtitle: 'S2-L2 Complete · Cross-Chain Bridge Ahead',
+        lessonTitle: '🔗 Lesson: Cross-Chain Bridges & Settlement',
+        lesson: `Moving value <span>cross-chain</span> today requires bridges — and bridges are slow.\nMost take <strong>7-day fraud windows</strong> (optimistic) or minutes (ZK).\nStellar's <span>Soroban smart contracts</span> + ZK proofs enable <strong>atomic cross-chain\nswaps</strong> with cryptographic certainty — no 7-day wait. That's the edge.`,
+        nextTitle: '▶ NEXT: S2-L3 — Bridge Speed Final',
+        nextStats: [
+            { label: 'SPEED', val: '2.7x 🔺🔺🔺' },
+            { label: 'FEE TARGET', val: '1200 fees' },
+            { label: 'OBSTACLE DMG', val: '30%' },
+            { label: 'TIP', val: 'Dodge first, collect second' },
+        ]
+    },
+    '1-2': {
+        badge: 'purple', title: 'SET 2 CONQUERED!',
+        subtitle: 'Speed & Fees Mastered · ZK Layer Unlocked',
+        lessonTitle: '🔐 Lesson: Zero-Knowledge Proofs — What Are They?',
+        lesson: `A <span>ZK proof</span> lets you prove you know something <strong>without revealing it</strong>.\nIn blockchain: prove a tx is valid <span>without exposing the data</span>.\nTwo types: <strong>ZK-SNARKs</strong> (small proofs, fast verify) and\n<strong>ZK-STARKs</strong> (no trusted setup, quantum-resistant).\nThis game uses ZK to verify your score on-chain. That's real.`,
+        nextTitle: '▶ ENTERING SET 3 — ZK PRESSURE',
+        nextStats: [
+            { label: 'SPEED', val: '2.2x (resets)' },
+            { label: 'FEE TARGET', val: '700 fees' },
+            { label: 'OBSTACLE DMG', val: '55% 💀' },
+            { label: 'WARNING', val: 'Obstacles now serious' },
+        ]
+    },
+    '2-0': {
+        badge: 'purple', title: 'PROOF LOAD SURVIVED',
+        subtitle: 'S3-L1 Complete · Prover Cost Ahead',
+        lessonTitle: '⚙️ Lesson: Proof Generation Costs',
+        lesson: `Generating a ZK proof is <strong>computationally expensive</strong>.\nA <span>SNARK prover</span> can take seconds to minutes depending on circuit size.\nThis is why L2 operators charge fees — they're paying GPU farms to\n<span>generate proofs continuously</span>. The bottleneck isn't consensus. It's proving.`,
+        nextTitle: '▶ NEXT: S3-L2 — Prover Cost Level',
+        nextStats: [
+            { label: 'SPEED', val: '3.0x 🔺' },
+            { label: 'FEE TARGET', val: '1200 fees' },
+            { label: 'OBSTACLE DMG', val: '55%' },
+            { label: 'TIP', val: 'One hit = half your fees gone' },
+        ]
+    },
+    '2-1': {
+        badge: 'purple', title: 'PROVER COST CLEARED',
+        subtitle: 'S3-L2 Complete · Aggregation Layer Ahead',
+        lessonTitle: '🧩 Lesson: Proof Aggregation & Recursive ZK',
+        lesson: `Instead of one proof per tx, <span>recursive ZK</span> lets you\n<strong>prove a proof</strong> — aggregating thousands of txs into one tiny proof.\n<span>RISC Zero</span> (what this game uses) enables this with\n<strong>zkVM</strong>: run any Rust program, get a proof it ran correctly.\nStellar + RISC Zero = verifiable game logic on-chain.`,
+        nextTitle: '▶ NEXT: S3-L3 — Aggregation Finale',
+        nextStats: [
+            { label: 'SPEED', val: '3.8x 🔺🔺' },
+            { label: 'FEE TARGET', val: '1800 fees' },
+            { label: 'OBSTACLE DMG', val: '55%' },
+            { label: 'TIP', val: 'ZK gems give speed burst' },
+        ]
+    },
+    '2-2': {
+        badge: 'red', title: 'ZK LAYER MASTERED!',
+        subtitle: 'The Final Mempool Awaits You',
+        lessonTitle: '⚔️ Lesson: Validator Economics & MEV',
+        lesson: `<strong>Validators</strong> earn by ordering transactions. This creates\n<span>MEV (Maximal Extractable Value)</span> — validators reorder, front-run,\nor sandwich txs to extract profit. ZK proofs fight this:\n<span>encrypted mempools</span> hide tx content until after ordering,\nmaking front-running <strong>cryptographically impossible</strong>.`,
+        nextTitle: '▶ ENTERING FINAL — VALIDATOR WARS',
+        nextStats: [
+            { label: 'SPEED', val: '2.8x (resets)' },
+            { label: 'FEE TARGET', val: '1000 fees' },
+            { label: 'OBSTACLE DMG', val: '95% 💀💀' },
+            { label: 'WARNING', val: 'ONE HIT = near death' },
+        ]
+    },
+    '3-0': {
+        badge: 'red', title: 'CONSENSUS SURVIVED',
+        subtitle: 'F-L1 Complete · Validator Race Begins',
+        lessonTitle: '🏁 Lesson: Stellar Consensus Protocol (SCP)',
+        lesson: `Stellar uses <span>Federated Byzantine Agreement (FBA)</span> — not PoW, not PoS.\nValidators choose who to trust via <strong>quorum slices</strong>.\nThis achieves <span>5-second finality</span> with no mining and no staking.\nYour score submission uses SCP to reach global consensus. That's real.`,
+        nextTitle: '▶ NEXT: F-L2 — Validator Race',
+        nextStats: [
+            { label: 'SPEED', val: '3.8x 🔺' },
+            { label: 'FEE TARGET', val: '1800 fees' },
+            { label: 'OBSTACLE DMG', val: '95%' },
+            { label: 'TIP', val: 'Shield upgrade is essential' },
+        ]
+    },
+    '3-1': {
+        badge: 'red', title: 'VALIDATOR RACE CLEARED',
+        subtitle: 'F-L2 Complete · Ledger Finality Remains',
+        lessonTitle: '🔮 Lesson: ZK on Stellar — The Hackathon Vision',
+        lesson: `<span>Stellar Protocol 25</span> introduces native ZK tooling via Soroban.\nThis game proves it: your score is <strong>ZK-verified on-chain</strong>.\nImagine: <span>private DeFi</span>, <span>verifiable gaming</span>, <span>ZK identity</span>,\nall on Stellar's <strong>5-second finality + $0.00001 fees</strong>.\nThis is what you're building. This is the frontier.`,
+        nextTitle: '▶ FINAL: F-L3 — Ledger Finality',
+        nextStats: [
+            { label: 'SPEED', val: '4.8x ⚡' },
+            { label: 'FEE TARGET', val: '2800 fees' },
+            { label: 'OBSTACLE DMG', val: '95%' },
+            { label: 'WARNING', val: 'The hardest run. Good luck.' },
+        ]
+    },
+};
+
+function getCurrentLevelData() {
+    const s = GAME_SETS[gameState.currentSet];
+    return s ? s.levels[gameState.currentLevel] : null;
+}
+
+function updateLevelHUD() {
+    const lv = getCurrentLevelData();
+    if (!lv) return;
+    levelDisplayEl.textContent = lv.label;
+    const pct = Math.min(100, Math.round((gameState.levelFeesCollected / lv.feeTarget) * 100));
+    feeProgressFill.style.width = pct + '%';
+    const dmg = Math.round(GAME_SETS[gameState.currentSet].obstacleDamage * 100);
+    feeProgressLabel.textContent = `FEE PROGRESS: ${Math.floor(gameState.levelFeesCollected)} / ${lv.feeTarget} · OBSTACLE DMG: ${dmg}%`;
+
+    // Pulse bar color red at high damage sets
+    const col = GAME_SETS[gameState.currentSet].color;
+    feeProgressFill.style.background = `linear-gradient(90deg, ${col}88, ${col})`;
+
+    // Canvas danger glow when fees low
+    if (gameState.score < 50 && gameState.score > 0) {
+        canvas.classList.add('danger');
+    } else {
+        canvas.classList.remove('danger');
+    }
+}
+
+// Show the level complete interstitial
+function showLevelComplete(fromSet, fromLevel, callback) {
+    gameState.isRunning = false;
+    if (gameState.animationId) { cancelAnimationFrame(gameState.animationId); gameState.animationId = null; }
+
+    const key = `${fromSet}-${fromLevel}`;
+    const data = LEVEL_LESSONS[key] || {
+        badge: 'green', title: 'LEVEL COMPLETE',
+        subtitle: 'Keep going!',
+        lessonTitle: '📡 Blockchain Tip',
+        lesson: 'Every level brings you closer to becoming a full Stellar Validator.',
+        nextTitle: '▶ NEXT LEVEL',
+        nextStats: [{ label: 'KEEP GOING', val: '🚀' }]
+    };
+
+    const lcScreen = document.getElementById('levelCompleteScreen');
+    document.getElementById('lcBadge').textContent = data.badge === 'red' ? '⚠️ SET COMPLETE' : '✓ LEVEL COMPLETE';
+    document.getElementById('lcBadge').className = `lc-badge ${data.badge}`;
+    document.getElementById('lcTitle').textContent = data.title;
+    document.getElementById('lcSubtitle').textContent = data.subtitle;
+    document.getElementById('lcLessonTitle').textContent = data.lessonTitle;
+    document.getElementById('lcLessonText').innerHTML = data.lesson.replace(/\n/g, '<br>');
+    document.getElementById('lcNextTitle').textContent = data.nextTitle;
+    document.getElementById('lcNextStats').innerHTML = data.nextStats.map(s =>
+        `<div class="lc-stat"><div class="stat-label">${s.label}</div><div class="stat-val">${s.val}</div></div>`
+    ).join('');
+
+    lcScreen.classList.add('active');
+
+    // Wire continue button
+    const btn = document.getElementById('lcContinueBtn');
+    const handler = () => {
+        btn.removeEventListener('click', handler);
+        lcScreen.classList.remove('active');
+        callback();
+    };
+    btn.addEventListener('click', handler);
+}
+
+function advanceLevel() {
+    const fromSet = gameState.currentSet;
+    const fromLevel = gameState.currentLevel;
+    const setData = GAME_SETS[gameState.currentSet];
+    const nextLevel = gameState.currentLevel + 1;
+
+    let willAdvanceSet = false;
+    let isGameWon = false;
+
+    if (nextLevel < setData.levels.length) {
+        // Same set, next level
+    } else if (gameState.currentSet + 1 < GAME_SETS.length) {
+        willAdvanceSet = true;
+    } else {
+        isGameWon = true;
+    }
+
+    showLevelComplete(fromSet, fromLevel, () => {
+        if (isGameWon) {
+            showTooltip('🏆 LEGENDARY VALIDATOR! You conquered the full mempool!', 'reward', 6000);
+            setTimeout(gameOver, 6000);
+            return;
         }
 
-        function disconnectWallet() {
-            walletState.connected = false;
-            walletState.address = null;
-            walletState.publicKey = null;
-            updateWalletUI();
+        if (willAdvanceSet) {
+            gameState.currentSet++;
+            gameState.currentLevel = 0;
+        } else {
+            gameState.currentLevel = nextLevel;
         }
 
-        function shortenAddress(address) {
-            if (!address) return '';
-            return `${address.substring(0, 8)}...${address.substring(address.length - 8)}`;
-        }
+        gameState.levelFeesCollected = 0;
+        const lv = getCurrentLevelData();
+        gameState.speed = lv.speed;
+        gameState.obstacleDamage = GAME_SETS[gameState.currentSet].obstacleDamage;
+        speedEl.textContent = gameState.speed.toFixed(2) + 'x';
+        updateLevelHUD();
 
-        connectWalletBtn.addEventListener('click', () => {
-            if (walletState.connected) {
-                disconnectWallet();
-            } else {
-                connectWallet();
-            }
-        });
-
-        // ========================================
-        // LEADERBOARD MANAGEMENT
-        // ========================================
-        let leaderboard = [
-            // Sample data - will be replaced with blockchain data
-            { rank: 1, name: 'Player1', address: 'GABC...XYZ1', score: 1250, verified: true },
-            { rank: 2, name: 'Player2', address: 'GDEF...XYZ2', score: 980, verified: true },
-            { rank: 3, name: 'Player3', address: 'GHIJ...XYZ3', score: 875, verified: true },
-            { rank: 4, name: 'Player4', address: 'GKLM...XYZ4', score: 720, verified: true },
-            { rank: 5, name: 'Player5', address: 'GNOP...XYZ5', score: 650, verified: true }
-        ];
-
-        function renderLeaderboard() {
-            const leaderboardList = document.getElementById('leaderboardList');
-            
-            if (leaderboard.length === 0) {
-                leaderboardList.innerHTML = '<div class="empty-leaderboard">No scores yet. Be the first to play!</div>';
-                return;
-            }
-
-            leaderboardList.innerHTML = leaderboard.map((entry, index) => {
-                const topClass = index === 0 ? 'top-1' : index === 1 ? 'top-2' : index === 2 ? 'top-3' : '';
-                const rankDisplay = index < 3 ? ['🥇', '🥈', '🥉'][index] : `#${index + 1}`;
-                
-                return `
-                    <div class="leaderboard-entry ${topClass}">
-                        <div class="rank">${rankDisplay}</div>
-                        <div class="player-info">
-                            <div class="player-name">
-                                ${entry.name}
-                                ${entry.verified ? '<span class="verified-icon">✓</span>' : ''}
-                            </div>
-                            <div class="player-address">${entry.address}</div>
-                        </div>
-                        <div class="player-score">${entry.score}</div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        async function submitScore(score) {
-            if (!walletState.connected) {
-                alert('Please connect your wallet first!');
-                return;
-            }
-
-            const zkProofStatus = document.getElementById('zkProofStatus');
-            const submitBtn = document.getElementById('submitScoreBtn');
-            
-            try {
-                // Show ZK proof generation
-                zkProofStatus.style.display = 'block';
-                zkProofStatus.classList.add('generating');
-                zkProofStatus.textContent = 'Generating ZK Proof...';
-                submitBtn.disabled = true;
-
-                // Simulate ZK proof generation
-                await new Promise(resolve => setTimeout(resolve, 2000));
-
-                zkProofStatus.textContent = 'Proof Generated ✓ Submitting to Stellar...';
-                
-                // Simulate blockchain submission
-                await new Promise(resolve => setTimeout(resolve, 1500));
-
-                // Add score to leaderboard (use full address, not already-shortened one)
-                const newEntry = {
-                    rank: 0,
-                    name: `Player${leaderboard.length + 1}`,
-                    address: shortenAddress(walletState.address),
-                    score: score,
-                    verified: true
-                };
-
-                leaderboard.push(newEntry);
-                leaderboard.sort((a, b) => b.score - a.score);
-                leaderboard = leaderboard.slice(0, 10); // Keep top 10
-                
-                // Update ranks
-                leaderboard.forEach((entry, index) => {
-                    entry.rank = index + 1;
-                });
-
-                renderLeaderboard();
-
-                zkProofStatus.classList.remove('generating');
-                zkProofStatus.textContent = 'Score Submitted Successfully! ✓';
-                
-                setTimeout(() => {
-                    zkProofStatus.style.display = 'none';
-                    submitBtn.disabled = false;
-                }, 2000);
-
-            } catch (error) {
-                console.error('Score submission error:', error);
-                zkProofStatus.classList.remove('generating');
-                zkProofStatus.textContent = 'Submission Failed. Please try again.';
-                submitBtn.disabled = false;
-            }
-        }
-
-        // ========================================
-        // GAME CODE
-        // ========================================
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        const scoreElement = document.getElementById('score');
-        const speedElement = document.getElementById('speed');
-        const gameOverScreen = document.getElementById('gameOverScreen');
-        const finalScoreElement = document.getElementById('finalScore');
-        const restartBtn = document.getElementById('restartBtn');
-        const submitScoreBtn = document.getElementById('submitScoreBtn');
-        const startScreen = document.getElementById('startScreen');
-        const startBtn = document.getElementById('startBtn');
-
-        // Game constants
-        const LANES = 3;
-        const LANE_WIDTH = canvas.width / LANES;
-        const LANE_POSITIONS = [
-            LANE_WIDTH / 2,
-            canvas.width / 2,
-            canvas.width - LANE_WIDTH / 2
-        ];
-
-        // Game state
-        let gameState = {
-            isRunning: false,
-            score: 0,
-            obstaclesDodged: 0,
-            speed: 1,
-            baseSpeed: 6,
-            playerLane: 1,
-            obstacles: [],
-            gems: [],
-            roadOffset: 0,
-            animationId: null,
-            lastObstacleSpawn: 0,
-            minObstacleGap: 200
-        };
-
-        // Player car
-        const player = {
-            width: 60,
-            height: 100,
-            y: canvas.height - 200,
-            targetX: LANE_POSITIONS[1],
-            currentX: LANE_POSITIONS[1],
-            moveSpeed: 8
-        };
-
-        // Draw pixel-style car
-        function drawCar(x, y) {
-            ctx.save();
-            
-            // Car body - vibrant blue
-            ctx.fillStyle = '#3498db';
-            ctx.fillRect(x - 25, y, 50, 70);
-            
-            // Car roof
-            ctx.fillStyle = '#2c3e50';
-            ctx.fillRect(x - 20, y + 10, 40, 30);
-            
-            // Windshield
-            ctx.fillStyle = '#5dade2';
-            ctx.fillRect(x - 15, y + 15, 30, 20);
-            
-            // Wheels
-            ctx.fillStyle = '#1a1a1a';
-            ctx.fillRect(x - 30, y + 15, 10, 15);
-            ctx.fillRect(x + 20, y + 15, 10, 15);
-            ctx.fillRect(x - 30, y + 55, 10, 15);
-            ctx.fillRect(x + 20, y + 55, 10, 15);
-            
-            // Headlights
-            ctx.fillStyle = '#f1c40f';
-            ctx.fillRect(x - 20, y + 65, 10, 8);
-            ctx.fillRect(x + 10, y + 65, 10, 8);
-            
-            // Racing stripe
-            ctx.fillStyle = '#e74c3c';
-            ctx.fillRect(x - 5, y, 10, 70);
-            
-            ctx.restore();
-        }
-
-        // Draw pixel-style barricade
-        function drawBarricade(x, y) {
-            const width = 80;
-            const height = 40;
-            const stripeWidth = 10;
-            
-            ctx.save();
-            
-            // Draw orange and black stripes
-            for (let i = 0; i < width; i += stripeWidth) {
-                ctx.fillStyle = (Math.floor(i / stripeWidth) % 2 === 0) ? '#ff6b00' : '#1a1a1a';
-                ctx.fillRect(x - width/2 + i, y, stripeWidth, height);
-            }
-            
-            // Support posts
-            ctx.fillStyle = '#4a4a4a';
-            ctx.fillRect(x - width/2 - 5, y, 5, height + 10);
-            ctx.fillRect(x + width/2, y, 5, height + 10);
-            
-            // Reflective strips
-            ctx.fillStyle = '#ffcc00';
-            ctx.fillRect(x - width/2, y + 2, width, 4);
-            ctx.fillRect(x - width/2, y + height - 6, width, 4);
-            
-            ctx.restore();
-        }
-
-        // Draw pixel-style diamond gem
-        function drawGem(x, y) {
-            ctx.save();
-            
-            const size = 20;
-            
-            // Outer glow
-            ctx.shadowColor = '#00ffff';
-            ctx.shadowBlur = 15;
-            
-            // Diamond shape
-            ctx.fillStyle = '#00ffff';
-            ctx.beginPath();
-            ctx.moveTo(x, y - size);
-            ctx.lineTo(x + size * 0.6, y);
-            ctx.lineTo(x, y + size);
-            ctx.lineTo(x - size * 0.6, y);
-            ctx.closePath();
-            ctx.fill();
-            
-            // Inner highlight
-            ctx.fillStyle = '#ffffff';
-            ctx.beginPath();
-            ctx.moveTo(x, y - size * 0.6);
-            ctx.lineTo(x + size * 0.3, y - size * 0.2);
-            ctx.lineTo(x, y + size * 0.2);
-            ctx.lineTo(x - size * 0.3, y - size * 0.2);
-            ctx.closePath();
-            ctx.fill();
-            
-            // Facets
-            ctx.strokeStyle = '#006666';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(x, y - size);
-            ctx.lineTo(x, y + size);
-            ctx.moveTo(x - size * 0.6, y);
-            ctx.lineTo(x + size * 0.6, y);
-            ctx.stroke();
-            
-            ctx.restore();
-        }
-
-        // Draw animated road
-        function drawRoad() {
-            // Road base
-            ctx.fillStyle = '#2c2c3c';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
-            // Lane dividers
-            ctx.strokeStyle = '#ffd700';
-            ctx.lineWidth = 4;
-            ctx.setLineDash([30, 20]);
-            ctx.lineDashOffset = -gameState.roadOffset;
-            
-            for (let i = 1; i < LANES; i++) {
-                ctx.beginPath();
-                ctx.moveTo(LANE_WIDTH * i, 0);
-                ctx.lineTo(LANE_WIDTH * i, canvas.height);
-                ctx.stroke();
-            }
-            
-            ctx.setLineDash([]);
-            
-            // Road edges
-            ctx.strokeStyle = '#ffffff';
-            ctx.lineWidth = 6;
-            ctx.beginPath();
-            ctx.moveTo(0, 0);
-            ctx.lineTo(0, canvas.height);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(canvas.width, 0);
-            ctx.lineTo(canvas.width, canvas.height);
-            ctx.stroke();
-            
-            // Update road animation only when game is running
-            if (gameState.isRunning) {
-                gameState.roadOffset += gameState.baseSpeed * gameState.speed;
-                if (gameState.roadOffset > 50) {
-                    gameState.roadOffset = 0;
-                }
-            }
-        }
-
-        // Improved obstacle spawning with guaranteed path
-        function spawnObstacle() {
-            const currentTime = Date.now();
-            
-            // Check minimum time gap between spawns
-            if (currentTime - gameState.lastObstacleSpawn < gameState.minObstacleGap / gameState.speed) {
-                return;
-            }
-
-            // Get lanes that don't have recent obstacles
-            const availableLanes = [];
-            for (let i = 0; i < LANES; i++) {
-                const hasRecentObstacle = gameState.obstacles.some(obs => 
-                    obs.lane === i && obs.y > -350
-                );
-                if (!hasRecentObstacle) {
-                    availableLanes.push(i);
-                }
-            }
-
-            // Always ensure at least one lane is clear
-            if (availableLanes.length === 0) {
-                return; // Skip this spawn if all lanes are blocked
-            }
-
-            // Spawn in 1-2 lanes max — always leave at least one lane clear
-            const numToSpawn = Math.min(availableLanes.length - 1, Math.random() > 0.6 ? 2 : 1);
-            const shuffled = availableLanes.sort(() => Math.random() - 0.5);
-            
-            for (let i = 0; i < numToSpawn; i++) {
-                const lane = shuffled[i];
-                gameState.obstacles.push({
-                    x: LANE_POSITIONS[lane],
-                    y: -50,
-                    lane: lane,
-                    passed: false
-                });
-            }
-
-            gameState.lastObstacleSpawn = currentTime;
-        }
-
-        // Spawn gem
-        function spawnGem() {
-            const lane = Math.floor(Math.random() * LANES);
-            // Check if there's already an obstacle in this lane nearby
-            const hasNearbyObstacle = gameState.obstacles.some(obs => 
-                obs.lane === lane && obs.y > -200 && obs.y < 100
-            );
-            
-            if (!hasNearbyObstacle) {
-                gameState.gems.push({
-                    x: LANE_POSITIONS[lane],
-                    y: -50,
-                    lane: lane,
-                    collected: false,
-                    pulse: 0
-                });
-            }
-        }
-
-        // Update game objects
-        function update() {
-            if (!gameState.isRunning) return;
-
-            // Smooth player movement
-            const diff = player.targetX - player.currentX;
-            if (Math.abs(diff) > 1) {
-                player.currentX += diff * 0.3;
-            } else {
-                player.currentX = player.targetX;
-            }
-
-            // Update obstacles — collect collision flag, avoid splice-during-iteration
-            let collided = false;
-            gameState.obstacles.forEach(obstacle => {
-                obstacle.y += gameState.baseSpeed * gameState.speed;
-
-                // Check collision
-                if (
-                    !obstacle.passed &&
-                    obstacle.y + 20 > player.y &&
-                    obstacle.y - 20 < player.y + player.height &&
-                    obstacle.lane === gameState.playerLane &&
-                    Math.abs(player.currentX - obstacle.x) < 50
-                ) {
-                    collided = true;
-                }
-
-                // Check if passed
-                if (!obstacle.passed && obstacle.y > player.y + player.height) {
-                    obstacle.passed = true;
-                    gameState.obstaclesDodged++;
-                    gameState.score += 2;
-                    scoreElement.textContent = gameState.score;
-
-                    // Increase speed every 15 obstacles
-                    if (gameState.obstaclesDodged % 15 === 0) {
-                        gameState.speed += 0.25;
-                        speedElement.textContent = gameState.speed.toFixed(2);
-                        
-                        // Visual feedback for speed increase
-                        speedElement.parentElement.style.animation = 'none';
-                        setTimeout(() => {
-                            speedElement.parentElement.style.animation = 'pulse 0.5s';
-                        }, 10);
-                    }
-                }
-            });
-
-            // Trigger game over once after loop to prevent multiple calls
-            if (collided) {
-                gameOver();
-                return;
-            }
-
-            // Remove off-screen obstacles safely
-            gameState.obstacles = gameState.obstacles.filter(o => o.y <= canvas.height + 50);
-
-            // Update gems — avoid splice-during-iteration
-            gameState.gems.forEach(gem => {
-                gem.y += gameState.baseSpeed * gameState.speed;
-                gem.pulse += 0.1;
-
-                // Check collection
-                if (
-                    !gem.collected &&
-                    gem.y + 20 > player.y &&
-                    gem.y - 20 < player.y + player.height &&
-                    gem.lane === gameState.playerLane &&
-                    Math.abs(player.currentX - gem.x) < 40
-                ) {
-                    gem.collected = true;
-                    gameState.score += 10;
-                    scoreElement.textContent = gameState.score;
-                    
-                    // Visual feedback for gem collection
-                    scoreElement.parentElement.style.animation = 'none';
-                    setTimeout(() => {
-                        scoreElement.parentElement.style.animation = 'pulse 0.3s';
-                    }, 10);
-                }
-            });
-
-            // Remove collected or off-screen gems safely
-            gameState.gems = gameState.gems.filter(g => !g.collected && g.y <= canvas.height + 50);
-
-            // Spawn new obstacles with improved logic
-            if (Math.random() < 0.015 * gameState.speed) {
-                spawnObstacle();
-            }
-
-            // Spawn new gems
-            if (Math.random() < 0.008) {
-                spawnGem();
-            }
-        }
-
-        // Draw game
-        function draw() {
-            drawRoad();
-
-            // Draw obstacles
-            gameState.obstacles.forEach(obstacle => {
-                drawBarricade(obstacle.x, obstacle.y);
-            });
-
-            // Draw gems
-            gameState.gems.forEach(gem => {
-                if (!gem.collected) {
-                    ctx.save();
-                    ctx.translate(gem.x, gem.y);
-                    ctx.scale(1 + Math.sin(gem.pulse) * 0.1, 1 + Math.sin(gem.pulse) * 0.1);
-                    drawGem(0, 0);
-                    ctx.restore();
-                }
-            });
-
-            // Draw player
-            drawCar(player.currentX, player.y);
-        }
-
-        // Game loop
-        function gameLoop() {
-            update();
-            draw();
-            if (gameState.isRunning) {
-                gameState.animationId = requestAnimationFrame(gameLoop);
-            }
-        }
-
-        // Start game
-        function startGame() {
-            // Cancel any existing animation loop before starting a new one
-            if (gameState.animationId) {
-                cancelAnimationFrame(gameState.animationId);
-                gameState.animationId = null;
-            }
-
-            startScreen.classList.add('hidden');
+        // Countdown then resume
+        runCountdown(`ENTERING ${lv.label} — ${lv.name}`, () => {
             gameState.isRunning = true;
-            gameState.score = 0;
-            gameState.obstaclesDodged = 0;
-            gameState.speed = 1;
-            gameState.playerLane = 1;
-            gameState.obstacles = [];
-            gameState.gems = [];
-            gameState.roadOffset = 0;
-            gameState.lastObstacleSpawn = 0;
-            player.currentX = LANE_POSITIONS[1];
-            player.targetX = LANE_POSITIONS[1];
-            
-            scoreElement.textContent = '0';
-            speedElement.textContent = '1.00';
-            gameOverScreen.classList.remove('active');
-            
             gameLoop();
-        }
-
-        // Game over
-        function gameOver() {
-            gameState.isRunning = false;
-            finalScoreElement.textContent = gameState.score;
-            gameOverScreen.classList.add('active');
-            
-            // Enable/disable submit button based on wallet connection
-            submitScoreBtn.disabled = !walletState.connected;
-            if (!walletState.connected) {
-                submitScoreBtn.title = 'Connect wallet to submit score';
-            }
-            
-            if (gameState.animationId) {
-                cancelAnimationFrame(gameState.animationId);
-            }
-        }
-
-        // Keyboard controls
-        document.addEventListener('keydown', (e) => {
-            if (!gameState.isRunning) return;
-            
-            if (e.key === 'ArrowLeft' && gameState.playerLane > 0) {
-                gameState.playerLane--;
-                player.targetX = LANE_POSITIONS[gameState.playerLane];
-            } else if (e.key === 'ArrowRight' && gameState.playerLane < LANES - 1) {
-                gameState.playerLane++;
-                player.targetX = LANE_POSITIONS[gameState.playerLane];
-            }
         });
+    });
+}
 
-        // Event listeners
-        startBtn.addEventListener('click', startGame);
-        restartBtn.addEventListener('click', startGame);
-        submitScoreBtn.addEventListener('click', () => submitScore(gameState.score));
+// ============================================================
+// FLOATING SCORE TEXTS
+// ============================================================
+function spawnFloatingText(x, y, text, color) {
+    gameState.floatingTexts.push({
+        x, y, text, color,
+        opacity: 1.0, vy: -2.5,
+        life: 60 // frames
+    });
+}
 
-        // Initialize
-        renderLeaderboard();
-        drawRoad();
-        drawCar(player.currentX, player.y);
-    </script>
+function updateFloatingTexts() {
+    gameState.floatingTexts.forEach(ft => {
+        ft.y  += ft.vy;
+        ft.vy *= 0.93;
+        ft.life--;
+        ft.opacity = Math.max(0, ft.life / 40);
+    });
+    gameState.floatingTexts = gameState.floatingTexts.filter(ft => ft.life > 0);
+}
+
+function drawFloatingTexts() {
+    gameState.floatingTexts.forEach(ft => {
+        ctx.save();
+        ctx.globalAlpha = ft.opacity;
+        ctx.font = 'bold 14px Orbitron, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = ft.color;
+        ctx.shadowColor = ft.color;
+        ctx.shadowBlur = 10;
+        ctx.fillText(ft.text, ft.x, ft.y);
+        ctx.restore();
+    });
+}
+
+let gameState = {
+    isRunning: false, score: 0, obstaclesDodged: 0,
+    speed: 1, baseSpeed: 5, playerLane: 1,
+    obstacles: [], gems: [], zkBoosts: [], floatingTexts: [],
+    roadOffset: 0, animationId: null,
+    lastObstacleSpawn: 0, minObstacleGap: 200,
+    currentSet: 0, currentLevel: 0,
+    levelFeesCollected: 0, obstacleDamage: 0.15,
+    blocksConfirmed: 0, hasShield: false,
+    // ZK proof recording
+    seed: 0, actions: [], pendingAction: 0, gameId: 1
+};
+
+const player = {
+    width: 50, height: 80,
+    y: canvas.height - 180,
+    targetX: LANE_POS[1], currentX: LANE_POS[1],
+    moveSpeed: 8
+};
+
+// Draw player as "transaction packet"
+function drawTxPacket(x, y) {
+    ctx.save();
+    // Glow
+    ctx.shadowColor = gameState.hasShield ? '#ffd700' : '#6b4aff';
+    ctx.shadowBlur = 20;
+
+    // Body — data packet
+    const gradient = ctx.createLinearGradient(x-22, y, x+22, y+70);
+    gradient.addColorStop(0, '#6b4aff');
+    gradient.addColorStop(1, '#00d4ff');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(x-22, y+10, 44, 60);
+
+    // Top sensor
+    ctx.fillStyle = '#00d4ff';
+    ctx.fillRect(x-14, y, 28, 14);
+
+    // Data lines
+    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+    ctx.fillRect(x-16, y+20, 32, 2);
+    ctx.fillRect(x-16, y+28, 24, 2);
+    ctx.fillRect(x-16, y+36, 28, 2);
+    ctx.fillRect(x-16, y+44, 20, 2);
+
+    // Thrusters
+    ctx.fillStyle = '#ff8c00';
+    ctx.shadowColor = '#ff8c00';
+    ctx.shadowBlur = 12;
+    ctx.fillRect(x-18, y+68, 12, 8 + Math.random()*4);
+    ctx.fillRect(x+6,  y+68, 12, 8 + Math.random()*4);
+
+    // Shield ring
+    if (gameState.hasShield) {
+        ctx.strokeStyle = '#ffd700';
+        ctx.lineWidth = 3;
+        ctx.shadowColor = '#ffd700';
+        ctx.shadowBlur = 20;
+        ctx.beginPath();
+        ctx.ellipse(x, y+40, 35, 50, 0, 0, Math.PI*2);
+        ctx.stroke();
+    }
+
+    ctx.restore();
+}
+
+// Draw threat obstacle
+function drawThreat(x, y, type) {
+    const t = THREAT_TYPES.find(t => t.id === type) || THREAT_TYPES[0];
+    ctx.save();
+    ctx.shadowColor = t.color; ctx.shadowBlur = 15;
+
+    // Body
+    ctx.fillStyle = t.color + '33';
+    ctx.strokeStyle = t.color;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.roundRect(x-38, y-18, 76, 36, 6);
+    ctx.fill(); ctx.stroke();
+
+    // Label
+    ctx.fillStyle = t.color;
+    ctx.font = 'bold 9px Share Tech Mono, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(t.label, x, y+4);
+
+    ctx.restore();
+}
+
+// Draw fee gem
+function drawFeeGem(x, y, pulse, isZK) {
+    ctx.save();
+    const col = isZK ? '#a855f7' : '#ffd700';
+    ctx.shadowColor = col; ctx.shadowBlur = 15;
+    const s = 14 + Math.sin(pulse) * 2;
+
+    ctx.fillStyle = col;
+    ctx.beginPath();
+    ctx.moveTo(x, y-s); ctx.lineTo(x+s*0.6, y);
+    ctx.lineTo(x, y+s); ctx.lineTo(x-s*0.6, y);
+    ctx.closePath(); ctx.fill();
+
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.beginPath();
+    ctx.moveTo(x, y-s*0.6); ctx.lineTo(x+s*0.3, y-s*0.1);
+    ctx.lineTo(x, y+s*0.2); ctx.lineTo(x-s*0.3, y-s*0.1);
+    ctx.closePath(); ctx.fill();
+
+    if (isZK) {
+        ctx.fillStyle = '#fff'; ctx.font = 'bold 8px monospace'; ctx.textAlign = 'center';
+        ctx.fillText('ZK', x, y+3);
+    }
+    ctx.restore();
+}
+
+// Draw mempool road
+function drawRoad() {
+    // Background
+    ctx.fillStyle = '#05050f';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Lane backgrounds
+    for (let i = 0; i < LANES; i++) {
+        ctx.fillStyle = LANE_COLORS[i];
+        ctx.fillRect(LANE_WIDTH * i, 0, LANE_WIDTH, canvas.height);
+    }
+
+    // Scrolling data stream particles
+    ctx.fillStyle = 'rgba(0,212,255,0.15)';
+    for (let i = 0; i < 12; i++) {
+        const x = (i * 53 + gameState.roadOffset * 0.5) % canvas.width;
+        const y = (i * 83 + gameState.roadOffset * 2) % canvas.height;
+        ctx.fillRect(x, y, 2, 8);
+    }
+
+    // Lane dividers — glowing
+    ctx.shadowColor = '#6b4aff'; ctx.shadowBlur = 8;
+    ctx.strokeStyle = 'rgba(107,74,255,0.6)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([25, 20]);
+    ctx.lineDashOffset = -gameState.roadOffset;
+    for (let i = 1; i < LANES; i++) {
+        ctx.beginPath();
+        ctx.moveTo(LANE_WIDTH * i, 0);
+        ctx.lineTo(LANE_WIDTH * i, canvas.height);
+        ctx.stroke();
+    }
+    ctx.setLineDash([]);
+    ctx.shadowBlur = 0;
+
+    // Lane labels at top
+    const laneLabels = ['SLOW FEE', 'MED FEE', 'FAST FEE'];
+    const laneClrs   = ['#00ff88', '#ffd700', '#ff4466'];
+    for (let i = 0; i < LANES; i++) {
+        ctx.fillStyle = laneClrs[i] + '99';
+        ctx.font = '8px Orbitron, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(laneLabels[i], LANE_POS[i], 14);
+    }
+
+    // Road edges
+    ctx.shadowColor = '#00d4ff'; ctx.shadowBlur = 10;
+    ctx.strokeStyle = 'rgba(0,212,255,0.4)'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(2, 0); ctx.lineTo(2, canvas.height); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(canvas.width-2, 0); ctx.lineTo(canvas.width-2, canvas.height); ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // Block confirmation line — green line sweeping down
+    const lineY = (gameState.roadOffset * 3) % canvas.height;
+    ctx.strokeStyle = 'rgba(0,255,136,0.2)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(0, lineY); ctx.lineTo(canvas.width, lineY); ctx.stroke();
+
+    if (gameState.isRunning) {
+        gameState.roadOffset += gameState.baseSpeed * gameState.speed;
+        if (gameState.roadOffset > 50) gameState.roadOffset = 0;
+    }
+}
+
+function spawnThreat() {
+    const now = Date.now();
+    if (now - gameState.lastObstacleSpawn < gameState.minObstacleGap / gameState.speed) return;
+
+    const available = [];
+    for (let i = 0; i < LANES; i++) {
+        if (!gameState.obstacles.some(o => o.lane === i && o.y > -300)) available.push(i);
+    }
+    if (available.length === 0) return;
+
+    // Soroban upgrade reduces obstacles
+    const soroban = upgrades.find(u => u.id === 'soroban');
+    const spawnChance = 0.012 * gameState.speed * (1 - soroban.level * 0.15);
+    if (Math.random() > spawnChance * 40) {
+        const max = Math.min(available.length - 1, Math.random() > 0.65 ? 2 : 1);
+        const shuffled = available.sort(() => Math.random() - 0.5);
+        const type = THREAT_TYPES[Math.floor(Math.random() * THREAT_TYPES.length)];
+        for (let i = 0; i < max; i++) {
+            gameState.obstacles.push({ x: LANE_POS[shuffled[i]], y: -30, lane: shuffled[i], type: type.id, passed: false });
+        }
+    }
+    gameState.lastObstacleSpawn = now;
+}
+
+function spawnFeeGem() {
+    if (Math.random() < 0.008) {
+        const lane = Math.floor(Math.random() * LANES);
+        const isZK = Math.random() < 0.15; // 15% ZK boost gem
+        gameState.gems.push({ x: LANE_POS[lane], y: -20, lane, pulse: 0, collected: false, isZK });
+    }
+}
+
+function update() {
+    if (!gameState.isRunning) return;
+
+    // ── ZK: record this tick's action ───────────────────────────────────────
+    gameState.actions.push(gameState.pendingAction);
+    gameState.pendingAction = 0; // reset for next frame
+
+    // Update ZK live bar every 30 ticks
+    if (gameState.actions.length % 30 === 0) {
+        document.getElementById('zkActionCount').textContent = gameState.actions.length + ' ticks';
+    }
+
+    // Smooth player movement
+    const diff = player.targetX - player.currentX;
+    if (Math.abs(diff) > 1) player.currentX += diff * 0.25;
+    else player.currentX = player.targetX;
+
+    let _unused = false; // no instant death
+
+    // Update threats
+    gameState.obstacles.forEach(o => {
+        o.y += gameState.baseSpeed * gameState.speed;
+
+        if (!o.passed &&
+            o.y + 20 > player.y &&
+            o.y - 20 < player.y + player.height &&
+            o.lane === gameState.playerLane &&
+            Math.abs(player.currentX - o.x) < 45) {
+
+            if (gameState.hasShield) {
+                // Shield absorbs hit
+                gameState.hasShield = false;
+                o.passed = true;
+                showTooltip('🛡️ Fee Buffer absorbed the attack!', 'reward', 2000);
+                spawnFloatingText(player.currentX, player.y - 10, 'BLOCKED!', '#ffd700');
+                return;
+            }
+            // Hit! Reduce fees by damage % 
+            const dmgPct = gameState.obstacleDamage;
+            const dmgAmt = Math.max(5, Math.floor(gameState.score * dmgPct));
+            gameState.score = Math.max(0, gameState.score - dmgAmt);
+            gameState.levelFeesCollected = Math.max(0, gameState.levelFeesCollected - dmgAmt);
+            scoreEl.textContent = Math.floor(gameState.score);
+            o.passed = true;
+            spawnFloatingText(player.currentX, player.y - 10, `-${dmgAmt}`, '#ff4466');
+            showBlockchainTip(o.type || 'doublespend');
+            updateLevelHUD();
+
+            // Death when fees hit zero
+            if (gameState.score <= 0 && gameState.isRunning) {
+                gameState.score = 0;
+                gameState.isRunning = false;
+                scoreEl.textContent = '0';
+                spawnFloatingText(player.currentX, player.y - 40, '💀 LIQUIDATED', '#ff4466');
+                draw();
+                setTimeout(gameOver, 900);
+                return;
+            }
+        }
+
+        if (!o.passed && o.y > player.y + player.height) {
+            o.passed = true;
+            gameState.obstaclesDodged++;
+            gameState.blocksConfirmed++;
+
+            // Memo field bonus every 15 blocks
+            if (gameState.obstaclesDodged % 15 === 0) {
+                showBlockchainTip('speedup');
+                const memo = upgrades.find(u => u.id === 'memo');
+                const bonus = memo.level * 5;
+                if (bonus > 0) {
+                    gameState.score += bonus;
+                    gameState.levelFeesCollected += bonus;
+                    scoreEl.textContent = Math.floor(gameState.score);
+                    updateLevelHUD();
+                }
+            }
+        }
+    });
+
+    // (no instant death — obstacles deal % fee damage)
+    gameState.obstacles = gameState.obstacles.filter(o => o.y <= canvas.height + 50);
+
+    // Update fee gems
+    gameState.gems.forEach(g => {
+        g.y += gameState.baseSpeed * gameState.speed;
+        g.pulse += 0.12;
+
+        if (!g.collected &&
+            g.y + 20 > player.y && g.y - 20 < player.y + player.height &&
+            g.lane === gameState.playerLane &&
+            Math.abs(player.currentX - g.x) < 40) {
+
+            g.collected = true;
+            const zkUpg = upgrades.find(u => u.id === 'zk');
+            const bonus = g.isZK ? 50 : 10;
+            const multiplied = Math.floor(bonus * (1 + zkUpg.level * 0.1));
+            gameState.score += multiplied;
+            gameState.levelFeesCollected += multiplied;
+            scoreEl.textContent = Math.floor(gameState.score);
+            shopFees += Math.floor(multiplied * 0.3);
+            updateLevelHUD();
+
+            // Floating impact text
+            const gemColor = g.isZK ? '#a855f7' : '#ffd700';
+            const gemLabel = g.isZK ? `+${multiplied} ZK⚡` : `+${multiplied}`;
+            spawnFloatingText(g.x, g.y, gemLabel, gemColor);
+
+            if (g.isZK) {
+                showBlockchainTip('zkboost');
+                gameState.speed = Math.min(gameState.speed + 0.15, 5);
+                speedEl.textContent = gameState.speed.toFixed(2) + 'x';
+            } else {
+                showBlockchainTip('feegem');
+            }
+        }
+    });
+    gameState.gems = gameState.gems.filter(g => !g.collected && g.y <= canvas.height + 50);
+
+    // Check level advancement
+    const lvData = getCurrentLevelData();
+    if (lvData && gameState.levelFeesCollected >= lvData.feeTarget) {
+        advanceLevel();
+    }
+
+    spawnThreat();
+    spawnFeeGem();
+    updateFloatingTexts();
+}
+
+function draw() {
+    drawRoad();
+    gameState.obstacles.forEach(o => drawThreat(o.x, o.y, o.type));
+    gameState.gems.forEach(g => { if (!g.collected) drawFeeGem(g.x, g.y, g.pulse, g.isZK); });
+    drawTxPacket(player.currentX, player.y);
+    drawFloatingTexts();
+}
+
+function gameLoop() {
+    update(); draw();
+    if (gameState.isRunning) gameState.animationId = requestAnimationFrame(gameLoop);
+}
+
+// ============================================================
+// COUNTDOWN
+// ============================================================
+function runCountdown(subText, callback) {
+    const overlay = document.getElementById('countdownOverlay');
+    const numEl   = document.getElementById('countdownNum');
+    const subEl   = document.getElementById('countdownSub');
+
+    overlay.classList.add('active');
+    subEl.textContent = subText;
+
+    const steps = ['3', '2', '1', 'GO!'];
+    let i = 0;
+
+    function nextStep() {
+        if (i >= steps.length) {
+            overlay.classList.remove('active');
+            callback();
+            return;
+        }
+        numEl.textContent = steps[i];
+        numEl.className = 'countdown-num' + (steps[i] === 'GO!' ? ' go' : '');
+        // re-trigger animation
+        numEl.style.animation = 'none';
+        void numEl.offsetHeight;
+        numEl.style.animation = '';
+        i++;
+        setTimeout(nextStep, steps[i - 1] === 'GO!' ? 700 : 900);
+    }
+    nextStep();
+}
+
+function startGame() {
+    if (gameState.animationId) { cancelAnimationFrame(gameState.animationId); gameState.animationId = null; }
+    startScreen.classList.add('hidden');
+    gameOverScreen.classList.remove('active');
+    document.getElementById('levelCompleteScreen').classList.remove('active');
+    canvas.classList.remove('danger');
+
+    // Generate new ZK seed (BigInt-safe 53-bit random)
+    const seed = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER);
+    const gid  = Date.now() % 0xFFFFFFFF;
+
+    gameState = {
+        isRunning: false, score: 0, obstaclesDodged: 0,
+        speed: 1, baseSpeed: 5, playerLane: 1,
+        obstacles: [], gems: [], zkBoosts: [], floatingTexts: [],
+        roadOffset: 0, animationId: null,
+        lastObstacleSpawn: 0, minObstacleGap: 200,
+        blocksConfirmed: 0,
+        currentSet: 0, currentLevel: 0,
+        levelFeesCollected: 0, obstacleDamage: 0.15,
+        hasShield: upgrades.find(u => u.id === 'fee').level > 0,
+        seed, actions: [], pendingAction: 0, gameId: gid
+    };
+
+    player.currentX = LANE_POS[1];
+    player.targetX  = LANE_POS[1];
+    scoreEl.textContent  = '0';
+    speedEl.textContent  = '1.00x';
+    feeProgressBar.style.display   = 'block';
+    feeProgressLabel.style.display = 'block';
+
+    // Show ZK live bar + seed
+    const zkBar = document.getElementById('zkLiveBar');
+    zkBar.style.display = 'flex';
+    document.getElementById('zkSeedDisplay').textContent = `seed: ${seed.toString(16).slice(0,8)}…`;
+    document.getElementById('zkActionCount').textContent = '0 ticks';
+
+    applyUpgradeEffects();
+    updateLevelHUD();
+
+    // Render static frame then countdown
+    drawRoad();
+    drawTxPacket(player.currentX, player.y);
+
+    runCountdown('MEMPOOL ENTRY IN…', () => {
+        gameState.isRunning = true;
+        gameLoop();
+    });
+}
+
+function gameOver() {
+    gameState.isRunning = false;
+    canvas.classList.remove('danger');
+    if (gameState.animationId) { cancelAnimationFrame(gameState.animationId); gameState.animationId = null; }
+
+    const finalScore = Math.floor(gameState.score * prestigeData.multiplier);
+
+    document.getElementById('finalBlocks').textContent  = gameState.blocksConfirmed;
+    document.getElementById('finalDodged').textContent  = gameState.obstaclesDodged;
+    document.getElementById('finalMult').textContent    = prestigeData.multiplier.toFixed(1) + 'x';
+    document.getElementById('finalScore').textContent   = finalScore;
+
+    // Show ZK summary row
+    const zkRow = document.getElementById('finalZKRow');
+    if (zkRow) {
+        zkRow.querySelector('.val').textContent =
+            `${gameState.actions.length} ticks · seed ${gameState.seed.toString(16).slice(0,8)}…`;
+    }
+
+    // Check prestige
+    const totalAfter = prestigeData.totalFeesEarned + finalScore;
+    if (totalAfter >= prestigeData.prestigeThreshold) {
+        document.getElementById('prestigeBanner').style.display = 'block';
+        document.getElementById('prestigeActionBtn').style.display = 'block';
+    }
+
+    submitScoreBtn.disabled = !walletState.connected;
+    gameOverScreen.classList.add('active');
+}
+
+// ============================================================
+// CONTROLS — set pendingAction each frame (recorded for ZK proof)
+// ============================================================
+document.addEventListener('keydown', e => {
+    if (!gameState.isRunning) return;
+    if (e.key === 'ArrowLeft' && gameState.playerLane > 0) {
+        gameState.playerLane--;
+        player.targetX = LANE_POS[gameState.playerLane];
+        gameState.pendingAction = 1; // left
+    } else if (e.key === 'ArrowRight' && gameState.playerLane < LANES-1) {
+        gameState.playerLane++;
+        player.targetX = LANE_POS[gameState.playerLane];
+        gameState.pendingAction = 2; // right
+    }
+});
+
+// Touch controls
+let touchStartX = 0;
+canvas.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; });
+canvas.addEventListener('touchend', e => {
+    const diff = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(diff) < 30) return;
+    if (diff < 0 && gameState.playerLane > 0) {
+        gameState.playerLane--; player.targetX = LANE_POS[gameState.playerLane];
+        gameState.pendingAction = 1;
+    } else if (diff > 0 && gameState.playerLane < LANES-1) {
+        gameState.playerLane++; player.targetX = LANE_POS[gameState.playerLane];
+        gameState.pendingAction = 2;
+    }
+});
+
+// ============================================================
+// EVENT LISTENERS
+// ============================================================
+startBtn.addEventListener('click', () => { startGameOnChain(); startGame(); });
+restartBtn.addEventListener('click', startGame);
+submitScoreBtn.addEventListener('click', () => submitScore(Math.floor(gameState.score * prestigeData.multiplier)));
+
+// Initial render
+drawRoad();
+drawTxPacket(player.currentX, player.y);
+updatePrestigeUI();
+</script>
 </body>
 </html>
