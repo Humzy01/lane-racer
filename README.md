@@ -48,3 +48,6 @@ cargo run --bin host
 
 ## 🛠 Stack
 Soroban (Rust) · RISC Zero zkVM · Vanilla JS · Stellar SDK v11 · Protocol 25
+
+licence MIT
+
