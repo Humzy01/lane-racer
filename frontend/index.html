@@ -3,1703 +3,756 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stellar Chain Speedway — ZK Gaming on Stellar</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <title>Chainway — Stellar ZK Racer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Share+Tech+Mono&family=Teko:wght@400;500;600&display=swap" rel="stylesheet">
     <script src="stellar-sdk.min.js"></script>
     <style>
-        :root {
-            --cyan:#00d4ff; --purple:#6b4aff; --green:#00ff88;
-            --red:#ff4466; --gold:#ffd700; --orange:#ff8c00;
-            --dark:#05050f; --card:#0d0d1f; --border:#2a2a4a;
-        }
-        *{margin:0;padding:0;box-sizing:border-box;}
-        html,body{height:100%;overflow:hidden;}
-        body{font-family:'Orbitron',sans-serif;background:var(--dark);
-            display:flex;justify-content:center;align-items:center;color:#fff;}
-        body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
-            background:radial-gradient(circle at 15% 50%,rgba(107,74,255,.08) 0%,transparent 50%),
-                       radial-gradient(circle at 85% 50%,rgba(0,212,255,.08) 0%,transparent 50%);}
+:root {
+    --bg:#050408; --panel:#0a0810; --border:#1c1428; --border2:#2a1e3c;
+    --org:#f59e0b; --org-d:#7a4e05; --org-g:rgba(245,158,11,0.10);
+    --red:#ef4444; --green:#22c55e; --purple:#8b5cf6;
+    --text:#c8a870; --text-dim:#6a5840; --text-faint:#2a1e10;
+    --font-g:'Russo One',sans-serif; --font-h:'Teko',sans-serif; --font-m:'Share Tech Mono',monospace;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{height:100%}
+body{font-family:var(--font-g);background:var(--bg);color:var(--text);height:100%;display:flex;flex-direction:column;overflow:hidden}
+body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.06) 3px,rgba(0,0,0,0.06) 4px);pointer-events:none;z-index:9999}
 
-        /* MENU */
-        .menu-toggle{position:fixed;top:12px;left:12px;z-index:1001;width:34px;height:34px;
-            background:rgba(13,13,31,.95);border:1.5px solid var(--border);border-radius:8px;
-            cursor:pointer;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:5px;transition:all .3s;}
-        .menu-toggle:hover{border-color:var(--purple);}
-        .menu-toggle span{width:15px;height:1.5px;background:var(--cyan);border-radius:2px;transition:all .3s;}
-        .menu-toggle.active span:nth-child(1){transform:rotate(45deg) translate(4.5px,4.5px);}
-        .menu-toggle.active span:nth-child(2){opacity:0;}
-        .menu-toggle.active span:nth-child(3){transform:rotate(-45deg) translate(4.5px,-4.5px);}
+/* ── NAVBAR ── */
+.navbar{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 16px;height:52px;background:var(--panel);border-bottom:2px solid var(--org-d);position:relative;z-index:100}
+.nav-brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+.nav-logo{width:34px;height:34px;background:var(--org);clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);display:flex;align-items:center;justify-content:center;font-family:var(--font-g);font-size:12px;color:var(--bg)}
+.nav-title{font-family:var(--font-g);font-size:clamp(14px,2.5vw,20px);color:var(--org);letter-spacing:2px}
+.nav-right{display:flex;align-items:center;gap:8px}
+.nav-btn{font-family:var(--font-m);font-size:12px;font-weight:700;padding:7px 14px;border:1px solid var(--border2);border-radius:3px;background:transparent;color:var(--text-dim);cursor:pointer;transition:all .2s;text-decoration:none;display:inline-flex;align-items:center;gap:5px;letter-spacing:.5px}
+.nav-btn:hover{border-color:var(--org);color:var(--org)}
+.nav-btn-wallet{background:var(--org);color:var(--bg);border-color:var(--org);font-weight:700}
+.nav-btn-wallet:hover{background:#fbbf24;border-color:#fbbf24;color:var(--bg)}
+.nav-btn-wallet.connected{background:transparent;color:var(--green);border-color:var(--green)}
 
-        /* OVERLAY — only covers right of sidebar */
-        .sidebar-overlay{display:none;position:fixed;top:0;left:260px;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:998;cursor:pointer;}
-        .sidebar-overlay.active{display:block;}
+/* ── GAME AREA ── */
+.game-area{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 12px 6px;gap:6px;overflow:hidden;min-height:0}
 
-        /* LAYOUT */
-        .main-container{position:relative;z-index:1;width:100%;height:100vh;display:flex;align-items:center;justify-content:center;}
+/* ── HUD ── */
+.hud{display:flex;align-items:center;justify-content:space-between;width:100%;max-width:600px;padding:6px 14px;background:var(--panel);border:1px solid var(--border2);border-top:2px solid var(--org-d);border-radius:0 0 4px 4px;flex-shrink:0}
+.hud-item{text-align:center}
+.hud-label{font-family:var(--font-m);font-size:9px;color:var(--text-faint);letter-spacing:2px;text-transform:uppercase;margin-bottom:1px}
+.hud-val{font-family:var(--font-h);font-size:clamp(20px,3.5vw,28px);font-weight:600;line-height:1;color:var(--org)}
+.hud-val.level{color:var(--text)}
+.hud-val.speed{color:var(--text-dim)}
+.hud-pause{background:transparent;border:1px solid var(--border2);border-radius:3px;color:var(--text-dim);font-size:15px;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;font-family:var(--font-m)}
+.hud-pause:hover{border-color:var(--org);color:var(--org)}
+.hud-pause.hidden{display:none}
 
-        /* SIDEBAR */
-        .sidebar{width:260px;background:var(--card);border-right:1px solid var(--border);
-            padding:54px 12px 12px;display:flex;flex-direction:column;gap:10px;
-            position:fixed;left:-270px;top:0;bottom:0;z-index:1000;overflow-y:auto;transition:left .3s ease;}
-        .sidebar.open{left:0;}
-        .sidebar::-webkit-scrollbar{width:3px;}
-        .sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+/* ── FEE BAR ── */
+.fee-bar-wrap{width:100%;max-width:600px;display:none;flex-shrink:0}
+.fee-bar-track{height:5px;background:var(--border);border-radius:2px;overflow:hidden}
+.fee-bar-fill{height:100%;width:0%;background:var(--org);border-radius:2px;transition:width .2s}
+.fee-bar-label{font-family:var(--font-m);font-size:9px;color:var(--text-dim);text-align:right;margin-top:3px}
 
-        /* WALLET */
-        .wallet-section{background:rgba(107,74,255,.08);border:1px solid rgba(107,74,255,.3);border-radius:10px;padding:12px;}
-        .wallet-header{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
-        .stellar-logo{width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--cyan),var(--purple));
-            display:flex;align-items:center;justify-content:center;font-weight:900;font-size:11px;flex-shrink:0;}
-        .wallet-title{font-size:10px;font-weight:700;color:var(--cyan);letter-spacing:1px;text-transform:uppercase;}
-        .wallet-status{font-size:9px;color:#666;margin-bottom:8px;font-family:'Share Tech Mono',monospace;}
-        .wallet-status.connected{color:var(--green);}
-        .connect-wallet-btn{width:100%;padding:8px;background:linear-gradient(135deg,var(--purple),var(--cyan));
-            border:none;border-radius:7px;color:#fff;font-family:'Orbitron',sans-serif;font-size:9px;
-            font-weight:700;cursor:pointer;letter-spacing:1px;transition:all .3s;text-transform:uppercase;}
-        .connect-wallet-btn:hover{opacity:.85;}
+/* ── CANVAS ── */
+.canvas-wrap{position:relative;width:100%;max-width:600px;flex:1;min-height:0}
+canvas{display:block;width:100%;height:100%;border:2px solid var(--border2);border-radius:4px;cursor:crosshair;image-rendering:pixelated}
+canvas.danger{border-color:var(--red)!important}
+.canvas-wrap::before,.canvas-wrap::after{content:'';position:absolute;width:12px;height:12px;border-color:var(--org);border-style:solid;z-index:5;pointer-events:none}
+.canvas-wrap::before{top:-1px;left:-1px;border-width:2px 0 0 2px}
+.canvas-wrap::after{bottom:-1px;right:-1px;border-width:0 2px 2px 0}
 
-        /* PRESTIGE */
-        .prestige-section{background:rgba(255,215,0,.06);border:1px solid rgba(255,215,0,.25);border-radius:10px;padding:12px;}
-        .prestige-title{font-size:10px;color:var(--gold);font-weight:700;letter-spacing:1px;margin-bottom:6px;text-transform:uppercase;}
-        .prestige-info{font-size:8px;color:#666;font-family:'Share Tech Mono',monospace;line-height:1.9;}
-        .prestige-info span{color:var(--gold);}
-        .prestige-btn{width:100%;margin-top:8px;padding:7px;background:linear-gradient(135deg,#7a6000,var(--gold));
-            border:none;border-radius:6px;color:#000;font-family:'Orbitron',sans-serif;font-size:8px;
-            font-weight:900;cursor:pointer;text-transform:uppercase;opacity:.4;transition:all .3s;}
-        .prestige-btn.available{opacity:1;animation:glow-gold 1.5s ease-in-out infinite;}
-        @keyframes glow-gold{0%,100%{box-shadow:0 0 10px rgba(255,215,0,.3)}50%{box-shadow:0 0 25px rgba(255,215,0,.7)}}
+/* ── OVERLAYS ── */
+.overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:20px;border-radius:4px;text-align:center;overflow-y:auto}
+.overlay::-webkit-scrollbar{width:3px}
+.overlay::-webkit-scrollbar-thumb{background:var(--border2)}
 
-        /* SHOP */
-        .shop-section{background:rgba(0,255,136,.05);border:1px solid rgba(0,255,136,.2);border-radius:10px;padding:12px;}
-        .shop-title{font-size:10px;color:var(--green);font-weight:700;letter-spacing:1px;margin-bottom:8px;text-transform:uppercase;}
-        .upgrade-item{display:flex;justify-content:space-between;align-items:center;
-            padding:6px 7px;border-radius:5px;margin-bottom:4px;background:rgba(255,255,255,.03);
-            border:1px solid var(--border);cursor:pointer;transition:all .2s;}
-        .upgrade-item:hover{border-color:var(--green);}
-        .upgrade-item.owned{border-color:rgba(0,255,136,.4);background:rgba(0,255,136,.06);}
-        .upgrade-item.maxed{opacity:.5;cursor:not-allowed;}
-        .upgrade-name{font-size:8px;font-weight:700;color:#ccc;}
-        .upgrade-desc{font-size:7px;color:#555;font-family:'Share Tech Mono',monospace;margin-top:1px;}
-        .upgrade-cost{font-size:8px;color:var(--gold);font-weight:700;white-space:nowrap;}
-        .upgrade-level{font-size:7px;color:var(--green);}
+/* START */
+.start-overlay{background:rgba(5,4,8,.97);z-index:50}
+.start-overlay.hidden{display:none}
+.glitch-title{font-family:var(--font-g);font-size:clamp(26px,7vw,52px);color:var(--org);letter-spacing:4px;line-height:1;animation:glitch 4s infinite}
+@keyframes glitch{0%,90%,100%{text-shadow:none;transform:none}92%{text-shadow:2px 0 #ef4444,-2px 0 #3b82f6;transform:translateX(1px)}94%{text-shadow:-2px 0 #ef4444,2px 0 #3b82f6;transform:translateX(-1px)}96%{text-shadow:none;transform:none}}
+.title-sub{font-family:var(--font-m);font-size:clamp(9px,1.5vw,12px);color:var(--text-dim);letter-spacing:3px;text-transform:uppercase;border:1px solid var(--border2);padding:4px 14px;border-radius:2px}
+.pixel-divider{width:80px;height:2px;background:repeating-linear-gradient(90deg,var(--org) 0px,var(--org) 6px,transparent 6px,transparent 10px)}
+.controls-hint{font-family:var(--font-m);font-size:clamp(10px,1.6vw,12px);color:var(--text-faint);letter-spacing:1px;line-height:2}
+.controls-hint span{color:var(--text-dim)}
+.start-buttons{display:flex;flex-direction:column;gap:10px;width:100%;max-width:260px}
+.btn-play{padding:15px 0;font-family:var(--font-g);font-size:clamp(14px,2.2vw,17px);letter-spacing:3px;background:var(--org);color:var(--bg);border:none;border-radius:3px;cursor:pointer;text-transform:uppercase;transition:all .15s;clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,8px 100%,0 calc(100% - 8px))}
+.btn-play:hover{background:#fbbf24;transform:translateY(-1px)}
+.btn-guest{padding:12px 0;font-family:var(--font-m);font-size:clamp(11px,1.8vw,13px);font-weight:700;background:transparent;color:var(--text-dim);border:1px solid var(--border2);border-radius:3px;cursor:pointer;letter-spacing:1px;transition:all .2s}
+.btn-guest:hover{border-color:var(--text-dim);color:var(--text)}
+.docs-link-btn{font-family:var(--font-m);font-size:10px;color:var(--text-faint);background:none;border:none;cursor:pointer;letter-spacing:1px;text-decoration:underline;transition:color .2s}
+.docs-link-btn:hover{color:var(--text-dim)}
 
-        /* LEADERBOARD */
-        .leaderboard-section{background:rgba(0,212,255,.05);border:1px solid rgba(0,212,255,.2);border-radius:10px;padding:12px;}
-        .leaderboard-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
-        .leaderboard-title{font-size:10px;color:var(--cyan);font-weight:700;letter-spacing:1px;text-transform:uppercase;}
-        .zk-badge{font-size:7px;padding:2px 6px;background:rgba(0,255,136,.15);border:1px solid var(--green);border-radius:10px;color:var(--green);font-weight:700;}
-        .leaderboard-list{max-height:150px;overflow-y:auto;}
-        .leaderboard-entry{display:flex;align-items:center;gap:6px;padding:5px 6px;border-radius:5px;margin-bottom:3px;
-            background:rgba(255,255,255,.02);border:1px solid transparent;font-size:8px;}
-        .leaderboard-entry.top-1{border-color:rgba(255,215,0,.4);background:rgba(255,215,0,.06);}
-        .leaderboard-entry.top-2{border-color:rgba(192,192,192,.4);}
-        .leaderboard-entry.top-3{border-color:rgba(205,127,50,.4);}
-        .entry-rank{width:18px;font-weight:900;color:var(--gold);}
-        .entry-address{flex:1;font-family:'Share Tech Mono',monospace;color:#aaa;}
-        .entry-score{color:var(--cyan);font-weight:700;}
-        .entry-prestige{font-size:7px;color:var(--gold);}
-        .empty-leaderboard{font-size:8px;color:#555;text-align:center;padding:14px 0;font-family:'Share Tech Mono',monospace;}
+/* DOCS */
+.docs-panel{position:absolute;inset:0;background:rgba(5,4,8,.98);border-radius:4px;z-index:65;display:none;flex-direction:column;padding:20px;gap:12px;overflow-y:auto}
+.docs-panel.open{display:flex}
+.docs-header{display:flex;justify-content:space-between;align-items:center}
+.docs-title-txt{font-family:var(--font-g);font-size:18px;color:var(--org);letter-spacing:2px}
+.docs-close{background:none;border:1px solid var(--border2);border-radius:3px;color:var(--text-dim);font-size:14px;width:28px;height:28px;cursor:pointer;font-family:var(--font-m);transition:all .2s}
+.docs-close:hover{border-color:var(--red);color:var(--red)}
+.docs-sec-title{font-family:var(--font-m);font-size:9px;color:var(--org-d);letter-spacing:2px;text-transform:uppercase;margin:8px 0 4px}
+.docs-txt{font-family:var(--font-m);font-size:11px;color:var(--text-dim);line-height:1.9}
+.docs-txt strong{color:var(--org);font-weight:400}
 
-        /* GAME AREA */
-        .game-container{display:flex;flex-direction:column;align-items:center;justify-content:center;
-            width:100%;height:100vh;position:relative;gap:3px;padding:8px;}
+/* COUNTDOWN */
+.countdown-overlay{background:rgba(5,4,8,.9);z-index:70;opacity:0;pointer-events:none;transition:opacity .2s}
+.countdown-overlay.active{opacity:1;pointer-events:all}
+.countdown-num{font-family:var(--font-g);font-size:clamp(90px,26vw,160px);color:var(--org);line-height:1;animation:cpop .8s ease-out}
+.countdown-num.go{color:var(--green);font-size:clamp(50px,16vw,100px)}
+@keyframes cpop{0%{transform:scale(2.2);opacity:0}45%{transform:scale(.9);opacity:1}100%{transform:scale(1)}}
+.countdown-sub{font-family:var(--font-m);font-size:clamp(10px,1.8vw,13px);color:var(--text-dim);letter-spacing:3px;margin-top:8px}
 
-        /* RESPONSIVE CANVAS WRAPPER */
-        .canvas-scale-wrapper{
-            position:relative;
-            width:min(600px, calc(100vw - 40px));
-            height:min(600px, calc(100vw - 40px));
-            max-height:calc(100vh - 120px);
-            flex-shrink:1;
-        }
-        canvas{display:block;width:100%;height:100%;border:2px solid var(--border);border-radius:4px;
-            box-shadow:0 0 30px rgba(107,74,255,.2),0 0 60px rgba(0,212,255,.1);}
-        canvas.danger{animation:lowHealth .5s ease-in-out infinite;border-color:var(--red) !important;}
-        @keyframes lowHealth{0%,100%{box-shadow:0 0 0 0 rgba(255,68,102,0)}50%{box-shadow:0 0 0 6px rgba(255,68,102,.5)}}
+/* PAUSE */
+.pause-overlay{background:rgba(5,4,8,.93);z-index:75;opacity:0;pointer-events:none;transition:opacity .2s}
+.pause-overlay.active{opacity:1;pointer-events:all}
+.pause-title{font-family:var(--font-g);font-size:clamp(32px,8vw,64px);color:var(--org);letter-spacing:6px}
+.pause-sub{font-family:var(--font-m);font-size:clamp(10px,1.6vw,13px);color:var(--text-dim);letter-spacing:2px}
+.btn-resume{padding:13px 40px;font-family:var(--font-g);font-size:clamp(13px,2vw,16px);letter-spacing:3px;background:var(--org);color:var(--bg);border:none;border-radius:3px;cursor:pointer;transition:all .2s}
+.btn-resume:hover{background:#fbbf24}
 
-        /* HUD */
-        .game-hud{display:flex;justify-content:space-around;align-items:center;
-            width:min(600px, calc(100vw - 40px));padding:6px 10px;
-            background:rgba(13,13,31,.9);border:1px solid var(--border);border-radius:8px;flex-shrink:0;}
-        .hud-item{text-align:center;}
-        .hud-label{font-size:clamp(6px,1.5vw,8px);color:#555;letter-spacing:1px;text-transform:uppercase;}
-        .hud-value{font-size:clamp(11px,2.5vw,14px);font-weight:700;color:var(--cyan);font-family:'Share Tech Mono',monospace;}
-        .hud-value.fees{color:var(--gold);}
-        .hud-value.block{color:var(--green);}
-        .hud-value.priority{color:var(--purple);}
+/* LEVEL COMPLETE */
+.lc-overlay{background:rgba(5,4,8,.97);z-index:60;opacity:0;pointer-events:none;transition:opacity .3s}
+.lc-overlay.active{opacity:1;pointer-events:all}
+.lc-tag{font-family:var(--font-m);font-size:clamp(10px,1.5vw,12px);letter-spacing:2px;padding:4px 14px;border-radius:2px;text-transform:uppercase}
+.lc-tag.orange{color:var(--org);border:1px solid var(--org)}
+.lc-tag.green{color:var(--green);border:1px solid var(--green)}
+.lc-tag.red{color:var(--red);border:1px solid var(--red)}
+.lc-title{font-family:var(--font-g);font-size:clamp(18px,4.5vw,30px);color:var(--text);letter-spacing:2px}
+.lc-score-reveal{background:var(--org-g);border:1px solid var(--org-d);border-radius:4px;padding:16px 28px;text-align:center}
+.lc-score-label{font-family:var(--font-m);font-size:10px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;margin-bottom:4px}
+.lc-score-num{font-family:var(--font-h);font-size:clamp(36px,7vw,56px);color:var(--org);font-weight:600;line-height:1}
+.lc-score-sub{font-family:var(--font-m);font-size:9px;color:var(--text-faint);letter-spacing:1px;margin-top:4px}
+.lc-lesson{background:var(--panel);border:1px solid var(--border2);border-radius:4px;padding:14px 16px;max-width:420px;width:100%;text-align:left}
+.lc-lesson-title{font-family:var(--font-m);font-size:9px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}
+.lc-lesson-body{font-family:var(--font-m);font-size:clamp(10px,1.7vw,12px);color:var(--text-dim);line-height:1.9}
+.lc-lesson-body strong{color:var(--org);font-weight:400}
+.btn-continue{padding:13px 36px;font-family:var(--font-g);font-size:clamp(12px,2vw,15px);letter-spacing:2px;background:transparent;color:var(--org);border:1px solid var(--org-d);border-radius:3px;cursor:pointer;text-transform:uppercase;transition:all .2s}
+.btn-continue:hover{background:var(--org-g);border-color:var(--org)}
 
-        /* FEE PROGRESS */
-        #feeProgressBar{width:min(600px, calc(100vw - 40px)) !important;}
-        #feeProgressLabel{width:min(600px, calc(100vw - 40px)) !important;font-size:8px;color:#555;text-align:center;font-family:'Share Tech Mono',monospace;}
+/* GAME OVER */
+.go-overlay{background:rgba(5,4,8,.97);z-index:60;opacity:0;pointer-events:none;transition:opacity .3s}
+.go-overlay.active{opacity:1;pointer-events:all}
+.go-title{font-family:var(--font-g);font-size:clamp(28px,6.5vw,48px);color:var(--red);letter-spacing:5px}
+.go-box{background:var(--panel);border:1px solid var(--border2);border-radius:4px;padding:16px 20px;width:100%;max-width:300px}
+.go-row{display:flex;justify-content:space-between;font-family:var(--font-m);font-size:clamp(11px,1.8vw,13px);padding:5px 0}
+.go-row .lbl{color:var(--text-dim)}.go-row .val{color:var(--org);font-weight:700}
+.go-row.total{border-top:1px solid var(--border2);margin-top:8px;padding-top:10px}
+.go-row.total .lbl{color:var(--text)}.go-row.total .val{font-family:var(--font-h);font-size:clamp(18px,3vw,24px);color:var(--org)}
+.go-note{font-family:var(--font-m);font-size:clamp(9px,1.5vw,11px);color:var(--text-faint);max-width:300px}
+.go-note strong{color:var(--green);font-weight:400}
+.go-status{font-family:var(--font-m);font-size:11px;color:var(--green);min-height:14px}
+.go-btns{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.btn-retry{padding:12px 22px;font-family:var(--font-m);font-size:clamp(11px,1.8vw,13px);font-weight:700;background:transparent;color:var(--text-dim);border:1px solid var(--border2);border-radius:3px;cursor:pointer;transition:all .2s}
+.btn-retry:hover{border-color:var(--text-dim);color:var(--text)}
+.btn-submit{padding:12px 22px;font-family:var(--font-g);font-size:clamp(12px,1.8vw,14px);letter-spacing:1px;background:var(--green);color:var(--bg);border:none;border-radius:3px;cursor:pointer;transition:all .2s}
+.btn-submit:hover{background:#4ade80}.btn-submit:disabled{opacity:.3;cursor:not-allowed}
 
-        /* ZK BAR */
-        .zk-live-bar{width:min(600px, calc(100vw - 40px));background:rgba(0,255,136,.04);
-            border:1px solid rgba(0,255,136,.15);border-radius:5px;padding:4px 10px;
-            display:none;align-items:center;gap:8px;font-family:'Share Tech Mono',monospace;font-size:8px;flex-shrink:0;}
-        .zk-dot{width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0;animation:zkPulse 1.5s ease-in-out infinite;}
-        @keyframes zkPulse{0%,100%{opacity:1}50%{opacity:.4}}
-        .zk-live-text{color:#00ff88;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-        .zk-live-actions,.zk-live-seed{color:#444;font-size:7px;white-space:nowrap;}
+/* TIP TOAST */
+.tip-toast{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:rgba(10,8,16,.96);border:1px solid var(--border2);border-radius:3px;padding:8px 16px;font-family:var(--font-m);font-size:clamp(10px,1.7vw,12px);color:var(--text-dim);max-width:94%;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:0;transition:opacity .3s;pointer-events:none;z-index:80}
+.tip-toast.show{opacity:1}
+.tip-toast.good{color:var(--org);border-color:var(--org-d)}
+.tip-toast.bad{color:var(--red);border-color:#7a1010}
 
-        /* TOOLTIP */
-        .tooltip{position:absolute;top:6px;left:50%;transform:translateX(-50%);
-            background:rgba(13,13,31,.95);border:1px solid var(--cyan);border-radius:7px;
-            padding:6px 12px;max-width:90%;font-size:9px;color:var(--cyan);text-align:center;
-            font-family:'Share Tech Mono',monospace;line-height:1.5;z-index:100;
-            opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;}
-        .tooltip.show{opacity:1;}
-        .tooltip.warning{border-color:var(--red);color:var(--red);}
-        .tooltip.reward{border-color:var(--gold);color:var(--gold);}
+/* WALLET MODAL */
+.modal-bd{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;align-items:center;justify-content:center}
+.modal-bd.open{display:flex}
+.modal{background:var(--panel);border:1px solid var(--border2);border-top:2px solid var(--org);border-radius:4px;padding:28px 22px;width:min(360px,calc(100vw - 32px));display:flex;flex-direction:column;gap:14px}
+.modal-title{font-family:var(--font-g);font-size:18px;color:var(--org);letter-spacing:2px}
+.modal-body{font-family:var(--font-m);font-size:12px;color:var(--text-dim);line-height:1.8}
+.modal-body strong{color:var(--org);font-weight:400}
+.modal-status{font-family:var(--font-m);font-size:11px;color:var(--green);min-height:14px}
+.modal-btns{display:flex;gap:10px;flex-wrap:wrap}
+.modal-btn{flex:1;padding:12px;font-family:var(--font-m);font-size:12px;font-weight:700;border-radius:3px;cursor:pointer;border:1px solid var(--border2);background:transparent;color:var(--text-dim);transition:all .2s}
+.modal-btn:hover{border-color:var(--text-dim);color:var(--text)}
+.modal-btn.primary{background:var(--org);color:var(--bg);border-color:var(--org)}
+.modal-btn.primary:hover{background:#fbbf24}
+.modal-btn.cancel{border-color:transparent;color:var(--text-faint);font-size:11px;flex:unset}
+.modal-btn.cancel:hover{color:var(--text-dim);border-color:transparent}
 
-        /* ALL OVERLAYS */
-        .start-screen,.game-over-screen,.level-complete-screen,.countdown-overlay{
-            position:absolute;inset:0;display:flex;flex-direction:column;
-            align-items:center;justify-content:center;border-radius:4px;
-            padding:16px;text-align:center;overflow-y:auto;gap:10px;}
-        .start-screen{background:rgba(5,5,15,.97);z-index:50;}
-        .start-screen.hidden{display:none;}
-        .game-over-screen{background:rgba(5,5,15,.96);z-index:50;opacity:0;pointer-events:none;transition:opacity .3s;}
-        .game-over-screen.active{opacity:1;pointer-events:all;}
-        .level-complete-screen{background:rgba(5,5,15,.97);z-index:60;opacity:0;pointer-events:none;transition:opacity .35s;}
-        .level-complete-screen.active{opacity:1;pointer-events:all;}
-        .countdown-overlay{background:rgba(5,5,15,.82);z-index:70;opacity:0;pointer-events:none;transition:opacity .2s;}
-        .countdown-overlay.active{opacity:1;}
-
-        /* START SCREEN */
-        .game-title{font-size:clamp(16px,5vw,26px);font-weight:900;
-            background:linear-gradient(135deg,var(--cyan),var(--purple));
-            -webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:2px;}
-        .game-subtitle{font-size:8px;color:#555;letter-spacing:2px;text-transform:uppercase;font-family:'Share Tech Mono',monospace;}
-        .narrative-box{background:rgba(107,74,255,.08);border:1px solid rgba(107,74,255,.3);
-            border-radius:8px;padding:12px 14px;max-width:360px;width:100%;text-align:left;}
-        .narrative-title{font-size:9px;color:var(--purple);font-weight:700;letter-spacing:1px;margin-bottom:6px;text-transform:uppercase;}
-        .narrative-text{font-size:9px;color:#888;font-family:'Share Tech Mono',monospace;line-height:1.9;}
-        .narrative-text span{color:var(--cyan);}
-        .lane-info{display:flex;gap:8px;}
-        .lane-tag{padding:5px 10px;border-radius:5px;font-size:8px;font-weight:700;border:1px solid;letter-spacing:1px;text-transform:uppercase;}
-        .lane-slow{color:var(--green);border-color:var(--green);background:rgba(0,255,136,.08);}
-        .lane-med{color:var(--gold);border-color:var(--gold);background:rgba(255,215,0,.08);}
-        .lane-fast{color:var(--red);border-color:var(--red);background:rgba(255,68,102,.08);}
-        .start-instructions{font-size:8px;color:#555;line-height:2;font-family:'Share Tech Mono',monospace;}
-        .start-btn{font-family:'Orbitron',sans-serif;font-size:13px;font-weight:700;padding:13px 40px;
-            background:linear-gradient(135deg,var(--purple),var(--cyan));border:none;border-radius:8px;
-            color:#fff;cursor:pointer;text-transform:uppercase;letter-spacing:3px;
-            box-shadow:0 6px 30px rgba(107,74,255,.5);animation:bounce 1.2s ease-in-out infinite;transition:all .3s;}
-        .start-btn:hover{animation:none;transform:translateY(-3px);}
-        @keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
-
-        /* GAME OVER */
-        .game-over-title{font-size:clamp(22px,5vw,32px);font-weight:900;color:var(--red);letter-spacing:4px;}
-        .block-result{font-size:9px;color:#555;font-family:'Share Tech Mono',monospace;letter-spacing:1px;}
-        .score-breakdown{background:rgba(107,74,255,.08);border:1px solid rgba(107,74,255,.3);
-            border-radius:8px;padding:12px;width:100%;max-width:340px;}
-        .score-row{display:flex;justify-content:space-between;font-size:9px;padding:3px 0;font-family:'Share Tech Mono',monospace;}
-        .score-row .label{color:#666;}.score-row .val{color:var(--cyan);font-weight:700;}
-        .score-row.total .label{color:var(--gold);font-weight:700;}.score-row.total .val{color:var(--gold);font-size:13px;}
-        .zk-proof-status{font-size:9px;padding:8px 14px;border-radius:7px;
-            background:rgba(0,255,136,.08);border:1px solid rgba(0,255,136,.3);
-            color:var(--green);width:100%;max-width:340px;font-family:'Share Tech Mono',monospace;display:none;}
-        .zk-proof-status.generating{animation:pulse-green 1s infinite;}
-        @keyframes pulse-green{0%,100%{border-color:rgba(0,255,136,.3)}50%{border-color:var(--green)}}
-        .prestige-available-banner{background:rgba(255,215,0,.1);border:1px solid var(--gold);
-            border-radius:7px;padding:8px 14px;font-size:9px;color:var(--gold);display:none;
-            font-family:'Share Tech Mono',monospace;max-width:340px;}
-        .game-over-buttons{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;}
-        .restart-btn{padding:10px 20px;background:rgba(107,74,255,.2);border:1px solid var(--purple);
-            border-radius:7px;color:var(--purple);font-family:'Orbitron',sans-serif;font-size:9px;
-            font-weight:700;cursor:pointer;letter-spacing:1px;transition:all .3s;}
-        .restart-btn:hover{background:rgba(107,74,255,.4);}
-        .submit-score-btn{padding:10px 20px;background:linear-gradient(135deg,var(--green),#00aa55);
-            border:none;border-radius:7px;color:#000;font-family:'Orbitron',sans-serif;font-size:9px;
-            font-weight:900;cursor:pointer;letter-spacing:1px;transition:all .3s;}
-        .submit-score-btn:hover{transform:translateY(-2px);}
-        .submit-score-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
-        .prestige-action-btn{padding:10px 20px;background:linear-gradient(135deg,#7a6000,var(--gold));
-            border:none;border-radius:7px;color:#000;font-family:'Orbitron',sans-serif;font-size:9px;
-            font-weight:900;cursor:pointer;letter-spacing:1px;transition:all .3s;display:none;}
-
-        /* LEVEL COMPLETE */
-        .lc-badge{font-size:9px;font-weight:700;letter-spacing:2px;padding:3px 12px;border-radius:20px;text-transform:uppercase;}
-        .lc-badge.green{color:var(--green);border:1px solid var(--green);background:rgba(0,255,136,.1);}
-        .lc-badge.gold{color:var(--gold);border:1px solid var(--gold);background:rgba(255,215,0,.1);}
-        .lc-badge.purple{color:var(--purple);border:1px solid var(--purple);background:rgba(107,74,255,.1);}
-        .lc-badge.red{color:var(--red);border:1px solid var(--red);background:rgba(255,68,102,.1);}
-        .lc-title{font-size:clamp(16px,4vw,24px);font-weight:900;letter-spacing:2px;
-            background:linear-gradient(135deg,var(--cyan),var(--purple));
-            -webkit-background-clip:text;-webkit-text-fill-color:transparent;}
-        .lc-subtitle{font-size:8px;color:#666;letter-spacing:1px;font-family:'Share Tech Mono',monospace;}
-        .lc-lesson-box{background:rgba(0,212,255,.06);border:1px solid rgba(0,212,255,.25);
-            border-radius:10px;padding:12px 14px;max-width:400px;width:100%;text-align:left;}
-        .lc-lesson-title{font-size:9px;color:var(--cyan);font-weight:700;letter-spacing:1px;margin-bottom:6px;text-transform:uppercase;}
-        .lc-lesson-text{font-size:9px;color:#888;font-family:'Share Tech Mono',monospace;line-height:1.8;}
-        .lc-lesson-text span{color:var(--cyan);}.lc-lesson-text strong{color:var(--gold);}
-        .lc-next-box{background:rgba(107,74,255,.08);border:1px solid rgba(107,74,255,.3);
-            border-radius:10px;padding:10px 14px;max-width:400px;width:100%;text-align:left;}
-        .lc-next-title{font-size:9px;color:var(--purple);font-weight:700;letter-spacing:1px;margin-bottom:6px;text-transform:uppercase;}
-        .lc-next-stats{display:flex;gap:14px;flex-wrap:wrap;}
-        .lc-stat{font-size:8px;font-family:'Share Tech Mono',monospace;}
-        .lc-stat .stat-label{color:#555;margin-bottom:1px;}.lc-stat .stat-val{color:var(--purple);font-weight:700;font-size:12px;}
-        .lc-continue-btn{font-family:'Orbitron',sans-serif;font-size:11px;font-weight:700;padding:12px 36px;
-            background:linear-gradient(135deg,var(--purple),var(--cyan));border:none;border-radius:8px;
-            color:#fff;cursor:pointer;text-transform:uppercase;letter-spacing:2px;
-            box-shadow:0 6px 25px rgba(107,74,255,.5);animation:bounce 1.2s ease-in-out infinite;}
-        .lc-continue-btn:hover{animation:none;transform:translateY(-2px);}
-
-        /* COUNTDOWN */
-        .countdown-num{font-size:clamp(60px,20vw,120px);font-weight:900;font-family:'Orbitron',sans-serif;
-            background:linear-gradient(135deg,var(--cyan),var(--purple));
-            -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-            animation:countPop .9s ease-out;line-height:1;}
-        .countdown-num.go{font-size:clamp(40px,12vw,72px);background:linear-gradient(135deg,var(--green),var(--cyan));
-            -webkit-background-clip:text;-webkit-text-fill-color:transparent;}
-        .countdown-sub{font-size:10px;color:#555;letter-spacing:2px;font-family:'Share Tech Mono',monospace;}
-        @keyframes countPop{0%{transform:scale(2.5);opacity:0}40%{transform:scale(.9);opacity:1}100%{transform:scale(1)}}
-
-        /* FOOTER */
-        .stellar-footer{position:fixed;bottom:8px;left:50%;transform:translateX(-50%);
-            font-size:8px;color:#333;display:flex;align-items:center;gap:6px;z-index:10;
-            font-family:'Share Tech Mono',monospace;pointer-events:none;}
-        .stellar-footer-logo{width:12px;height:12px;border-radius:50%;background:linear-gradient(135deg,var(--cyan),var(--purple));}
+@media(max-width:480px){.navbar{padding:0 10px}.nav-title{display:none}.nav-btn{padding:6px 10px;font-size:11px}.game-area{padding:5px 8px;gap:5px}.hud{padding:5px 10px}.tip-toast{white-space:normal;font-size:10px}}
+@media(min-width:768px){.canvas-wrap{max-width:min(600px,calc(100vh - 180px))}}
     </style>
 </head>
 <body>
 
-<div class="menu-toggle" id="menuToggle"><span></span><span></span><span></span></div>
-<div class="sidebar-overlay" id="sidebarOverlay"></div>
-
-<div class="main-container">
-    <!-- SIDEBAR -->
-    <div class="sidebar" id="sidebar">
-        <div style="height: 40px;"></div>
-
-        <!-- Wallet -->
-        <div class="wallet-section">
-            <div class="wallet-header">
-                <div class="stellar-logo">S</div>
-                <div class="wallet-title">Stellar Wallet</div>
-            </div>
-            <div class="wallet-status" id="walletStatus">Not Connected</div>
-            <button class="connect-wallet-btn" id="connectWalletBtn">Connect Wallet</button>
-        </div>
-
-        <!-- Prestige -->
-        <div class="prestige-section">
-            <div class="prestige-title">⚡ Validator Prestige</div>
-            <div class="prestige-info" id="prestigeInfo">
-                Level: <span id="prestigeLevel">0</span> &nbsp;·&nbsp;
-                Mult: <span id="prestigeMult">1.0x</span><br>
-                Fees: <span id="totalFees">0</span> / 5000
-            </div>
-            <button class="prestige-btn" id="prestigeBtn">BECOME VALIDATOR</button>
-        </div>
-
-        <!-- Upgrade Shop -->
-        <div class="shop-section">
-            <div class="shop-title">🔧 Tx Upgrades</div>
-            <div id="upgradeList"></div>
-        </div>
-
-        <!-- Leaderboard -->
-        <div class="leaderboard-section">
-            <div class="leaderboard-header">
-                <div class="leaderboard-title">🏆 Validators</div>
-                <div class="zk-badge">ZK Verified</div>
-            </div>
-            <div class="leaderboard-list" id="leaderboardList">
-                <div class="empty-leaderboard">No validators yet.<br>Be the first!</div>
-            </div>
-        </div>
+<div class="modal-bd" id="walletModal">
+  <div class="modal">
+    <div class="modal-title">CONNECT WALLET</div>
+    <div class="modal-body">Use <strong>Freighter wallet</strong> to submit ZK-verified scores.<br>Or create a <strong>demo testnet account</strong> funded automatically.</div>
+    <div class="modal-status" id="walletStatus"></div>
+    <div class="modal-btns">
+      <button class="modal-btn primary" id="modalFreighterBtn">Freighter</button>
+      <button class="modal-btn" id="modalDemoBtn">Demo Account</button>
     </div>
-
-    <!-- GAME -->
-    <div class="game-container">
-        <!-- HUD -->
-        <div class="game-hud">
-            <div class="hud-item">
-                <div class="hud-label">Fees Collected</div>
-                <div class="hud-value fees" id="score">0</div>
-            </div>
-            <div class="hud-item">
-                <div class="hud-label">Level</div>
-                <div class="hud-value" id="levelDisplay" style="color:var(--purple)">S1-L1</div>
-            </div>
-            <div class="hud-item">
-                <div class="hud-label">Priority</div>
-                <div class="hud-value priority" id="speed">1.00x</div>
-            </div>
-            <div class="hud-item">
-                <div class="hud-label">Prestige</div>
-                <div class="hud-value" id="hudPrestige" style="color:var(--gold)">Lv.0</div>
-            </div>
-        </div>
-        <!-- Fee progress bar -->
-        <div id="feeProgressBar" style="width:600px;height:6px;background:rgba(255,255,255,0.08);border-radius:3px;margin-bottom:4px;overflow:hidden;display:none;">
-            <div id="feeProgressFill" style="height:100%;width:0%;background:linear-gradient(90deg,var(--purple),var(--cyan));transition:width 0.3s;border-radius:3px;"></div>
-        </div>
-        <div id="feeProgressLabel" style="width:600px;font-size:9px;color:#555;text-align:center;font-family:'Share Tech Mono',monospace;margin-bottom:4px;display:none;">
-            FEE PROGRESS: 0 / 300 · OBSTACLE DAMAGE: 15%
-        </div>
-
-        <!-- ZK Live Recording Bar -->
-        <div class="zk-live-bar" id="zkLiveBar">
-            <div class="zk-dot"></div>
-            <span class="zk-live-text">🔐 ZK Recording — actions being committed to proof</span>
-            <span class="zk-live-actions" id="zkActionCount">0 ticks</span>
-            <span class="zk-live-seed" id="zkSeedDisplay">seed: —</span>
-        </div>
-
-        <!-- Tooltip -->
-        <div class="tooltip" id="tooltip"></div>
-
-        <div class="canvas-scale-wrapper">
-            <!-- Canvas -->
-            <canvas id="gameCanvas" width="600" height="600"></canvas>
-
-            <!-- Countdown Overlay -->
-            <div class="countdown-overlay" id="countdownOverlay">
-                <div class="countdown-num" id="countdownNum">3</div>
-                <div class="countdown-sub" id="countdownSub">MEMPOOL ENTRY IN...</div>
-            </div>
-
-            <!-- Start Screen -->
-            <div class="start-screen" id="startScreen">
-                <div class="game-title">CHAIN SPEEDWAY</div>
-                <div class="game-subtitle">ZK Transaction Racing on Stellar</div>
-
-                <div class="narrative-box">
-                    <div class="narrative-title">📡 You Are a Stellar TX</div>
-                    <div class="narrative-text">
-                        Race through the <span>mempool</span>. Collect <span>fee gems</span>.<br>
-                        Dodge threats — each one teaches real blockchain concepts.<br>
-                        Reach block confirmation. Submit your <span>ZK proof</span>.
-                    </div>
-                </div>
-
-                <div class="lane-info">
-                    <div class="lane-tag lane-slow">Slow</div>
-                    <div class="lane-tag lane-med">Medium</div>
-                    <div class="lane-tag lane-fast">Fast</div>
-                </div>
-
-                <div class="start-instructions">
-                    ← → to switch lanes &nbsp;·&nbsp; 💎 Collect gems &nbsp;·&nbsp; ⛔ Dodge threats
-                </div>
-                <button class="start-btn" id="startBtn">BROADCAST TX</button>
-            </div>
-
-            <!-- Level Complete Interstitial -->
-            <div class="level-complete-screen" id="levelCompleteScreen">
-                <div class="lc-badge green" id="lcBadge">LEVEL COMPLETE</div>
-                <div class="lc-title" id="lcTitle">BLOCK CONFIRMED</div>
-                <div class="lc-subtitle" id="lcSubtitle">Transaction validated successfully</div>
-
-                <div class="lc-lesson-box">
-                    <div class="lc-lesson-title" id="lcLessonTitle">📡 What You Just Learned</div>
-                    <div class="lc-lesson-text" id="lcLessonText">Lesson text goes here.</div>
-                </div>
-
-                <div class="lc-next-box">
-                    <div class="lc-next-title" id="lcNextTitle">▶ NEXT: What's Ahead</div>
-                    <div class="lc-next-stats" id="lcNextStats"></div>
-                </div>
-
-                <button class="lc-continue-btn" id="lcContinueBtn">CONTINUE →</button>
-            </div>
-
-            <!-- Game Over -->
-            <div class="game-over-screen" id="gameOverScreen">
-                <div class="game-over-title">TX REJECTED</div>
-                <div class="block-result" id="blockResult">Transaction failed to reach confirmation</div>
-
-                <div class="score-breakdown">
-                    <div class="score-row"><span class="label">Blocks Confirmed</span><span class="val" id="finalBlocks">0</span></div>
-                    <div class="score-row"><span class="label">Threats Dodged</span><span class="val" id="finalDodged">0</span></div>
-                    <div class="score-row"><span class="label">Prestige Multiplier</span><span class="val" id="finalMult">1.0x</span></div>
-                    <div class="score-row" id="finalZKRow" style="border-top:1px solid rgba(0,255,136,.15);margin-top:4px;padding-top:4px;">
-                        <span class="label" style="color:var(--green)">🔐 ZK Proof</span>
-                        <span class="val" style="color:var(--green);font-size:8px;">Ready</span>
-                    </div>
-                    <div class="score-row total"><span class="label">Total Fees</span><span class="val" id="finalScore">0</span></div>
-                </div>
-
-                <div class="prestige-available-banner" id="prestigeBanner">
-                    ⚡ Enough fees to Prestige! Become a Validator →
-                </div>
-
-                <div class="zk-proof-status" id="zkProofStatus">Generating ZK Proof...</div>
-
-                <div class="game-over-buttons">
-                    <button class="restart-btn" id="restartBtn">RETRY TX</button>
-                    <button class="submit-score-btn" id="submitScoreBtn">SUBMIT TO LEDGER</button>
-                    <button class="prestige-action-btn" id="prestigeActionBtn">⚡ PRESTIGE</button>
-                </div>
-            </div>
-        </div>
-    </div>
+    <button class="modal-btn cancel" id="modalCancelBtn">Cancel</button>
+  </div>
 </div>
 
-<div class="stellar-footer">
-    <div class="stellar-footer-logo"></div>
-    <span>Stellar Chain Speedway · Protocol 25</span>
+<nav class="navbar">
+  <a class="nav-brand" href="#">
+    <div class="nav-logo">CS</div>
+    <span class="nav-title">CHAIN SPEEDWAY</span>
+  </a>
+  <div class="nav-right">
+    <a class="nav-btn" href="./leaderboard.html" target="_blank">🏆 LEADERBOARD</a>
+    <button class="nav-btn nav-btn-wallet" id="navWalletBtn">⬡ WALLET</button>
+  </div>
+</nav>
+
+<div class="game-area">
+  <div class="hud">
+    <div class="hud-item"><div class="hud-label">Level Fees</div><div class="hud-val" id="score">0</div></div>
+    <div class="hud-item"><div class="hud-label">Stage</div><div class="hud-val level" id="levelDisplay">—</div></div>
+    <div class="hud-item"><div class="hud-label">Speed</div><div class="hud-val speed" id="speed">—</div></div>
+    <button class="hud-pause hidden" id="pauseBtn" title="Pause [ESC]">⏸</button>
+  </div>
+  <div class="fee-bar-wrap" id="feeBarWrap">
+    <div class="fee-bar-track"><div class="fee-bar-fill" id="feeBarFill"></div></div>
+    <div class="fee-bar-label" id="feeBarLabel">0 / 0</div>
+  </div>
+  <div class="canvas-wrap">
+    <canvas id="gameCanvas" width="600" height="600"></canvas>
+    <div class="tip-toast" id="tipToast"></div>
+
+    <div class="overlay start-overlay" id="startScreen">
+      <div class="glitch-title">CHAIN SPEEDWAY</div>
+      <div class="title-sub">ZK TRANSACTION RACER · STELLAR TESTNET</div>
+      <div class="pixel-divider"></div>
+      <div class="controls-hint"><span>← →</span> switch lanes &nbsp;·&nbsp; <span>💎</span> collect gems &nbsp;·&nbsp; <span>⛔</span> dodge threats<br><span>ESC</span> pause &nbsp;·&nbsp; each level score is submitted independently</div>
+      <div class="start-buttons">
+        <button class="btn-play" id="startOnChainBtn">▶ PLAY ON-CHAIN</button>
+        <button class="btn-guest" id="startGuestBtn">PLAY AS GUEST</button>
+      </div>
+      <button class="docs-link-btn" id="docsLinkBtn">What is this? / How to play</button>
+    </div>
+
+    <div class="docs-panel" id="docsPanel">
+      <div class="docs-header"><div class="docs-title-txt">HOW TO PLAY</div><button class="docs-close" id="docsClose">✕</button></div>
+      <div class="docs-sec-title">Objective</div>
+      <div class="docs-txt">You are a <strong>Stellar transaction</strong> racing through the mempool. Collect <strong>fee gems</strong> to hit the level target. Each completed level submits that level's score independently.</div>
+      <div class="docs-sec-title">Level Structure</div>
+      <div class="docs-txt"><strong>Level 1</strong> — Collection phase: slow speed, high gem density. Fill your fees.<br><strong>Level 2</strong> — Balanced: faster, mixed threats and gems. Execution matters.<br><strong>Level 3</strong> — Gauntlet: fast + sparse gems + wave obstacle patterns. Survive.</div>
+      <div class="docs-sec-title">Threats</div>
+      <div class="docs-txt"><strong>⛔ Double-Spend</strong> — validator rejects duplicate txs<br><strong>🌐 Congestion</strong> — mempool backlog hits your fees<br><strong>🔑 Invalid Sig</strong> — Ed25519 mismatch, tx rejected<br><strong>🤖 MEV Bot</strong> — front-run steal</div>
+      <div class="docs-sec-title">ZK Scoring</div>
+      <div class="docs-txt">Each level score gets a <strong>zero-knowledge proof</strong> — proves the score is real without revealing gameplay. Rankings public. Strategies private.</div>
+    </div>
+
+    <div class="overlay countdown-overlay" id="countdownOverlay">
+      <div class="countdown-num" id="countdownNum">3</div>
+      <div class="countdown-sub" id="countdownSub">ENTERING MEMPOOL</div>
+    </div>
+
+    <div class="overlay pause-overlay" id="pauseOverlay">
+      <div class="pause-title">PAUSED</div>
+      <div class="pause-sub">PRESS ESC OR CLICK RESUME</div>
+      <button class="btn-resume" id="resumeBtn">▶ RESUME</button>
+    </div>
+
+    <div class="overlay lc-overlay" id="lcScreen">
+      <div class="lc-tag" id="lcTag">LEVEL COMPLETE</div>
+      <div class="lc-title" id="lcTitle">BLOCK CONFIRMED</div>
+      <div class="lc-score-reveal">
+        <div class="lc-score-label">Level Score</div>
+        <div class="lc-score-num" id="lcScoreNum">0</div>
+        <div class="lc-score-sub" id="lcScoreSub">FEES COLLECTED THIS LEVEL</div>
+      </div>
+      <div class="lc-lesson">
+        <div class="lc-lesson-title">📡 Blockchain Concept</div>
+        <div class="lc-lesson-body" id="lcLessonBody">—</div>
+      </div>
+      <button class="btn-continue" id="lcContinueBtn">NEXT LEVEL →</button>
+    </div>
+
+    <div class="overlay go-overlay" id="goScreen">
+      <div class="go-title">TX REJECTED</div>
+      <div class="go-box">
+        <div class="go-row"><span class="lbl">Levels Cleared</span><span class="val" id="goLevels">0</span></div>
+        <div class="go-row"><span class="lbl">Threats Dodged</span><span class="val" id="goDodged">0</span></div>
+        <div class="go-row total"><span class="lbl">Best Level Score</span><span class="val" id="goBest">0</span></div>
+      </div>
+      <div class="go-note" id="goNote"></div>
+      <div class="go-status" id="goStatus"></div>
+      <div class="go-btns">
+        <button class="btn-retry" id="retryBtn">↺ RETRY</button>
+        <button class="btn-submit" id="submitBtn" disabled>SUBMIT BEST SCORE</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
-// ============================================================
-// STELLAR CONFIG
-// ============================================================
-const CONTRACT_ID = 'CA7DLSPSWKZSU425D3W5TXTPS4GQMTX5T2AFUI6TREJZWML5MIKRC54S';
-const GAME_HUB   = 'CB4VZAT2U3UC6XFK3N23SKRF2NDCMP3QHJYMCHHFMZO7MRQO6DQ2EMYG';
-const RPC_URL    = 'https://soroban-testnet.stellar.org';
-const NET_PASS   = 'Test SDF Network ; September 2015';
-const PROVER_URL = 'http://localhost:3002/prove';
-let sessionId    = null;
+const CONTRACT_ID='CA7DLSPSWKZSU425D3W5TXTPS4GQMTX5T2AFUI6TREJZWML5MIKRC54S';
+const RPC_URL='https://soroban-testnet.stellar.org';
+const NET_PASS='Test SDF Network ; September 2015';
+const PROVER_URL='http://localhost:3002/prove';
+let sessionId=null;
+let wallet={connected:false,address:null,keypair:null,isGuest:false};
 
-// ============================================================
-// SIDEBAR
-// ============================================================
-const menuToggle     = document.getElementById('menuToggle');
-const sidebar        = document.getElementById('sidebar');
-const sidebarOverlay = document.getElementById('sidebarOverlay');
+// ── WALLET ──
+const navWalletBtn=document.getElementById('navWalletBtn');
+const walletModal=document.getElementById('walletModal');
+const walletStatus=document.getElementById('walletStatus');
 
-function toggleSidebar() {
-    sidebar.classList.toggle('open');
-    sidebarOverlay.classList.toggle('active');
-    menuToggle.classList.toggle('active');
-}
-menuToggle.addEventListener('click', (e) => { e.stopPropagation(); toggleSidebar(); });
-sidebarOverlay.addEventListener('click', toggleSidebar);
-sidebar.addEventListener('click', (e) => e.stopPropagation());
-document.addEventListener('keydown', e => {
-    if (e.key === 'Escape' && sidebar.classList.contains('open')) toggleSidebar();
+function openWalletModal(){walletModal.classList.add('open');walletStatus.textContent=''}
+function closeWalletModal(){walletModal.classList.remove('open')}
+navWalletBtn.addEventListener('click',()=>wallet.connected?disconnectWallet():openWalletModal());
+document.getElementById('modalCancelBtn').addEventListener('click',closeWalletModal);
+walletModal.addEventListener('click',e=>{if(e.target===walletModal)closeWalletModal()});
+
+document.getElementById('modalFreighterBtn').addEventListener('click',async()=>{
+    walletStatus.textContent='Connecting…';
+    try{
+        if(typeof window.freighterApi!=='undefined'){
+            const ok=await window.freighterApi.isConnected();
+            if(ok){const pk=await window.freighterApi.getPublicKey();wallet={connected:true,address:pk,keypair:null,isGuest:false};updateWalletUI();closeWalletModal();return}
+        }
+        walletStatus.textContent='Freighter not found — try Demo Account.';
+    }catch(e){walletStatus.textContent='Error: '+e.message}
 });
 
-// ============================================================
-// WALLET
-// ============================================================
-let walletState = { connected: false, address: null, keypair: null };
-
-const connectWalletBtn = document.getElementById('connectWalletBtn');
-const walletStatus     = document.getElementById('walletStatus');
-
-async function connectWallet() {
-    try {
-        connectWalletBtn.textContent = 'Connecting...';
-        connectWalletBtn.disabled = true;
-
-        if (typeof window.freighterApi !== 'undefined') {
-            const allowed = await window.freighterApi.isConnected();
-            if (allowed) {
-                const pk = await window.freighterApi.getPublicKey();
-                walletState.connected = true;
-                walletState.address = pk;
-                updateWalletUI();
-                return;
-            }
-        }
-
-        // Demo keypair — fund via friendbot
-        const kp = StellarSdk.Keypair.random();
-        walletStatus.textContent = 'Funding testnet account...';
+document.getElementById('modalDemoBtn').addEventListener('click',async()=>{
+    walletStatus.textContent='Generating keypair…';
+    document.getElementById('modalDemoBtn').disabled=true;
+    try{
+        const kp=StellarSdk.Keypair.random();
+        walletStatus.textContent='Funding via Friendbot…';
         await fetch(`https://friendbot.stellar.org?addr=${kp.publicKey()}`);
-        walletState = { connected: true, address: kp.publicKey(), keypair: kp };
-        updateWalletUI();
-        fetchLeaderboard();
-    } catch (e) {
-        console.error(e);
-        connectWalletBtn.textContent = 'Connect Wallet';
-        connectWalletBtn.disabled = false;
-    }
-}
-
-function updateWalletUI() {
-    walletStatus.classList.add('connected');
-    walletStatus.textContent = `✓ ${walletState.address.slice(0,8)}...${walletState.address.slice(-4)}`;
-    connectWalletBtn.textContent = '✕ Disconnect';
-    connectWalletBtn.style.background = 'linear-gradient(135deg,#3a1a1a,#5a2a2a)';
-    connectWalletBtn.disabled = false;
-}
-
-function disconnectWallet() {
-    walletState = { connected: false, address: null, keypair: null };
-    walletStatus.classList.remove('connected');
-    walletStatus.textContent = 'Not Connected';
-    connectWalletBtn.textContent = 'Connect Wallet';
-    connectWalletBtn.style.background = 'linear-gradient(135deg,var(--purple),var(--cyan))';
-}
-
-function shortenAddress(a) { return a ? `${a.slice(0,6)}...${a.slice(-4)}` : ''; }
-
-connectWalletBtn.addEventListener('click', () => {
-    if (walletState.connected) disconnectWallet();
-    else connectWallet();
+        wallet={connected:true,address:kp.publicKey(),keypair:kp,isGuest:false};
+        updateWalletUI();closeWalletModal();
+    }catch(e){walletStatus.textContent='Failed: '+e.message;document.getElementById('modalDemoBtn').disabled=false}
 });
 
-// ============================================================
-// PRESTIGE SYSTEM
-// ============================================================
-let prestigeData = {
-    level: 0,
-    multiplier: 1.0,
-    totalFeesEarned: 0,
-    prestigeThreshold: 5000
+function updateWalletUI(){
+    if(wallet.connected){navWalletBtn.textContent='✓ '+wallet.address.slice(0,6)+'…'+wallet.address.slice(-4);navWalletBtn.classList.add('connected')}
+    else{navWalletBtn.textContent='⬡ WALLET';navWalletBtn.classList.remove('connected')}
+}
+function disconnectWallet(){wallet={connected:false,address:null,keypair:null,isGuest:false};updateWalletUI();showTip('Wallet disconnected','',2000)}
+
+// ── TIP TOAST ──
+let tipTimer=null;
+function showTip(msg,type='',dur=3500){
+    const el=document.getElementById('tipToast');
+    el.textContent=msg;el.className='tip-toast show'+(type?' '+type:'');
+    clearTimeout(tipTimer);tipTimer=setTimeout(()=>el.classList.remove('show'),dur);
+}
+const EDU={
+    doublespend:['bad','⚠ Double-Spend: validators reject duplicate txs in milliseconds'],
+    congestion: ['bad','🌐 Congestion: your tx drops priority — fees pay the penalty'],
+    invalidsig: ['bad','🔑 Invalid Signature: Ed25519 mismatch — this tx was never yours'],
+    mevbot:     ['bad','🤖 MEV Bot: front-ran your order and extracted fee value'],
+    feegem:     ['good','💎 Fee collected — validators earn this. Higher fees = faster inclusion'],
+    zkboost:    ['good','⚡ ZK Gem — Protocol 25 priority op: speed burst granted'],
 };
+const eduCD={};
+function eduTip(k){if(eduCD[k])return;eduCD[k]=true;const[t,m]=EDU[k]||['',''];showTip(m,t,4000);setTimeout(()=>delete eduCD[k],9000)}
 
-function updatePrestigeUI() {
-    document.getElementById('prestigeLevel').textContent = prestigeData.level;
-    document.getElementById('prestigeMult').textContent  = prestigeData.multiplier.toFixed(1) + 'x';
-    document.getElementById('totalFees').textContent     = Math.floor(prestigeData.totalFeesEarned);
-    document.getElementById('hudPrestige').textContent   = 'Lv.' + prestigeData.level;
-
-    const btn = document.getElementById('prestigeBtn');
-    if (prestigeData.totalFeesEarned >= prestigeData.prestigeThreshold) {
-        btn.classList.add('available');
-    } else {
-        btn.classList.remove('available');
+// ── PAUSE ──
+let paused=false;
+const pauseBtn=document.getElementById('pauseBtn');
+const pauseOverlay=document.getElementById('pauseOverlay');
+function pauseGame(){if(!gs?.running)return;paused=true;gs.running=false;if(gs.animId){cancelAnimationFrame(gs.animId);gs.animId=null}pauseOverlay.classList.add('active');pauseBtn.textContent='▶'}
+function resumeGame(){if(!paused)return;paused=false;gs.running=true;pauseOverlay.classList.remove('active');pauseBtn.textContent='⏸';loop()}
+pauseBtn.addEventListener('click',()=>paused?resumeGame():pauseGame());
+document.getElementById('resumeBtn').addEventListener('click',resumeGame);
+pauseOverlay.addEventListener('click',e=>{if(e.target===pauseOverlay)resumeGame()});
+document.addEventListener('keydown',e=>{
+    if(e.key==='Escape'){
+        if(document.getElementById('docsPanel').classList.contains('open')){document.getElementById('docsPanel').classList.remove('open');return}
+        if(!gs||(!gs.running&&!paused))return;
+        paused?resumeGame():pauseGame();
     }
-}
+});
 
-function doPrestige() {
-    if (prestigeData.totalFeesEarned < prestigeData.prestigeThreshold) return;
-    prestigeData.level++;
-    prestigeData.multiplier = parseFloat((1.0 + prestigeData.level * 0.25).toFixed(2));
-    prestigeData.totalFeesEarned = 0;
-    prestigeData.prestigeThreshold = Math.floor(5000 * Math.pow(1.5, prestigeData.level));
-
-    // Reset upgrades
-    upgrades.forEach(u => { u.level = 0; });
-    renderUpgrades();
-    updatePrestigeUI();
-    showTooltip(`⚡ PRESTIGE! You are now a Validator Lv.${prestigeData.level}! Permanent ${prestigeData.multiplier}x multiplier applied.`, 'reward', 4000);
-    document.getElementById('prestigeActionBtn').style.display = 'none';
-    document.getElementById('prestigeBanner').style.display = 'none';
-}
-
-document.getElementById('prestigeBtn').addEventListener('click', doPrestige);
-document.getElementById('prestigeActionBtn').addEventListener('click', doPrestige);
-
-// ============================================================
-// UPGRADE SHOP
-// ============================================================
-const upgrades = [
-    { id: 'sig',     name: 'Ed25519 Optimizer',  desc: '+dodge speed',       cost: 50,  maxLevel: 3, level: 0, effect: 'dodge' },
-    { id: 'fee',     name: 'Fee Buffer',          desc: 'survive 1 hit',      cost: 120, maxLevel: 1, level: 0, effect: 'shield' },
-    { id: 'zk',      name: 'ZK Proof Booster',   desc: '+10% fee gems',      cost: 200, maxLevel: 3, level: 0, effect: 'gems' },
-    { id: 'memo',    name: 'Memo Field',          desc: '+5 pts per block',   cost: 300, maxLevel: 2, level: 0, effect: 'bonus' },
-    { id: 'soroban', name: 'Soroban Gas Opt.',    desc: 'fewer obstacles',    cost: 500, maxLevel: 2, level: 0, effect: 'obstacles' },
+// ── CANVAS ──
+const canvas=document.getElementById('gameCanvas');
+const ctx=canvas.getContext('2d');
+const scoreEl=document.getElementById('score');
+const speedEl=document.getElementById('speed');
+const levelEl=document.getElementById('levelDisplay');
+const LANE_N=3,LW=canvas.width/3;
+const LANE_X=[LW/2,canvas.width/2,canvas.width-LW/2];
+const LANE_NAMES=['SLOW','MED','FAST'];
+const LANE_BG=['rgba(245,158,11,0.05)','rgba(245,158,11,0.03)','rgba(239,68,68,0.04)'];
+const THREATS=[
+    {id:'doublespend',label:'DBL-SPEND',color:'#ef4444'},
+    {id:'congestion', label:'CONGESTION',color:'#f97316'},
+    {id:'invalidsig', label:'INV-SIG',  color:'#8b5cf6'},
+    {id:'mevbot',     label:'MEV BOT',  color:'#ec4899'},
 ];
 
-let shopFees = 0; // fees available to spend in shop
+// ── LEVEL SYSTEM — differentiated per level ──
+// L1=Collection (slow+high gems), L2=Balanced, L3=Gauntlet (fast+sparse gems+waves)
+const SETS=[
+    {name:'FEE WARS',levels:[
+        {label:'S1-L1',speed:.85,target:200,gemRate:.018,obstRate:.22,maxBlock:1,dmg:.10,mode:'COLLECTION'},
+        {label:'S1-L2',speed:1.2,target:350,gemRate:.010,obstRate:.45,maxBlock:1,dmg:.15,mode:'BALANCED'},
+        {label:'S1-L3',speed:1.6,target:500,gemRate:.005,obstRate:.72,maxBlock:2,dmg:.20,mode:'GAUNTLET'},
+    ]},
+    {name:'SPEED & FEES',levels:[
+        {label:'S2-L1',speed:1.4,target:300,gemRate:.016,obstRate:.28,maxBlock:1,dmg:.22,mode:'COLLECTION'},
+        {label:'S2-L2',speed:1.9,target:500,gemRate:.009,obstRate:.55,maxBlock:2,dmg:.30,mode:'BALANCED'},
+        {label:'S2-L3',speed:2.6,target:750,gemRate:.004,obstRate:.82,maxBlock:2,dmg:.38,mode:'GAUNTLET'},
+    ]},
+    {name:'ZK PRESSURE',levels:[
+        {label:'S3-L1',speed:2.0,target:400,gemRate:.014,obstRate:.34,maxBlock:1,dmg:.45,mode:'COLLECTION'},
+        {label:'S3-L2',speed:2.8,target:650,gemRate:.008,obstRate:.65,maxBlock:2,dmg:.55,mode:'BALANCED'},
+        {label:'S3-L3',speed:3.7,target:950,gemRate:.003,obstRate:.92,maxBlock:2,dmg:.65,mode:'GAUNTLET'},
+    ]},
+    {name:'VALIDATOR WARS',levels:[
+        {label:'F-L1', speed:2.6,target:500,gemRate:.012,obstRate:.46,maxBlock:2,dmg:.75,mode:'BALANCED'},
+        {label:'F-L2', speed:3.6,target:850,gemRate:.006,obstRate:.82,maxBlock:2,dmg:.88,mode:'GAUNTLET'},
+        {label:'F-L3', speed:4.8,target:1300,gemRate:.003,obstRate:.95,maxBlock:2,dmg:.95,mode:'GAUNTLET'},
+    ]},
+];
 
-function renderUpgrades() {
-    const list = document.getElementById('upgradeList');
-    list.innerHTML = upgrades.map(u => `
-        <div class="upgrade-item ${u.level >= u.maxLevel ? 'maxed' : u.level > 0 ? 'owned' : ''}"
-             onclick="buyUpgrade('${u.id}')" id="upg-${u.id}">
-            <div>
-                <div class="upgrade-name">${u.name}</div>
-                <div class="upgrade-desc">${u.desc}</div>
-            </div>
-            <div style="text-align:right">
-                <div class="upgrade-cost">${u.level >= u.maxLevel ? 'MAX' : u.cost + ' fee'}</div>
-                <div class="upgrade-level">${u.level}/${u.maxLevel}</div>
-            </div>
-        </div>
-    `).join('');
+const LESSONS={
+    '0-0':{tag:'orange',title:'MEMPOOL ENTRY CLEARED',lesson:'<strong>Transaction fees</strong> are bids for block space. Validators pick highest-fee txs first — you\'ve been running that auction.'},
+    '0-1':{tag:'orange',title:'STANDARD LANE CLEARED',lesson:'<strong>Fee markets:</strong> when network is congested, fees spike. Validators earn more, users pay more — the price of priority.'},
+    '0-2':{tag:'orange',title:'FEE WARS DONE',lesson:'<strong>Layer 2 networks</strong> batch txs off-chain and post one compressed proof to L1. Stellar Protocol 25 adds native ZK infrastructure for exactly this.'},
+    '1-0':{tag:'orange',title:'L2 ENTRY CLEARED',lesson:'<strong>ZK Rollups</strong> prove tx validity instantly — no 7-day fraud window. Stellar\'s 5-second ledger close means ZK proofs settle faster than any EVM chain.'},
+    '1-1':{tag:'orange',title:'ROLLUP LANE CLEARED',lesson:'<strong>Most bridges</strong> have 7-day fraud windows. ZK bridges settle in minutes. Soroban + ZK enables atomic cross-chain swaps with zero wait.'},
+    '1-2':{tag:'orange',title:'SPEED & FEES DONE',lesson:'<strong>Zero-knowledge proofs</strong> prove you know something without revealing it. Your score was proven on-chain without exposing a single move.'},
+    '2-0':{tag:'green',title:'PROOF LOAD SURVIVED',lesson:'<strong>Proof generation</strong> takes real compute. L2 operators charge fees because they pay for proof generation on every batch they submit.'},
+    '2-1':{tag:'green',title:'PROVER CLEARED',lesson:'<strong>Recursive ZK</strong> proves thousands of txs in one tiny proof. RISC Zero zkVM runs game logic and proves it was correct — verifiable on-chain.'},
+    '2-2':{tag:'green',title:'ZK PRESSURE DONE',lesson:'<strong>MEV bots</strong> reorder and front-run txs to steal fees. Encrypted mempools using ZK proofs make front-running cryptographically impossible.'},
+    '3-0':{tag:'red',title:'CONSENSUS SURVIVED',lesson:'<strong>Stellar SCP</strong> — Federated Byzantine Agreement: no mining, no staking. Consensus in ~5 seconds with global validator nodes.'},
+    '3-1':{tag:'red',title:'VALIDATOR RACE CLEARED',lesson:'<strong>Protocol 25</strong> brings native ZK to Soroban: private DeFi, verifiable gaming, ZK identity — on 5-second finality + sub-cent fees.'},
+};
+
+function getLv(){return SETS[gs?.set]?.levels[gs?.level]||null}
+function rand(a,b){return a+Math.random()*(b-a)}
+
+// ── RANDOMIZED SPAWNER ──
+function makeSpawner(lv){
+    return{nextFire:Date.now()+rand(300,700),waveAt:Date.now()+rand(12000,22000)}
 }
 
-function buyUpgrade(id) {
-    const u = upgrades.find(x => x.id === id);
-    if (!u || u.level >= u.maxLevel) return;
-    if (shopFees < u.cost) {
-        showTooltip(`Need ${u.cost} fees to buy ${u.name}`, 'warning', 2000);
+// Weighted lane: FAST lane gets more threats
+const LANE_W=[25,35,40];
+function weightedLane(exclude=[]){
+    const pool=[0,1,2].filter(i=>!exclude.includes(i)&&!gs.threats.some(o=>o.lane===i&&o.y>-160));
+    if(!pool.length)return -1;
+    const tot=pool.reduce((s,l)=>s+LANE_W[l],0);
+    let r=Math.random()*tot;
+    for(const l of pool){r-=LANE_W[l];if(r<=0)return l}
+    return pool[pool.length-1];
+}
+
+// Threat type weighted by set (later sets = worse threats)
+const SET_WEIGHTS=[[40,30,20,10],[25,30,25,20],[15,20,30,35],[10,15,30,45]];
+function pickThreat(){
+    const w=SET_WEIGHTS[Math.min(gs.set,3)];
+    let r=Math.random()*100;
+    for(let i=0;i<4;i++){r-=w[i];if(r<=0)return THREATS[i].id}
+    return THREATS[3].id;
+}
+
+function spawnThreats(){
+    if(!gs.running)return;
+    const now=Date.now();const lv=getLv();if(!lv)return;
+
+    // WAVE EVENT
+    if(now>=gs.spawner.waveAt&&lv.mode!=='COLLECTION'){
+        const lanes=[0,1,2].filter(i=>!gs.threats.some(o=>o.lane===i&&o.y>-200));
+        const count=Math.min(lanes.length,lv.maxBlock);
+        const sh=lanes.sort(()=>Math.random()-.5);
+        const tp=pickThreat();
+        for(let i=0;i<count;i++){
+            const delay=i*rand(60,140);
+            setTimeout(()=>{if(gs&&gs.running)gs.threats.push({x:LANE_X[sh[i]],y:-30,lane:sh[i],type:tp,hit:false})},delay);
+        }
+        gs.spawner.waveAt=now+rand(15000,26000);
         return;
     }
-    shopFees -= u.cost;
-    u.level++;
-    u.cost = Math.floor(u.cost * 1.8);
-    renderUpgrades();
-    showTooltip(`✓ ${u.name} upgraded to Lv.${u.level}!`, 'reward', 2000);
-    applyUpgradeEffects();
-}
 
-function applyUpgradeEffects() {
-    // dodge speed
-    const sigUpg = upgrades.find(x => x.id === 'sig');
-    player.moveSpeed = 8 + sigUpg.level * 3;
-    // obstacle reduction handled in spawnObstacle
-}
+    if(now<gs.spawner.nextFire)return;
+    // Random varied gap
+    gs.spawner.nextFire=now+rand(160,480)/lv.speed;
+    if(Math.random()>lv.obstRate)return;
 
-renderUpgrades();
+    const l1=weightedLane([]);
+    if(l1===-1)return;
+    gs.threats.push({x:LANE_X[l1],y:-30,lane:l1,type:pickThreat(),hit:false});
 
-// ============================================================
-// TOOLTIP
-// ============================================================
-let tooltipTimer = null;
-function showTooltip(msg, type = '', duration = 2500) {
-    const t = document.getElementById('tooltip');
-    t.textContent = msg;
-    t.className = 'tooltip show' + (type ? ' ' + type : '');
-    clearTimeout(tooltipTimer);
-    tooltipTimer = setTimeout(() => t.classList.remove('show'), duration);
-}
-
-// ============================================================
-// BLOCKCHAIN TOOLTIPS — educational
-// ============================================================
-const blockchainTips = {
-    doublespend: '⚠️ Double-Spend Attack: A malicious actor tried to spend the same XLM twice. Stellar validators reject this instantly.',
-    congestion:  '🌐 Network Congestion: Too many transactions competing for block space. Higher fees get priority!',
-    invalidsig:  '🔑 Invalid Signature: Transaction rejected — cryptographic signature didn\'t match. Ed25519 protects the network.',
-    mevbot:      '🤖 MEV Bot: Maximal Extractable Value bot front-ran your transaction to steal fees!',
-    feegem:      '💎 Fee Gem: Transaction fee collected! Fees incentivize Stellar validators to include your transaction.',
-    zkboost:     '⚡ ZK Boost: Protocol 25 ZK operation activated — your transaction gets priority processing!',
-    speedup:     '📦 Block confirmed! 15 blocks processed. Network throughput increasing...',
-};
-
-let tipCooldown = {};
-function showBlockchainTip(key) {
-    if (tipCooldown[key]) return;
-    tipCooldown[key] = true;
-    showTooltip(blockchainTips[key], key === 'feegem' ? 'reward' : key === 'zkboost' ? 'reward' : 'warning', 3000);
-    setTimeout(() => { tipCooldown[key] = false; }, 8000);
-}
-
-// ============================================================
-// STELLAR CONTRACT
-// ============================================================
-async function callContract(method, args) {
-    if (!walletState.keypair) throw new Error('No keypair');
-    const server  = new StellarSdk.SorobanRpc.Server(RPC_URL);
-    const account = await server.getAccount(walletState.address);
-    const contract = new StellarSdk.Contract(CONTRACT_ID);
-    const tx = new StellarSdk.TransactionBuilder(account, {
-        fee: StellarSdk.BASE_FEE,
-        networkPassphrase: NET_PASS,
-    }).addOperation(contract.call(method, ...args)).setTimeout(30).build();
-    const prepared = await server.prepareTransaction(tx);
-    prepared.sign(walletState.keypair);
-    return await server.sendTransaction(prepared);
-}
-
-async function startGameOnChain() {
-    if (!walletState.connected || !walletState.keypair) return;
-    try {
-        sessionId = (() => { const b = new Uint32Array(1); crypto.getRandomValues(b); return b[0] || 1; })();
-        await callContract('start_game', [
-            StellarSdk.nativeToScVal(sessionId, { type: 'u32' }),
-            StellarSdk.Address.fromString(walletState.address).toScVal(),
-        ]);
-        showTooltip('📡 Transaction broadcast to mempool! Session #' + sessionId, 'reward', 3000);
-    } catch (e) { console.error('start_game:', e); }
-}
-
-async function generateZKProof(score) {
-    try {
-        const payload = {
-            seed: gameState.seed,
-            actions: gameState.actions,
-            player_address: walletState.address || 'DEMO',
-            game_id: gameState.gameId,
-        };
-        const res = await fetch(PROVER_URL, {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-        if (!res.ok) throw new Error(res.status);
-        return await res.json();
-    } catch (e) {
-        console.warn('Prover unavailable, mock proof:', e.message);
-        // Return mock proof with correct structure for demo
-        return {
-            seal: '00'.repeat(64),
-            journal: '00'.repeat(32),
-            score_verified: score,
-            game_id: gameState.gameId,
-        };
-    }
-}
-
-async function submitScore(score) {
-    if (!walletState.connected) { alert('Connect wallet first!'); return; }
-
-    const zkStatus  = document.getElementById('zkProofStatus');
-    const submitBtn = document.getElementById('submitScoreBtn');
-
-    try {
-        zkStatus.style.display = 'block';
-        zkStatus.classList.add('generating');
-        zkStatus.textContent = '🔐 Generating ZK Proof of transaction validity...';
-        submitBtn.disabled = true;
-
-        const proof = await generateZKProof(score);
-        zkStatus.textContent = '✓ ZK Proof generated! Broadcasting to Stellar...';
-
-        if (!sessionId) await startGameOnChain();
-
-        if (walletState.keypair && sessionId) {
-            const hexToBytes = h => new Uint8Array(h.match(/.{1,2}/g).map(b => parseInt(b, 16)));
-            const proofVal = StellarSdk.xdr.ScVal.scvMap([
-                new StellarSdk.xdr.ScMapEntry({
-                    key: StellarSdk.xdr.ScVal.scvSymbol('seal'),
-                    val: StellarSdk.xdr.ScVal.scvBytes(hexToBytes(proof.seal))
-                }),
-                new StellarSdk.xdr.ScMapEntry({
-                    key: StellarSdk.xdr.ScVal.scvSymbol('journal'),
-                    val: StellarSdk.xdr.ScVal.scvBytes(hexToBytes(proof.journal))
-                })
-            ]);
-            await callContract('submit_score', [
-                StellarSdk.nativeToScVal(sessionId, { type: 'u32' }),
-                StellarSdk.Address.fromString(walletState.address).toScVal(),
-                StellarSdk.nativeToScVal(score, { type: 'u32' }),
-                proofVal
-            ]);
-            sessionId = null;
-            await fetchLeaderboard();
-        } else {
-            // Fallback local leaderboard
-            addToLocalLeaderboard(score);
+    // Second lane block in gauntlet/balanced
+    if(lv.maxBlock>=2&&Math.random()<0.32){
+        const l2=weightedLane([l1]);
+        if(l2!==-1){
+            const stagger=rand(80,220);
+            setTimeout(()=>{if(gs&&gs.running)gs.threats.push({x:LANE_X[l2],y:-30-rand(10,50),lane:l2,type:pickThreat(),hit:false})},stagger);
         }
-
-        // Add to total fees for prestige
-        prestigeData.totalFeesEarned += score * prestigeData.multiplier;
-        updatePrestigeUI();
-
-        // Add to shop fees
-        shopFees += Math.floor(score * 0.2);
-        renderUpgrades();
-
-        zkStatus.classList.remove('generating');
-        zkStatus.textContent = '✓ Score confirmed on Stellar ledger! ZK proof verified.';
-        setTimeout(() => { zkStatus.style.display = 'none'; submitBtn.disabled = false; }, 3000);
-
-    } catch (e) {
-        console.error(e);
-        zkStatus.classList.remove('generating');
-        zkStatus.textContent = '✗ Submission failed: ' + e.message;
-        submitBtn.disabled = false;
     }
 }
 
-// ============================================================
-// LEADERBOARD
-// ============================================================
-let leaderboard = [];
-
-function addToLocalLeaderboard(score) {
-    leaderboard.push({
-        rank: 0,
-        address: shortenAddress(walletState.address || 'DEMO'),
-        score: Math.floor(score * prestigeData.multiplier),
-        prestige: prestigeData.level
-    });
-    leaderboard.sort((a, b) => b.score - a.score);
-    leaderboard = leaderboard.slice(0, 10);
-    leaderboard.forEach((e, i) => e.rank = i + 1);
-    renderLeaderboard();
-}
-
-async function fetchLeaderboard() {
-    try {
-        const server = new StellarSdk.SorobanRpc.Server(RPC_URL);
-        const contract = new StellarSdk.Contract(CONTRACT_ID);
-        const kp = walletState.keypair || StellarSdk.Keypair.random();
-        const account = await server.getAccount(kp.publicKey()).catch(() => null);
-        if (!account) return;
-        const tx = new StellarSdk.TransactionBuilder(account, {
-            fee: StellarSdk.BASE_FEE, networkPassphrase: NET_PASS,
-        }).addOperation(contract.call('get_leaderboard')).setTimeout(30).build();
-        const result = await server.simulateTransaction(tx);
-        if (result?.result?.retval) {
-            const entries = StellarSdk.scValToNative(result.result.retval);
-            leaderboard = entries.map((e, i) => ({
-                rank: i + 1, address: shortenAddress(e.player),
-                score: Number(e.score), prestige: 0
-            }));
-            renderLeaderboard();
-        }
-    } catch (e) { console.warn('Leaderboard fetch:', e.message); }
-}
-
-function renderLeaderboard() {
-    const list = document.getElementById('leaderboardList');
-    if (!leaderboard.length) {
-        list.innerHTML = '<div class="empty-leaderboard">No validators yet.<br>Be the first!</div>';
-        return;
-    }
-    list.innerHTML = leaderboard.map((e, i) => {
-        const cls = i === 0 ? 'top-1' : i === 1 ? 'top-2' : i === 2 ? 'top-3' : '';
-        const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i+1}`;
-        return `<div class="leaderboard-entry ${cls}">
-            <span class="entry-rank">${medal}</span>
-            <span class="entry-address">${e.address}</span>
-            <span class="entry-score">${e.score}</span>
-            ${e.prestige > 0 ? `<span class="entry-prestige">⚡${e.prestige}</span>` : ''}
-        </div>`;
-    }).join('');
-}
-
-renderLeaderboard();
-fetchLeaderboard();
-
-// ============================================================
-// GAME ENGINE
-// ============================================================
-const canvas         = document.getElementById('gameCanvas');
-const ctx            = canvas.getContext('2d');
-const scoreEl        = document.getElementById('score');
-const speedEl        = document.getElementById('speed');
-const levelDisplayEl = document.getElementById('levelDisplay');
-const feeProgressFill = document.getElementById('feeProgressFill');
-const feeProgressLabel = document.getElementById('feeProgressLabel');
-const feeProgressBar   = document.getElementById('feeProgressBar');
-const gameOverScreen = document.getElementById('gameOverScreen');
-const startScreen    = document.getElementById('startScreen');
-const startBtn       = document.getElementById('startBtn');
-const restartBtn     = document.getElementById('restartBtn');
-const submitScoreBtn = document.getElementById('submitScoreBtn');
-
-const LANES       = 3;
-const LANE_WIDTH  = canvas.width / LANES;
-const LANE_POS    = [LANE_WIDTH/2, canvas.width/2, canvas.width - LANE_WIDTH/2];
-const LANE_COLORS = ['rgba(0,255,136,0.15)', 'rgba(255,215,0,0.10)', 'rgba(255,68,102,0.10)'];
-
-// Obstacle types
-const THREAT_TYPES = [
-    { id: 'doublespend', label: '⛔ DBL-SPEND', color: '#ff4466', tip: 'doublespend' },
-    { id: 'congestion',  label: '🌐 CONGESTION', color: '#ff8c00', tip: 'congestion' },
-    { id: 'invalidsig',  label: '🔑 INV-SIG',    color: '#cc44ff', tip: 'invalidsig' },
-    { id: 'mevbot',      label: '🤖 MEV BOT',    color: '#ff0066', tip: 'mevbot' },
-];
-
-// ============================================================
-// PROGRESSION SYSTEM — Sets × Levels
-// ============================================================
-const GAME_SETS = [
-    { label: 'SET 1 — FEE WARS', obstacleDamage: 0.15, color: '#00ff88', levels: [
-        { speed: 1.0, feeTarget: 250,  label: 'S1-L1', name: 'Low Priority' },
-        { speed: 1.0, feeTarget: 500,  label: 'S1-L2', name: 'Standard Fee' },
-        { speed: 1.0, feeTarget: 800,  label: 'S1-L3', name: 'High Priority' },
-    ]},
-    { label: 'SET 2 — SPEED & FEES', obstacleDamage: 0.30, color: '#ffd700', levels: [
-        { speed: 1.6, feeTarget: 450,  label: 'S2-L1', name: 'L2 Entry' },
-        { speed: 2.1, feeTarget: 800,  label: 'S2-L2', name: 'Rollup Lane' },
-        { speed: 2.7, feeTarget: 1200, label: 'S2-L3', name: 'Bridge Speed' },
-    ]},
-    { label: 'SET 3 — ZK PRESSURE', obstacleDamage: 0.55, color: '#a855f7', levels: [
-        { speed: 2.2, feeTarget: 700,  label: 'S3-L1', name: 'Proof Load' },
-        { speed: 3.0, feeTarget: 1200, label: 'S3-L2', name: 'Prover Cost' },
-        { speed: 3.8, feeTarget: 1800, label: 'S3-L3', name: 'Aggregation' },
-    ]},
-    { label: 'FINAL — VALIDATOR WARS', obstacleDamage: 0.95, color: '#ff4466', levels: [
-        { speed: 2.8, feeTarget: 1000, label: 'F-L1', name: 'Consensus' },
-        { speed: 3.8, feeTarget: 1800, label: 'F-L2', name: 'Validator Race' },
-        { speed: 4.8, feeTarget: 2800, label: 'F-L3', name: 'Ledger Finality' },
-    ]},
-];
-
-// Educational content for each level-complete transition
-// key = "fromSet-fromLevel" (0-indexed)
-const LEVEL_LESSONS = {
-    '0-0': {
-        badge: 'green', title: 'FEE PRIORITY UNLOCKED',
-        subtitle: 'S1-L1 Complete · Fees Collected',
-        lessonTitle: '💎 Lesson: Transaction Fee Basics',
-        lesson: `Stellar transactions pay fees in <span>stroops</span> to get included in a block.\nValidators pick <span>highest-fee transactions first</span> — exactly like you just raced.`,
-        nextTitle: '▶ Next Level',
-        nextStats: [
-            { label: 'SPEED', val: '1.0x (same)' },
-            { label: 'FEE TARGET', val: '500 fees' },
-            { label: 'OBSTACLE DMG', val: '15%' },
-            { label: 'TIP', val: 'Stay in FAST lane more' },
-        ]
-    },
-    '0-1': {
-        badge: 'green', title: 'BLOCK CONFIRMED',
-        subtitle: 'S1-L2 Complete · Standard Fee Lane Cleared',
-        lessonTitle: '📦 Lesson: Fee Markets & Block Space',
-        lesson: `When the network is busy, <span>fees surge</span> — validators run a fee auction.\nYou've been living inside that auction.`,
-        nextTitle: '▶ Next Level',
-        nextStats: [
-            { label: 'SPEED', val: '1.0x' },
-            { label: 'FEE TARGET', val: '800 fees' },
-            { label: 'OBSTACLE DMG', val: '15%' },
-            { label: 'TIP', val: 'Collect ZK gems — they\'re worth 5x' },
-        ]
-    },
-    '0-2': {
-        badge: 'gold', title: 'SET 1 MASTERED!',
-        subtitle: 'Fee Wars Complete · Entering Speed Dimension',
-        lessonTitle: '🌐 Lesson: L1 vs L2 — Why Speed Matters',
-        lesson: `<strong>Layer 2 networks</strong> batch transactions off-chain and submit one <span>compressed proof</span> to L1.\nStellar <span>Protocol 25</span> adds ZK infrastructure to make this possible.`,
-        nextTitle: '▶ Entering Set 2',
-        nextStats: [
-            { label: 'SPEED', val: '1.6x 🔺' },
-            { label: 'FEE TARGET', val: '450 fees' },
-            { label: 'OBSTACLE DMG', val: '30% ⚠️' },
-            { label: 'NEW MECHANIC', val: 'Speed now kills too' },
-        ]
-    },
-    '1-0': {
-        badge: 'gold', title: 'L2 ENTRY CLEARED',
-        subtitle: 'S2-L1 Complete · Rollup Lane Open',
-        lessonTitle: '⚡ Lesson: Rollups & Transaction Batching',
-        lesson: `<span>ZK rollups</span> prove transaction validity instantly — no waiting period.\nStellar's <span>5-second ledger close</span> means ZK proofs settle faster than any EVM chain.`,
-        nextTitle: '▶ Next Level',
-        nextStats: [
-            { label: 'SPEED', val: '2.1x 🔺🔺' },
-            { label: 'FEE TARGET', val: '800 fees' },
-            { label: 'OBSTACLE DMG', val: '30%' },
-            { label: 'TIP', val: 'Use the shield upgrade now' },
-        ]
-    },
-    '1-1': {
-        badge: 'gold', title: 'ROLLUP LANE CLEARED',
-        subtitle: 'S2-L2 Complete · Cross-Chain Bridge Ahead',
-        lessonTitle: '🔗 Lesson: Cross-Chain Bridges & Settlement',
-        lesson: `Most bridges have <strong>7-day fraud windows</strong>. ZK bridges settle in minutes.\nStellar <span>Soroban</span> + ZK proofs enable atomic cross-chain swaps — no waiting.`,
-        nextTitle: '▶ Next Level',
-        nextStats: [
-            { label: 'SPEED', val: '2.7x 🔺🔺🔺' },
-            { label: 'FEE TARGET', val: '1200 fees' },
-            { label: 'OBSTACLE DMG', val: '30%' },
-            { label: 'TIP', val: 'Dodge first, collect second' },
-        ]
-    },
-    '1-2': {
-        badge: 'purple', title: 'SET 2 CONQUERED!',
-        subtitle: 'Speed & Fees Mastered · ZK Layer Unlocked',
-        lessonTitle: '🔐 Lesson: Zero-Knowledge Proofs — What Are They?',
-        lesson: `A <span>ZK proof</span> proves you know something <strong>without revealing it</strong>.\nThis game uses ZK to verify your score on-chain — that's real.`,
-        nextTitle: '▶ Entering Set 3',
-        nextStats: [
-            { label: 'SPEED', val: '2.2x (resets)' },
-            { label: 'FEE TARGET', val: '700 fees' },
-            { label: 'OBSTACLE DMG', val: '55% 💀' },
-            { label: 'WARNING', val: 'Obstacles now serious' },
-        ]
-    },
-    '2-0': {
-        badge: 'purple', title: 'PROOF LOAD SURVIVED',
-        subtitle: 'S3-L1 Complete · Prover Cost Ahead',
-        lessonTitle: '⚙️ Lesson: Proof Generation Costs',
-        lesson: `Generating a ZK proof takes real compute — seconds to minutes.\nL2 operators charge fees because they're <span>paying for proof generation</span>.`,
-        nextTitle: '▶ Next Level',
-        nextStats: [
-            { label: 'SPEED', val: '3.0x 🔺' },
-            { label: 'FEE TARGET', val: '1200 fees' },
-            { label: 'OBSTACLE DMG', val: '55%' },
-            { label: 'TIP', val: 'One hit = half your fees gone' },
-        ]
-    },
-    '2-1': {
-        badge: 'purple', title: 'PROVER COST CLEARED',
-        subtitle: 'S3-L2 Complete · Aggregation Layer Ahead',
-        lessonTitle: '🧩 Lesson: Proof Aggregation & Recursive ZK',
-        lesson: `<span>Recursive ZK</span> lets you prove thousands of transactions in one tiny proof.\n<span>RISC Zero zkVM</span> runs this game's logic and proves it was correct — on-chain.`,
-        nextTitle: '▶ Next Level',
-        nextStats: [
-            { label: 'SPEED', val: '3.8x 🔺🔺' },
-            { label: 'FEE TARGET', val: '1800 fees' },
-            { label: 'OBSTACLE DMG', val: '55%' },
-            { label: 'TIP', val: 'ZK gems give speed burst' },
-        ]
-    },
-    '2-2': {
-        badge: 'red', title: 'ZK LAYER MASTERED!',
-        subtitle: 'The Final Mempool Awaits You',
-        lessonTitle: '⚔️ Lesson: Validator Economics & MEV',
-        lesson: `<span>MEV bots</span> reorder and front-run transactions to steal fees.\n<strong>Encrypted mempools</strong> using ZK proofs make this cryptographically impossible.`,
-        nextTitle: '▶ Final Set',
-        nextStats: [
-            { label: 'SPEED', val: '2.8x (resets)' },
-            { label: 'FEE TARGET', val: '1000 fees' },
-            { label: 'OBSTACLE DMG', val: '95% 💀💀' },
-            { label: 'WARNING', val: 'ONE HIT = near death' },
-        ]
-    },
-    '3-0': {
-        badge: 'red', title: 'CONSENSUS SURVIVED',
-        subtitle: 'F-L1 Complete · Validator Race Begins',
-        lessonTitle: '🏁 Lesson: Stellar Consensus Protocol (SCP)',
-        lesson: `Stellar uses <span>Federated Byzantine Agreement</span> — no mining, no staking.\nYour score submission just reached <span>global consensus in ~5 seconds</span>.`,
-        nextTitle: '▶ NEXT: F-L2 — Validator Race',
-        nextStats: [
-            { label: 'SPEED', val: '3.8x 🔺' },
-            { label: 'FEE TARGET', val: '1800 fees' },
-            { label: 'OBSTACLE DMG', val: '95%' },
-            { label: 'TIP', val: 'Shield upgrade is essential' },
-        ]
-    },
-    '3-1': {
-        badge: 'red', title: 'VALIDATOR RACE CLEARED',
-        subtitle: 'F-L2 Complete · Ledger Finality Remains',
-        lessonTitle: '🔮 Lesson: ZK on Stellar — The Hackathon Vision',
-        lesson: `<span>Stellar Protocol 25</span> introduces native ZK tooling via Soroban.\nThis game proves it: your score is <strong>ZK-verified on-chain</strong>.\nImagine: <span>private DeFi</span>, <span>verifiable gaming</span>, <span>ZK identity</span>,\nall on Stellar's <strong>5-second finality + $0.00001 fees</strong>.\nThis is what you're building. This is the frontier.`,
-        nextTitle: '▶ FINAL: F-L3 — Ledger Finality',
-        nextStats: [
-            { label: 'SPEED', val: '4.8x ⚡' },
-            { label: 'FEE TARGET', val: '2800 fees' },
-            { label: 'OBSTACLE DMG', val: '95%' },
-            { label: 'WARNING', val: 'The hardest run. Good luck.' },
-        ]
-    },
-};
-
-function getCurrentLevelData() {
-    const s = GAME_SETS[gameState.currentSet];
-    return s ? s.levels[gameState.currentLevel] : null;
-}
-
-function updateLevelHUD() {
-    const lv = getCurrentLevelData();
-    if (!lv) return;
-    levelDisplayEl.textContent = lv.label;
-    const pct = Math.min(100, Math.round((gameState.levelFeesCollected / lv.feeTarget) * 100));
-    feeProgressFill.style.width = pct + '%';
-    const dmg = Math.round(GAME_SETS[gameState.currentSet].obstacleDamage * 100);
-    feeProgressLabel.textContent = `FEE PROGRESS: ${Math.floor(gameState.levelFeesCollected)} / ${lv.feeTarget} · OBSTACLE DMG: ${dmg}%`;
-
-    // Pulse bar color red at high damage sets
-    const col = GAME_SETS[gameState.currentSet].color;
-    feeProgressFill.style.background = `linear-gradient(90deg, ${col}88, ${col})`;
-
-    // Canvas danger glow when fees low
-    if (gameState.score < 50 && gameState.score > 0) {
-        canvas.classList.add('danger');
-    } else {
-        canvas.classList.remove('danger');
+function spawnGems(){
+    const lv=getLv();if(!lv)return;
+    if(Math.random()<lv.gemRate){
+        // In gauntlet, gems skew toward safer lanes
+        const lc=lv.mode==='GAUNTLET'?[50,35,15]:[33,34,33];
+        let r=Math.random()*100,lane=2;
+        for(let i=0;i<3;i++){r-=lc[i];if(r<=0){lane=i;break}}
+        gs.gems.push({x:LANE_X[lane],y:-20,lane,pulse:0,hit:false,isZK:Math.random()<.14});
     }
 }
 
-// Show the level complete interstitial
-function showLevelComplete(fromSet, fromLevel, callback) {
-    gameState.isRunning = false;
-    if (gameState.animationId) { cancelAnimationFrame(gameState.animationId); gameState.animationId = null; }
-
-    const key = `${fromSet}-${fromLevel}`;
-    const data = LEVEL_LESSONS[key] || {
-        badge: 'green', title: 'LEVEL COMPLETE',
-        subtitle: 'Keep going!',
-        lessonTitle: '📡 Blockchain Tip',
-        lesson: 'Every level brings you closer to becoming a full Stellar Validator.',
-        nextTitle: '▶ NEXT LEVEL',
-        nextStats: [{ label: 'KEEP GOING', val: '🚀' }]
-    };
-
-    const lcScreen = document.getElementById('levelCompleteScreen');
-    document.getElementById('lcBadge').textContent = data.badge === 'red' ? '⚠️ SET COMPLETE' : '✓ LEVEL COMPLETE';
-    document.getElementById('lcBadge').className = `lc-badge ${data.badge}`;
-    document.getElementById('lcTitle').textContent = data.title;
-    document.getElementById('lcSubtitle').textContent = data.subtitle;
-    document.getElementById('lcLessonTitle').textContent = data.lessonTitle;
-    document.getElementById('lcLessonText').innerHTML = data.lesson.replace(/\n/g, '<br>');
-    document.getElementById('lcNextTitle').textContent = data.nextTitle;
-    document.getElementById('lcNextStats').innerHTML = data.nextStats.map(s =>
-        `<div class="lc-stat"><div class="stat-label">${s.label}</div><div class="stat-val">${s.val}</div></div>`
-    ).join('');
-
-    lcScreen.classList.add('active');
-
-    // Wire continue button
-    const btn = document.getElementById('lcContinueBtn');
-    const handler = () => {
-        btn.removeEventListener('click', handler);
-        lcScreen.classList.remove('active');
-        callback();
-    };
-    btn.addEventListener('click', handler);
-}
-
-function advanceLevel() {
-    const fromSet = gameState.currentSet;
-    const fromLevel = gameState.currentLevel;
-    const setData = GAME_SETS[gameState.currentSet];
-    const nextLevel = gameState.currentLevel + 1;
-
-    let willAdvanceSet = false;
-    let isGameWon = false;
-
-    if (nextLevel < setData.levels.length) {
-        // Same set, next level
-    } else if (gameState.currentSet + 1 < GAME_SETS.length) {
-        willAdvanceSet = true;
-    } else {
-        isGameWon = true;
-    }
-
-    showLevelComplete(fromSet, fromLevel, () => {
-        if (isGameWon) {
-            showTooltip('🏆 LEGENDARY VALIDATOR! You conquered the full mempool!', 'reward', 6000);
-            setTimeout(gameOver, 6000);
-            return;
-        }
-
-        if (willAdvanceSet) {
-            gameState.currentSet++;
-            gameState.currentLevel = 0;
-        } else {
-            gameState.currentLevel = nextLevel;
-        }
-
-        gameState.levelFeesCollected = 0;
-        const lv = getCurrentLevelData();
-        gameState.speed = lv.speed;
-        gameState.obstacleDamage = GAME_SETS[gameState.currentSet].obstacleDamage;
-        speedEl.textContent = gameState.speed.toFixed(2) + 'x';
-        updateLevelHUD();
-
-        // Countdown then resume
-        runCountdown(`ENTERING ${lv.label} — ${lv.name}`, () => {
-            gameState.isRunning = true;
-            gameLoop();
-        });
-    });
-}
-
-// ============================================================
-// FLOATING SCORE TEXTS
-// ============================================================
-function spawnFloatingText(x, y, text, color) {
-    gameState.floatingTexts.push({
-        x, y, text, color,
-        opacity: 1.0, vy: -2.5,
-        life: 60 // frames
-    });
-}
-
-function updateFloatingTexts() {
-    gameState.floatingTexts.forEach(ft => {
-        ft.y  += ft.vy;
-        ft.vy *= 0.93;
-        ft.life--;
-        ft.opacity = Math.max(0, ft.life / 40);
-    });
-    gameState.floatingTexts = gameState.floatingTexts.filter(ft => ft.life > 0);
-}
-
-function drawFloatingTexts() {
-    gameState.floatingTexts.forEach(ft => {
-        ctx.save();
-        ctx.globalAlpha = ft.opacity;
-        ctx.font = 'bold 14px Orbitron, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillStyle = ft.color;
-        ctx.shadowColor = ft.color;
-        ctx.shadowBlur = 10;
-        ctx.fillText(ft.text, ft.x, ft.y);
-        ctx.restore();
-    });
-}
-
-let gameState = {
-    isRunning: false, score: 0, obstaclesDodged: 0,
-    speed: 1, baseSpeed: 5, playerLane: 1,
-    obstacles: [], gems: [], zkBoosts: [], floatingTexts: [],
-    roadOffset: 0, animationId: null,
-    lastObstacleSpawn: 0, minObstacleGap: 200,
-    currentSet: 0, currentLevel: 0,
-    levelFeesCollected: 0, obstacleDamage: 0.15,
-    blocksConfirmed: 0, hasShield: false,
-    // ZK proof recording
-    seed: 0, actions: [], pendingAction: 0, gameId: 1
-};
-
-const player = {
-    width: 50, height: 80,
-    y: canvas.height - 180,
-    targetX: LANE_POS[1], currentX: LANE_POS[1],
-    moveSpeed: 8
-};
-
-// Draw player as "transaction packet"
-function drawTxPacket(x, y) {
-    ctx.save();
-    // Glow
-    ctx.shadowColor = gameState.hasShield ? '#ffd700' : '#6b4aff';
-    ctx.shadowBlur = 20;
-
-    // Body — data packet
-    const gradient = ctx.createLinearGradient(x-22, y, x+22, y+70);
-    gradient.addColorStop(0, '#6b4aff');
-    gradient.addColorStop(1, '#00d4ff');
-    ctx.fillStyle = gradient;
-    ctx.fillRect(x-22, y+10, 44, 60);
-
-    // Top sensor
-    ctx.fillStyle = '#00d4ff';
-    ctx.fillRect(x-14, y, 28, 14);
-
-    // Data lines
-    ctx.fillStyle = 'rgba(255,255,255,0.4)';
-    ctx.fillRect(x-16, y+20, 32, 2);
-    ctx.fillRect(x-16, y+28, 24, 2);
-    ctx.fillRect(x-16, y+36, 28, 2);
-    ctx.fillRect(x-16, y+44, 20, 2);
-
-    // Thrusters
-    ctx.fillStyle = '#ff8c00';
-    ctx.shadowColor = '#ff8c00';
-    ctx.shadowBlur = 12;
-    ctx.fillRect(x-18, y+68, 12, 8 + Math.random()*4);
-    ctx.fillRect(x+6,  y+68, 12, 8 + Math.random()*4);
-
-    // Shield ring
-    if (gameState.hasShield) {
-        ctx.strokeStyle = '#ffd700';
-        ctx.lineWidth = 3;
-        ctx.shadowColor = '#ffd700';
-        ctx.shadowBlur = 20;
-        ctx.beginPath();
-        ctx.ellipse(x, y+40, 35, 50, 0, 0, Math.PI*2);
-        ctx.stroke();
-    }
-
-    ctx.restore();
-}
-
-// Draw threat obstacle
-function drawThreat(x, y, type) {
-    const t = THREAT_TYPES.find(t => t.id === type) || THREAT_TYPES[0];
-    ctx.save();
-    ctx.shadowColor = t.color; ctx.shadowBlur = 15;
-
-    // Body
-    ctx.fillStyle = t.color + '33';
-    ctx.strokeStyle = t.color;
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.roundRect(x-38, y-18, 76, 36, 6);
-    ctx.fill(); ctx.stroke();
-
-    // Label
-    ctx.fillStyle = t.color;
-    ctx.font = 'bold 9px Share Tech Mono, monospace';
-    ctx.textAlign = 'center';
-    ctx.fillText(t.label, x, y+4);
-
-    ctx.restore();
-}
-
-// Draw fee gem
-function drawFeeGem(x, y, pulse, isZK) {
-    ctx.save();
-    const col = isZK ? '#a855f7' : '#ffd700';
-    ctx.shadowColor = col; ctx.shadowBlur = 15;
-    const s = 14 + Math.sin(pulse) * 2;
-
-    ctx.fillStyle = col;
-    ctx.beginPath();
-    ctx.moveTo(x, y-s); ctx.lineTo(x+s*0.6, y);
-    ctx.lineTo(x, y+s); ctx.lineTo(x-s*0.6, y);
-    ctx.closePath(); ctx.fill();
-
-    ctx.fillStyle = 'rgba(255,255,255,0.5)';
-    ctx.beginPath();
-    ctx.moveTo(x, y-s*0.6); ctx.lineTo(x+s*0.3, y-s*0.1);
-    ctx.lineTo(x, y+s*0.2); ctx.lineTo(x-s*0.3, y-s*0.1);
-    ctx.closePath(); ctx.fill();
-
-    if (isZK) {
-        ctx.fillStyle = '#fff'; ctx.font = 'bold 8px monospace'; ctx.textAlign = 'center';
-        ctx.fillText('ZK', x, y+3);
-    }
-    ctx.restore();
-}
-
-// Draw mempool road
-function drawRoad() {
-    // Background
-    ctx.fillStyle = '#05050f';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Lane backgrounds
-    for (let i = 0; i < LANES; i++) {
-        ctx.fillStyle = LANE_COLORS[i];
-        ctx.fillRect(LANE_WIDTH * i, 0, LANE_WIDTH, canvas.height);
-    }
-
-    // Scrolling data stream particles
-    ctx.fillStyle = 'rgba(0,212,255,0.15)';
-    for (let i = 0; i < 12; i++) {
-        const x = (i * 53 + gameState.roadOffset * 0.5) % canvas.width;
-        const y = (i * 83 + gameState.roadOffset * 2) % canvas.height;
-        ctx.fillRect(x, y, 2, 8);
-    }
-
-    // Lane dividers — glowing
-    ctx.shadowColor = '#6b4aff'; ctx.shadowBlur = 8;
-    ctx.strokeStyle = 'rgba(107,74,255,0.6)';
-    ctx.lineWidth = 2;
-    ctx.setLineDash([25, 20]);
-    ctx.lineDashOffset = -gameState.roadOffset;
-    for (let i = 1; i < LANES; i++) {
-        ctx.beginPath();
-        ctx.moveTo(LANE_WIDTH * i, 0);
-        ctx.lineTo(LANE_WIDTH * i, canvas.height);
-        ctx.stroke();
-    }
+// ── DRAW ──
+function drawRoad(){
+    ctx.fillStyle='#050408';ctx.fillRect(0,0,canvas.width,canvas.height);
+    for(let i=0;i<3;i++){ctx.fillStyle=LANE_BG[i];ctx.fillRect(LW*i,0,LW,canvas.height)}
+    ctx.fillStyle='rgba(245,158,11,0.06)';
+    for(let i=0;i<14;i++){const x=(i*47+gs.roadOff*.3)%canvas.width,y=(i*83+gs.roadOff*2.4)%canvas.height;ctx.fillRect(x,y,1,5)}
+    ctx.strokeStyle='rgba(42,30,60,0.9)';ctx.lineWidth=1;ctx.setLineDash([16,14]);ctx.lineDashOffset=-gs.roadOff;
+    for(let i=1;i<3;i++){ctx.beginPath();ctx.moveTo(LW*i,0);ctx.lineTo(LW*i,canvas.height);ctx.stroke()}
     ctx.setLineDash([]);
-    ctx.shadowBlur = 0;
-
-    // Lane labels at top
-    const laneLabels = ['SLOW FEE', 'MED FEE', 'FAST FEE'];
-    const laneClrs   = ['#00ff88', '#ffd700', '#ff4466'];
-    for (let i = 0; i < LANES; i++) {
-        ctx.fillStyle = laneClrs[i] + '99';
-        ctx.font = '8px Orbitron, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText(laneLabels[i], LANE_POS[i], 14);
-    }
-
-    // Road edges
-    ctx.shadowColor = '#00d4ff'; ctx.shadowBlur = 10;
-    ctx.strokeStyle = 'rgba(0,212,255,0.4)'; ctx.lineWidth = 3;
-    ctx.beginPath(); ctx.moveTo(2, 0); ctx.lineTo(2, canvas.height); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(canvas.width-2, 0); ctx.lineTo(canvas.width-2, canvas.height); ctx.stroke();
-    ctx.shadowBlur = 0;
-
-    // Block confirmation line — green line sweeping down
-    const lineY = (gameState.roadOffset * 3) % canvas.height;
-    ctx.strokeStyle = 'rgba(0,255,136,0.2)';
-    ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(0, lineY); ctx.lineTo(canvas.width, lineY); ctx.stroke();
-
-    if (gameState.isRunning) {
-        gameState.roadOffset += gameState.baseSpeed * gameState.speed;
-        if (gameState.roadOffset > 50) gameState.roadOffset = 0;
-    }
+    ctx.strokeStyle='rgba(28,20,40,1)';ctx.lineWidth=3;
+    ctx.beginPath();ctx.moveTo(2,0);ctx.lineTo(2,canvas.height);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(canvas.width-2,0);ctx.lineTo(canvas.width-2,canvas.height);ctx.stroke();
+    ctx.font='9px Russo One,sans-serif';ctx.textAlign='center';
+    const lc=['rgba(245,158,11,0.4)','rgba(245,158,11,0.3)','rgba(239,68,68,0.4)'];
+    for(let i=0;i<3;i++){ctx.fillStyle=lc[i];ctx.fillText(LANE_NAMES[i],LANE_X[i],13)}
+    if(gs.running){gs.roadOff+=5*gs.speed;if(gs.roadOff>36)gs.roadOff=0}
 }
 
-function spawnThreat() {
-    const now = Date.now();
-    if (now - gameState.lastObstacleSpawn < gameState.minObstacleGap / gameState.speed) return;
+function drawPlayer(x,y){
+    const gr=ctx.createLinearGradient(x-20,y,x+20,y+70);
+    gr.addColorStop(0,'#120d1e');gr.addColorStop(1,'#0a0814');
+    ctx.fillStyle=gr;ctx.fillRect(x-20,y+8,40,58);
+    ctx.fillStyle='#f59e0b';ctx.fillRect(x-12,y,24,10);
+    ctx.fillStyle='rgba(245,158,11,0.5)';ctx.fillRect(x-20,y+20,3,32);ctx.fillRect(x+17,y+20,3,32);
+    ctx.fillStyle='rgba(245,158,11,0.22)';
+    [18,26,34,42].forEach(dy=>ctx.fillRect(x-14,y+dy,28,1));
+    ctx.fillStyle='#0e0818';ctx.fillRect(x-20,y+58,40,12);
+    const fl=5+Math.floor(Math.random()*6);
+    ctx.fillStyle='#f59e0b';ctx.fillRect(x-16,y+70,10,fl);ctx.fillRect(x+6,y+70,10,fl);
+    ctx.fillStyle='rgba(251,191,36,0.6)';ctx.fillRect(x-13,y+70+fl,5,3);ctx.fillRect(x+9,y+70+fl,5,3);
+}
 
-    const available = [];
-    for (let i = 0; i < LANES; i++) {
-        if (!gameState.obstacles.some(o => o.lane === i && o.y > -300)) available.push(i);
-    }
-    if (available.length === 0) return;
+function drawThreat(x,y,type){
+    const t=THREATS.find(t=>t.id===type)||THREATS[0];
+    ctx.fillStyle=t.color+'18';ctx.strokeStyle=t.color+'cc';ctx.lineWidth=1;
+    ctx.beginPath();ctx.roundRect(x-38,y-16,76,32,3);ctx.fill();ctx.stroke();
+    ctx.fillStyle=t.color;ctx.font='bold 9px Share Tech Mono,monospace';ctx.textAlign='center';
+    ctx.fillText(t.label,x,y+4);
+}
 
-    // Soroban upgrade reduces obstacles
-    const soroban = upgrades.find(u => u.id === 'soroban');
-    const spawnChance = 0.012 * gameState.speed * (1 - soroban.level * 0.15);
-    if (Math.random() > spawnChance * 40) {
-        const max = Math.min(available.length - 1, Math.random() > 0.65 ? 2 : 1);
-        const shuffled = available.sort(() => Math.random() - 0.5);
-        const type = THREAT_TYPES[Math.floor(Math.random() * THREAT_TYPES.length)];
-        for (let i = 0; i < max; i++) {
-            gameState.obstacles.push({ x: LANE_POS[shuffled[i]], y: -30, lane: shuffled[i], type: type.id, passed: false });
+function drawGem(x,y,pulse,isZK){
+    const col=isZK?'#8b5cf6':'#f59e0b',s=11+Math.sin(pulse)*1.5;
+    ctx.fillStyle=col+'cc';
+    ctx.beginPath();ctx.moveTo(x,y-s);ctx.lineTo(x+s*.55,y);ctx.lineTo(x,y+s);ctx.lineTo(x-s*.55,y);ctx.closePath();ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,0.28)';
+    ctx.beginPath();ctx.moveTo(x,y-s*.5);ctx.lineTo(x+s*.22,y-s*.08);ctx.lineTo(x,y+s*.18);ctx.lineTo(x-s*.22,y-s*.08);ctx.closePath();ctx.fill();
+    if(isZK){ctx.fillStyle='#fff';ctx.font='7px Share Tech Mono,monospace';ctx.textAlign='center';ctx.fillText('ZK',x,y+2)}
+}
+
+function drawFloats(){
+    gs.floats.forEach(f=>{ctx.globalAlpha=f.opacity;ctx.fillStyle=f.color;ctx.font='bold 14px Russo One,sans-serif';ctx.textAlign='center';ctx.fillText(f.text,f.x,f.y);ctx.globalAlpha=1});
+}
+function spawnFloat(x,y,text,color){gs.floats.push({x,y,text,color,opacity:1,vy:-2,life:55})}
+
+function updateHUD(){
+    const lv=getLv();if(!lv)return;
+    levelEl.textContent=lv.label;speedEl.textContent=gs.speed.toFixed(2)+'x';
+    const pct=Math.min(100,(gs.levelFees/lv.target)*100);
+    document.getElementById('feeBarFill').style.width=pct+'%';
+    document.getElementById('feeBarLabel').textContent=Math.floor(gs.levelFees)+' / '+lv.target+' — '+lv.mode;
+    canvas.classList.toggle('danger',gs.levelFees<30&&gs.levelFees>0);
+}
+
+// ── GAME STATE ──
+let gs=null;
+const player={w:48,h:78,y:430,targetX:LANE_X[1],currentX:LANE_X[1]};
+
+function update(){
+    if(!gs.running)return;
+    gs.actions.push(gs.pendingAction);gs.pendingAction=0;
+    const d=player.targetX-player.currentX;
+    if(Math.abs(d)>1)player.currentX+=d*.25;else player.currentX=player.targetX;
+    const lv=getLv();
+
+    gs.threats.forEach(o=>{
+        o.y+=5*gs.speed;
+        if(!o.hit&&o.y+18>player.y&&o.y-18<player.y+player.h&&o.lane===gs.playerLane&&Math.abs(player.currentX-o.x)<42){
+            o.hit=true;
+            const dmg=Math.max(5,Math.floor(gs.levelFees*lv.dmg));
+            gs.levelFees=Math.max(0,gs.levelFees-dmg);
+            scoreEl.textContent=Math.floor(gs.levelFees);
+            spawnFloat(player.currentX,player.y-10,'-'+dmg,'#ef4444');
+            eduTip(o.type);updateHUD();
+            if(gs.levelFees<=0){gs.running=false;spawnFloat(player.currentX,player.y-40,'REJECTED','#ef4444');draw();setTimeout(gameOver,900)}
         }
-    }
-    gameState.lastObstacleSpawn = now;
-}
+        if(!o.hit&&o.y>player.y+player.h){o.hit=true;gs.dodged++}
+    });
+    gs.threats=gs.threats.filter(o=>o.y<canvas.height+70);
 
-function spawnFeeGem() {
-    if (Math.random() < 0.008) {
-        const lane = Math.floor(Math.random() * LANES);
-        const isZK = Math.random() < 0.15; // 15% ZK boost gem
-        gameState.gems.push({ x: LANE_POS[lane], y: -20, lane, pulse: 0, collected: false, isZK });
-    }
-}
-
-function update() {
-    if (!gameState.isRunning) return;
-
-    // ── ZK: record this tick's action ───────────────────────────────────────
-    gameState.actions.push(gameState.pendingAction);
-    gameState.pendingAction = 0; // reset for next frame
-
-    // Update ZK live bar every 30 ticks
-    if (gameState.actions.length % 30 === 0) {
-        document.getElementById('zkActionCount').textContent = gameState.actions.length + ' ticks';
-    }
-
-    // Smooth player movement
-    const diff = player.targetX - player.currentX;
-    if (Math.abs(diff) > 1) player.currentX += diff * 0.25;
-    else player.currentX = player.targetX;
-
-    let _unused = false; // no instant death
-
-    // Update threats
-    gameState.obstacles.forEach(o => {
-        o.y += gameState.baseSpeed * gameState.speed;
-
-        if (!o.passed &&
-            o.y + 20 > player.y &&
-            o.y - 20 < player.y + player.height &&
-            o.lane === gameState.playerLane &&
-            Math.abs(player.currentX - o.x) < 45) {
-
-            if (gameState.hasShield) {
-                // Shield absorbs hit
-                gameState.hasShield = false;
-                o.passed = true;
-                showTooltip('🛡️ Fee Buffer absorbed the attack!', 'reward', 2000);
-                spawnFloatingText(player.currentX, player.y - 10, 'BLOCKED!', '#ffd700');
-                return;
-            }
-            // Hit! Reduce fees by damage % 
-            const dmgPct = gameState.obstacleDamage;
-            const dmgAmt = Math.max(5, Math.floor(gameState.score * dmgPct));
-            gameState.score = Math.max(0, gameState.score - dmgAmt);
-            gameState.levelFeesCollected = Math.max(0, gameState.levelFeesCollected - dmgAmt);
-            scoreEl.textContent = Math.floor(gameState.score);
-            o.passed = true;
-            spawnFloatingText(player.currentX, player.y - 10, `-${dmgAmt}`, '#ff4466');
-            showBlockchainTip(o.type || 'doublespend');
-            updateLevelHUD();
-
-            // Death when fees hit zero
-            if (gameState.score <= 0 && gameState.isRunning) {
-                gameState.score = 0;
-                gameState.isRunning = false;
-                scoreEl.textContent = '0';
-                spawnFloatingText(player.currentX, player.y - 40, '💀 LIQUIDATED', '#ff4466');
-                draw();
-                setTimeout(gameOver, 900);
-                return;
-            }
-        }
-
-        if (!o.passed && o.y > player.y + player.height) {
-            o.passed = true;
-            gameState.obstaclesDodged++;
-            gameState.blocksConfirmed++;
-
-            // Memo field bonus every 15 blocks
-            if (gameState.obstaclesDodged % 15 === 0) {
-                showBlockchainTip('speedup');
-                const memo = upgrades.find(u => u.id === 'memo');
-                const bonus = memo.level * 5;
-                if (bonus > 0) {
-                    gameState.score += bonus;
-                    gameState.levelFeesCollected += bonus;
-                    scoreEl.textContent = Math.floor(gameState.score);
-                    updateLevelHUD();
-                }
-            }
+    gs.gems.forEach(g=>{
+        g.y+=5*gs.speed;g.pulse+=.12;
+        if(!g.hit&&g.y+18>player.y&&g.y-18<player.y+player.h&&g.lane===gs.playerLane&&Math.abs(player.currentX-g.x)<38){
+            g.hit=true;
+            const bonus=g.isZK?50:10;
+            gs.levelFees+=bonus;scoreEl.textContent=Math.floor(gs.levelFees);
+            spawnFloat(g.x,g.y,(g.isZK?'+50 ZK':'+10'),g.isZK?'#8b5cf6':'#f59e0b');
+            eduTip(g.isZK?'zkboost':'feegem');
+            if(g.isZK){gs.speed=Math.min(gs.speed+.1,5.5);speedEl.textContent=gs.speed.toFixed(2)+'x'}
+            updateHUD();
         }
     });
+    gs.gems=gs.gems.filter(g=>!g.hit&&g.y<canvas.height+60);
 
-    // (no instant death — obstacles deal % fee damage)
-    gameState.obstacles = gameState.obstacles.filter(o => o.y <= canvas.height + 50);
+    gs.floats.forEach(f=>{f.y+=f.vy;f.vy*=.94;f.life--;f.opacity=Math.max(0,f.life/40)});
+    gs.floats=gs.floats.filter(f=>f.life>0);
 
-    // Update fee gems
-    gameState.gems.forEach(g => {
-        g.y += gameState.baseSpeed * gameState.speed;
-        g.pulse += 0.12;
-
-        if (!g.collected &&
-            g.y + 20 > player.y && g.y - 20 < player.y + player.height &&
-            g.lane === gameState.playerLane &&
-            Math.abs(player.currentX - g.x) < 40) {
-
-            g.collected = true;
-            const zkUpg = upgrades.find(u => u.id === 'zk');
-            const bonus = g.isZK ? 50 : 10;
-            const multiplied = Math.floor(bonus * (1 + zkUpg.level * 0.1));
-            gameState.score += multiplied;
-            gameState.levelFeesCollected += multiplied;
-            scoreEl.textContent = Math.floor(gameState.score);
-            shopFees += Math.floor(multiplied * 0.3);
-            updateLevelHUD();
-
-            // Floating impact text
-            const gemColor = g.isZK ? '#a855f7' : '#ffd700';
-            const gemLabel = g.isZK ? `+${multiplied} ZK⚡` : `+${multiplied}`;
-            spawnFloatingText(g.x, g.y, gemLabel, gemColor);
-
-            if (g.isZK) {
-                showBlockchainTip('zkboost');
-                gameState.speed = Math.min(gameState.speed + 0.15, 5);
-                speedEl.textContent = gameState.speed.toFixed(2) + 'x';
-            } else {
-                showBlockchainTip('feegem');
-            }
-        }
-    });
-    gameState.gems = gameState.gems.filter(g => !g.collected && g.y <= canvas.height + 50);
-
-    // Check level advancement
-    const lvData = getCurrentLevelData();
-    if (lvData && gameState.levelFeesCollected >= lvData.feeTarget) {
-        advanceLevel();
-    }
-
-    spawnThreat();
-    spawnFeeGem();
-    updateFloatingTexts();
+    spawnThreats();spawnGems();
+    if(lv&&gs.levelFees>=lv.target)advanceLevel();
 }
 
-function draw() {
+function draw(){
     drawRoad();
-    gameState.obstacles.forEach(o => drawThreat(o.x, o.y, o.type));
-    gameState.gems.forEach(g => { if (!g.collected) drawFeeGem(g.x, g.y, g.pulse, g.isZK); });
-    drawTxPacket(player.currentX, player.y);
-    drawFloatingTexts();
+    gs.threats.forEach(o=>{if(!o.hit)drawThreat(o.x,o.y,o.type)});
+    gs.gems.forEach(g=>{if(!g.hit)drawGem(g.x,g.y,g.pulse,g.isZK)});
+    drawPlayer(player.currentX,player.y);
+    drawFloats();
 }
 
-function gameLoop() {
-    update(); draw();
-    if (gameState.isRunning) gameState.animationId = requestAnimationFrame(gameLoop);
-}
+function loop(){update();draw();if(gs.running)gs.animId=requestAnimationFrame(loop)}
 
-// ============================================================
-// COUNTDOWN
-// ============================================================
-function runCountdown(subText, callback) {
-    const overlay = document.getElementById('countdownOverlay');
-    const numEl   = document.getElementById('countdownNum');
-    const subEl   = document.getElementById('countdownSub');
+// ── LEVEL ADVANCE ──
+async function advanceLevel(){
+    gs.running=false;
+    if(gs.animId){cancelAnimationFrame(gs.animId);gs.animId=null}
+    const fromSet=gs.set,fromLv=gs.level;
+    const levelScore=Math.floor(gs.levelFees);
+    if(levelScore>gs.bestLevelScore)gs.bestLevelScore=levelScore;
+    gs.levelsCleared++;
 
-    overlay.classList.add('active');
-    subEl.textContent = subText;
+    const key=`${fromSet}-${fromLv}`;
+    const data=LESSONS[key]||{tag:'orange',title:'LEVEL COMPLETE',lesson:'Keep going.'};
+    document.getElementById('lcTag').textContent=data.title;
+    document.getElementById('lcTag').className=`lc-tag ${data.tag}`;
+    document.getElementById('lcTitle').textContent=data.title;
+    document.getElementById('lcScoreNum').textContent=levelScore.toLocaleString();
+    document.getElementById('lcScoreSub').textContent='LEVEL '+SETS[fromSet].levels[fromLv].label+' — '+SETS[fromSet].levels[fromLv].mode;
+    document.getElementById('lcLessonBody').innerHTML=data.lesson;
+    document.getElementById('lcScreen').classList.add('active');
 
-    const steps = ['3', '2', '1', 'GO!'];
-    let i = 0;
+    if(!wallet.isGuest&&wallet.connected)submitLevelScore(levelScore,SETS[fromSet].levels[fromLv].label).catch(console.warn);
 
-    function nextStep() {
-        if (i >= steps.length) {
-            overlay.classList.remove('active');
-            callback();
-            return;
-        }
-        numEl.textContent = steps[i];
-        numEl.className = 'countdown-num' + (steps[i] === 'GO!' ? ' go' : '');
-        // re-trigger animation
-        numEl.style.animation = 'none';
-        void numEl.offsetHeight;
-        numEl.style.animation = '';
-        i++;
-        setTimeout(nextStep, steps[i - 1] === 'GO!' ? 700 : 900);
-    }
-    nextStep();
-}
-
-function startGame() {
-    if (gameState.animationId) { cancelAnimationFrame(gameState.animationId); gameState.animationId = null; }
-    startScreen.classList.add('hidden');
-    gameOverScreen.classList.remove('active');
-    document.getElementById('levelCompleteScreen').classList.remove('active');
-    canvas.classList.remove('danger');
-
-    // Generate new ZK seed (BigInt-safe 53-bit random)
-    const seed = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER);
-    const gid  = Date.now() % 0xFFFFFFFF;
-
-    gameState = {
-        isRunning: false, score: 0, obstaclesDodged: 0,
-        speed: 1, baseSpeed: 5, playerLane: 1,
-        obstacles: [], gems: [], zkBoosts: [], floatingTexts: [],
-        roadOffset: 0, animationId: null,
-        lastObstacleSpawn: 0, minObstacleGap: 200,
-        blocksConfirmed: 0,
-        currentSet: 0, currentLevel: 0,
-        levelFeesCollected: 0, obstacleDamage: 0.15,
-        hasShield: upgrades.find(u => u.id === 'fee').level > 0,
-        seed, actions: [], pendingAction: 0, gameId: gid
+    const btn=document.getElementById('lcContinueBtn');
+    const handler=()=>{
+        btn.removeEventListener('click',handler);
+        document.getElementById('lcScreen').classList.remove('active');
+        const nLv=fromLv+1,lastSet=fromSet>=SETS.length-1,lastLv=nLv>=SETS[fromSet].levels.length;
+        if(lastLv&&lastSet){showTip('🏆 LEGENDARY VALIDATOR! Full mempool conquered!','good',6000);setTimeout(gameOver,6200);return}
+        if(lastLv){gs.set++;gs.level=0}else{gs.level=nLv}
+        gs.levelFees=0;const lv2=getLv();
+        gs.speed=lv2.speed;scoreEl.textContent='0';speedEl.textContent=lv2.speed.toFixed(2)+'x';
+        gs.spawner=makeSpawner(lv2);updateHUD();
+        runCountdown(lv2.label+' — '+lv2.mode,()=>{gs.running=true;loop()});
     };
-
-    player.currentX = LANE_POS[1];
-    player.targetX  = LANE_POS[1];
-    scoreEl.textContent  = '0';
-    speedEl.textContent  = '1.00x';
-    feeProgressBar.style.display   = 'block';
-    feeProgressLabel.style.display = 'block';
-
-    // Show ZK live bar + seed
-    const zkBar = document.getElementById('zkLiveBar');
-    zkBar.style.display = 'flex';
-    document.getElementById('zkSeedDisplay').textContent = `seed: ${seed.toString(16).slice(0,8)}…`;
-    document.getElementById('zkActionCount').textContent = '0 ticks';
-
-    applyUpgradeEffects();
-    updateLevelHUD();
-
-    // Render static frame then countdown
-    drawRoad();
-    drawTxPacket(player.currentX, player.y);
-
-    runCountdown('MEMPOOL ENTRY IN…', () => {
-        gameState.isRunning = true;
-        gameLoop();
-    });
+    btn.addEventListener('click',handler);
 }
 
-function gameOver() {
-    gameState.isRunning = false;
-    canvas.classList.remove('danger');
-    if (gameState.animationId) { cancelAnimationFrame(gameState.animationId); gameState.animationId = null; }
-
-    const finalScore = Math.floor(gameState.score * prestigeData.multiplier);
-
-    document.getElementById('finalBlocks').textContent  = gameState.blocksConfirmed;
-    document.getElementById('finalDodged').textContent  = gameState.obstaclesDodged;
-    document.getElementById('finalMult').textContent    = prestigeData.multiplier.toFixed(1) + 'x';
-    document.getElementById('finalScore').textContent   = finalScore;
-
-    // Show ZK summary row
-    const zkRow = document.getElementById('finalZKRow');
-    if (zkRow) {
-        zkRow.querySelector('.val').textContent =
-            `${gameState.actions.length} ticks · seed ${gameState.seed.toString(16).slice(0,8)}…`;
+function runCountdown(sub,cb){
+    const ov=document.getElementById('countdownOverlay'),numEl=document.getElementById('countdownNum');
+    document.getElementById('countdownSub').textContent=sub;ov.classList.add('active');
+    const steps=['3','2','1','GO!'];let i=0;
+    function step(){
+        if(i>=steps.length){ov.classList.remove('active');cb();return}
+        numEl.textContent=steps[i];numEl.className='countdown-num'+(steps[i]==='GO!'?' go':'');
+        numEl.style.animation='none';void numEl.offsetHeight;numEl.style.animation='';
+        i++;setTimeout(step,steps[i-1]==='GO!'?650:850);
     }
-
-    // Check prestige
-    const totalAfter = prestigeData.totalFeesEarned + finalScore;
-    if (totalAfter >= prestigeData.prestigeThreshold) {
-        document.getElementById('prestigeBanner').style.display = 'block';
-        document.getElementById('prestigeActionBtn').style.display = 'block';
-    }
-
-    submitScoreBtn.disabled = !walletState.connected;
-    gameOverScreen.classList.add('active');
+    step();
 }
 
-// ============================================================
-// CONTROLS — set pendingAction each frame (recorded for ZK proof)
-// ============================================================
-document.addEventListener('keydown', e => {
-    if (!gameState.isRunning) return;
-    if (e.key === 'ArrowLeft' && gameState.playerLane > 0) {
-        gameState.playerLane--;
-        player.targetX = LANE_POS[gameState.playerLane];
-        gameState.pendingAction = 1; // left
-    } else if (e.key === 'ArrowRight' && gameState.playerLane < LANES-1) {
-        gameState.playerLane++;
-        player.targetX = LANE_POS[gameState.playerLane];
-        gameState.pendingAction = 2; // right
-    }
+function gameOver(){
+    gs.running=false;canvas.classList.remove('danger');
+    if(gs.animId){cancelAnimationFrame(gs.animId);gs.animId=null}
+    paused=false;pauseBtn.classList.add('hidden');pauseOverlay.classList.remove('active');
+    document.getElementById('goLevels').textContent=gs.levelsCleared;
+    document.getElementById('goDodged').textContent=gs.dodged;
+    document.getElementById('goBest').textContent=gs.bestLevelScore.toLocaleString();
+    const btn=document.getElementById('submitBtn'),note=document.getElementById('goNote');
+    if(wallet.isGuest){note.innerHTML='Guest scores are not recorded on-chain.';btn.disabled=true}
+    else if(wallet.connected){note.innerHTML='<strong>ZK proofs</strong> auto-submitted per level. Use this to re-submit your best.';btn.disabled=false}
+    else{note.innerHTML='Connect wallet to submit scores.';btn.disabled=true}
+    document.getElementById('goStatus').textContent='';
+    document.getElementById('goScreen').classList.add('active');
+}
+
+function startGame(){
+    paused=false;if(gs?.animId)cancelAnimationFrame(gs.animId);
+    document.getElementById('startScreen').classList.add('hidden');
+    document.getElementById('goScreen').classList.remove('active');
+    document.getElementById('lcScreen').classList.remove('active');
+    canvas.classList.remove('danger');pauseBtn.classList.remove('hidden');
+    const lv0=SETS[0].levels[0];
+    gs={running:false,levelFees:0,dodged:0,bestLevelScore:0,levelsCleared:0,set:0,level:0,speed:lv0.speed,roadOff:0,playerLane:1,threats:[],gems:[],floats:[],animId:null,seed:Math.floor(Math.random()*Number.MAX_SAFE_INTEGER),actions:[],pendingAction:0,spawner:makeSpawner(lv0)};
+    player.currentX=LANE_X[1];player.targetX=LANE_X[1];
+    scoreEl.textContent='0';speedEl.textContent=lv0.speed.toFixed(2)+'x';levelEl.textContent=lv0.label;
+    document.getElementById('feeBarWrap').style.display='block';
+    document.getElementById('feeBarFill').style.width='0%';
+    updateHUD();drawRoad();drawPlayer(player.currentX,player.y);
+    if(wallet.connected&&wallet.keypair)startOnChain().catch(console.warn);
+    runCountdown('S1-L1 — COLLECTION',()=>{gs.running=true;pauseBtn.textContent='⏸';loop()});
+}
+
+// ── STELLAR ──
+async function callContract(method,args){
+    if(!wallet.keypair)throw new Error('No keypair');
+    const srv=new StellarSdk.SorobanRpc.Server(RPC_URL);
+    const acct=await srv.getAccount(wallet.address);
+    const ct=new StellarSdk.Contract(CONTRACT_ID);
+    const tx=new StellarSdk.TransactionBuilder(acct,{fee:StellarSdk.BASE_FEE,networkPassphrase:NET_PASS}).addOperation(ct.call(method,...args)).setTimeout(30).build();
+    const prep=await srv.prepareTransaction(tx);prep.sign(wallet.keypair);
+    return srv.sendTransaction(prep);
+}
+async function startOnChain(){sessionId=(()=>{const b=new Uint32Array(1);crypto.getRandomValues(b);return b[0]||1})();await callContract('start_game',[StellarSdk.nativeToScVal(sessionId,{type:'u32'}),StellarSdk.Address.fromString(wallet.address).toScVal()])}
+async function genProof(score){try{const r=await fetch(PROVER_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({seed:gs.seed,actions:gs.actions,player_address:wallet.address})});if(!r.ok)throw new Error(r.status);return await r.json()}catch{return{seal:'00'.repeat(64),journal:'00'.repeat(32)}}}
+async function submitLevelScore(score,label){
+    try{
+        const proof=await genProof(score);
+        if(wallet.keypair&&sessionId){
+            const h2b=h=>new Uint8Array(h.match(/.{1,2}/g).map(b=>parseInt(b,16)));
+            const pv=StellarSdk.xdr.ScVal.scvMap([new StellarSdk.xdr.ScMapEntry({key:StellarSdk.xdr.ScVal.scvSymbol('seal'),val:StellarSdk.xdr.ScVal.scvBytes(h2b(proof.seal))}),new StellarSdk.xdr.ScMapEntry({key:StellarSdk.xdr.ScVal.scvSymbol('journal'),val:StellarSdk.xdr.ScVal.scvBytes(h2b(proof.journal))})]);
+            await callContract('submit_score',[StellarSdk.nativeToScVal(sessionId,{type:'u32'}),StellarSdk.Address.fromString(wallet.address).toScVal(),StellarSdk.nativeToScVal(score,{type:'u32'}),pv]);
+        }
+        showTip('✓ Level '+label+' score submitted to Stellar','good',3000);
+    }catch(e){console.warn('Submit:',e.message)}
+}
+
+document.getElementById('submitBtn').addEventListener('click',async()=>{
+    const score=gs.bestLevelScore,status=document.getElementById('goStatus'),btn=document.getElementById('submitBtn');
+    btn.disabled=true;status.textContent='🔐 Generating ZK proof…';
+    try{await submitLevelScore(score,'BEST');status.textContent='✓ Submitted.';setTimeout(()=>{status.textContent='';btn.disabled=false},3000)}
+    catch(e){status.textContent='✗ '+e.message;btn.disabled=false}
 });
 
-// Touch controls
-let touchStartX = 0;
-canvas.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; });
-canvas.addEventListener('touchend', e => {
-    const diff = e.changedTouches[0].clientX - touchStartX;
-    if (Math.abs(diff) < 30) return;
-    if (diff < 0 && gameState.playerLane > 0) {
-        gameState.playerLane--; player.targetX = LANE_POS[gameState.playerLane];
-        gameState.pendingAction = 1;
-    } else if (diff > 0 && gameState.playerLane < LANES-1) {
-        gameState.playerLane++; player.targetX = LANE_POS[gameState.playerLane];
-        gameState.pendingAction = 2;
-    }
+// ── CONTROLS ──
+document.addEventListener('keydown',e=>{
+    if(!gs?.running)return;
+    if(e.key==='ArrowLeft'&&gs.playerLane>0){gs.playerLane--;player.targetX=LANE_X[gs.playerLane];gs.pendingAction=1}
+    else if(e.key==='ArrowRight'&&gs.playerLane<2){gs.playerLane++;player.targetX=LANE_X[gs.playerLane];gs.pendingAction=2}
+});
+let touchX=0;
+canvas.addEventListener('touchstart',e=>{touchX=e.touches[0].clientX});
+canvas.addEventListener('touchend',e=>{
+    const d=e.changedTouches[0].clientX-touchX;if(Math.abs(d)<28)return;
+    if(d<0&&gs.playerLane>0){gs.playerLane--;player.targetX=LANE_X[gs.playerLane];gs.pendingAction=1}
+    else if(d>0&&gs.playerLane<2){gs.playerLane++;player.targetX=LANE_X[gs.playerLane];gs.pendingAction=2}
 });
 
-// ============================================================
-// EVENT LISTENERS
-// ============================================================
-startBtn.addEventListener('click', () => { startGameOnChain(); startGame(); });
-restartBtn.addEventListener('click', startGame);
-submitScoreBtn.addEventListener('click', () => submitScore(Math.floor(gameState.score * prestigeData.multiplier)));
+// ── DOCS + NAV ──
+document.getElementById('docsLinkBtn').addEventListener('click',()=>document.getElementById('docsPanel').classList.add('open'));
+document.getElementById('docsClose').addEventListener('click',()=>document.getElementById('docsPanel').classList.remove('open'));
+document.getElementById('startOnChainBtn').addEventListener('click',()=>{
+    if(!wallet.connected){openWalletModal();const poll=setInterval(()=>{if(wallet.connected){clearInterval(poll);closeWalletModal();wallet.isGuest=false;startGame()}},400);setTimeout(()=>clearInterval(poll),120000);return}
+    wallet.isGuest=false;startGame();
+});
+document.getElementById('startGuestBtn').addEventListener('click',()=>{wallet.isGuest=true;startGame()});
+document.getElementById('retryBtn').addEventListener('click',()=>{document.getElementById('goScreen').classList.remove('active');document.getElementById('startScreen').classList.remove('hidden');pauseBtn.classList.add('hidden')});
 
-// Initial render
-drawRoad();
-drawTxPacket(player.currentX, player.y);
-updatePrestigeUI();
+// ── INIT ──
+gs={running:false,roadOff:0,threats:[],gems:[],floats:[],speed:1,playerLane:1,levelFees:0,dodged:0,bestLevelScore:0,levelsCleared:0,set:0,level:0,animId:null,seed:0,actions:[],pendingAction:0,spawner:{nextFire:0,waveAt:0}};
+drawRoad();drawPlayer(LANE_X[1],player.y);
 </script>
 </body>
 </html>

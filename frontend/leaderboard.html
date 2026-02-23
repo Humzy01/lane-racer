@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaderboard — Chain Speedway</title>
+    <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Share+Tech+Mono&family=Teko:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+:root {
+    --bg:#050408; --panel:#0a0810; --border:#1c1428; --border2:#2a1e3c;
+    --org:#f59e0b; --org-d:#7a4e05; --org-g:rgba(245,158,11,0.08);
+    --red:#ef4444; --green:#22c55e; --purple:#8b5cf6;
+    --text:#c8a870; --text-dim:#6a5840; --text-faint:#2a1e10;
+    --gold:#fbbf24; --silver:#9ca3af; --bronze:#d97706;
+    --font-g:'Russo One',sans-serif; --font-h:'Teko',sans-serif; --font-m:'Share Tech Mono',monospace;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html,body{min-height:100%}
+body{font-family:var(--font-g);background:var(--bg);color:var(--text);display:flex;flex-direction:column}
+body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.06) 3px,rgba(0,0,0,0.06) 4px);pointer-events:none;z-index:9999}
+
+/* ── NAVBAR ── */
+.navbar{display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:56px;background:var(--panel);border-bottom:2px solid var(--org-d);position:sticky;top:0;z-index:100;flex-shrink:0}
+.nav-brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+.nav-logo{width:34px;height:34px;background:var(--org);clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);display:flex;align-items:center;justify-content:center;font-family:var(--font-g);font-size:12px;color:var(--bg)}
+.nav-title{font-family:var(--font-g);font-size:clamp(14px,2.5vw,19px);color:var(--org);letter-spacing:2px}
+.nav-right{display:flex;align-items:center;gap:8px}
+.nav-link{font-family:var(--font-m);font-size:12px;font-weight:700;padding:7px 14px;border:1px solid var(--border2);border-radius:3px;color:var(--text-dim);text-decoration:none;transition:all .2s;letter-spacing:.5px}
+.nav-link:hover{border-color:var(--org);color:var(--org)}
+.nav-link.play{background:var(--org);color:var(--bg);border-color:var(--org);font-weight:700}
+.nav-link.play:hover{background:#fbbf24}
+
+/* ── CONTENT ── */
+.content{flex:1;max-width:780px;margin:0 auto;padding:32px 20px 56px;width:100%}
+
+/* ── HEADER ── */
+.page-eyebrow{font-family:var(--font-m);font-size:10px;color:var(--org-d);letter-spacing:3px;text-transform:uppercase;margin-bottom:6px}
+.page-title{font-family:var(--font-g);font-size:clamp(26px,5.5vw,44px);color:var(--text);letter-spacing:2px;margin-bottom:6px}
+.page-title span{color:var(--org)}
+.page-desc{font-family:var(--font-m);font-size:12px;color:var(--text-dim);line-height:1.8;margin-bottom:28px}
+.page-desc strong{color:var(--green);font-weight:400}
+
+/* ── STATS ── */
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px}
+.stat-card{background:var(--panel);border:1px solid var(--border2);border-top:2px solid var(--org-d);border-radius:4px;padding:14px;text-align:center}
+.stat-label{font-family:var(--font-m);font-size:9px;color:var(--text-faint);letter-spacing:2px;text-transform:uppercase;margin-bottom:5px}
+.stat-val{font-family:var(--font-h);font-size:clamp(22px,4vw,32px);font-weight:600;color:var(--org)}
+
+/* ── FILTERS ── */
+.filters{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.filter-btn{font-family:var(--font-m);font-size:11px;font-weight:700;padding:6px 14px;border:1px solid var(--border2);border-radius:3px;background:transparent;color:var(--text-dim);cursor:pointer;transition:all .2s;letter-spacing:.5px}
+.filter-btn:hover{border-color:var(--org);color:var(--org)}
+.filter-btn.active{background:var(--org);color:var(--bg);border-color:var(--org)}
+
+/* ── TABLE ── */
+.lb-table-wrap{background:var(--panel);border:1px solid var(--border2);border-radius:4px;overflow:hidden}
+.lb-header{display:grid;grid-template-columns:52px 1fr 110px 110px;padding:10px 16px;background:var(--org-g);border-bottom:1px solid var(--border2)}
+.th{font-family:var(--font-m);font-size:9px;color:var(--text-faint);letter-spacing:2px;text-transform:uppercase}
+.th.right{text-align:right}
+
+.lb-entry{display:grid;grid-template-columns:52px 1fr 110px 110px;padding:13px 16px;border-bottom:1px solid rgba(28,20,40,0.6);align-items:center;transition:background .15s;position:relative}
+.lb-entry:last-child{border-bottom:none}
+.lb-entry:hover{background:rgba(245,158,11,0.03)}
+.lb-entry.rank-1{background:rgba(251,191,36,0.04)}.lb-entry.rank-1:hover{background:rgba(251,191,36,0.07)}
+.lb-entry.rank-2{background:rgba(156,163,175,0.02)}.lb-entry.rank-3{background:rgba(217,119,6,0.02)}
+
+.e-rank{font-family:var(--font-g);font-size:15px;display:flex;align-items:center}
+.rank-1 .e-rank{color:var(--gold)}.rank-2 .e-rank{color:var(--silver)}.rank-3 .e-rank{color:var(--bronze)}
+
+.e-player{display:flex;align-items:center;gap:10px;min-width:0}
+.e-avatar{width:32px;height:32px;border-radius:3px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:var(--font-g);font-size:11px}
+.e-name{font-family:var(--font-g);font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.e-addr{font-family:var(--font-m);font-size:9px;color:var(--text-faint);margin-top:1px}
+
+.e-level{font-family:var(--font-m);font-size:13px;color:var(--org);text-align:right;font-weight:700}
+.rank-1 .e-level{color:var(--gold)}
+
+.e-proof{display:flex;justify-content:flex-end}
+.proof-badge{font-family:var(--font-m);font-size:9px;letter-spacing:1px;padding:3px 7px;border-radius:2px;font-weight:700;text-transform:uppercase}
+.proof-badge.verified{background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.25);color:var(--green)}
+.proof-badge.guest{background:rgba(74,96,112,0.1);border:1px solid var(--border2);color:var(--text-faint)}
+
+/* left bar on top 3 */
+.e-bar{position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:2px 0 0 2px}
+.rank-1 .e-bar{background:var(--gold)}.rank-2 .e-bar{background:var(--silver)}.rank-3 .e-bar{background:var(--bronze)}
+
+/* ── ZK INFO ── */
+.zk-info{margin-top:24px;background:var(--org-g);border:1px solid var(--org-d);border-radius:4px;padding:18px 20px;display:flex;gap:14px}
+.zk-icon{font-size:22px;flex-shrink:0;margin-top:2px}
+.zk-title{font-family:var(--font-g);font-size:13px;color:var(--org);margin-bottom:5px;letter-spacing:1px}
+.zk-body{font-family:var(--font-m);font-size:11px;color:var(--text-dim);line-height:1.9}
+.zk-body strong{color:var(--org);font-weight:400}
+
+.lb-empty{font-family:var(--font-m);font-size:12px;color:var(--text-faint);text-align:center;padding:28px 0}
+
+/* ── RESPONSIVE ── */
+@media(max-width:600px){
+    .navbar{padding:0 12px}.content{padding:20px 12px 40px}
+    .stats-row{gap:8px}.stat-card{padding:10px 8px}.stat-val{font-size:20px}
+    .lb-header{grid-template-columns:40px 1fr 0 80px}
+    .lb-header .th:nth-child(3){display:none}
+    .lb-entry{grid-template-columns:40px 1fr 0 80px}
+    .lb-entry .e-level{display:none}
+    .e-name{font-size:12px}
+}
+@media(max-width:400px){.page-title{font-size:22px}.nav-link:not(.play){display:none}}
+    </style>
+</head>
+<body>
+
+<nav class="navbar">
+    <a class="nav-brand" href="index.html">
+        <div class="nav-logo">CS</div>
+        <span class="nav-title">CHAIN SPEEDWAY</span>
+    </a>
+    <div class="nav-right">
+        <a class="nav-link" href="index.html">← BACK</a>
+        <a class="nav-link play" href="index.html">▶ PLAY</a>
+    </div>
+</nav>
+
+<div class="content">
+    <div class="page-eyebrow">🏆 Hall of Validators</div>
+    <div class="page-title">LEADER<span>BOARD</span></div>
+    <div class="page-desc">All scores are <strong>ZK-verified on Stellar</strong> — proofs confirm accuracy without revealing gameplay. Rankings are public. Strategies stay private.</div>
+
+    <div class="stats-row">
+        <div class="stat-card"><div class="stat-label">Total Validators</div><div class="stat-val" id="statPlayers">—</div></div>
+        <div class="stat-card"><div class="stat-label">Top Level</div><div class="stat-val" id="statTop" style="font-size:clamp(16px,3vw,24px)">—</div></div>
+        <div class="stat-card"><div class="stat-label">ZK Proofs</div><div class="stat-val" id="statProofs">—</div></div>
+    </div>
+
+    <div class="filters">
+        <button class="filter-btn active" onclick="setFilter('all',this)">All Time</button>
+        <button class="filter-btn" onclick="setFilter('weekly',this)">This Week</button>
+        <button class="filter-btn" onclick="setFilter('verified',this)">ZK Verified Only</button>
+    </div>
+
+    <div class="lb-table-wrap">
+        <div class="lb-header">
+            <div class="th">#</div>
+            <div class="th">Player</div>
+            <div class="th right">Best Level</div>
+            <div class="th right">Proof</div>
+        </div>
+        <div id="lbBody"></div>
+    </div>
+
+    <div class="zk-info">
+        <div class="zk-icon">🔐</div>
+        <div>
+            <div class="zk-title">HOW ZK SCORING WORKS</div>
+            <div class="zk-body">When you complete a level, a <strong>zero-knowledge proof</strong> is generated using the RISC Zero zkVM — it proves your score is the result of valid gameplay without revealing which lanes you used or when you collected gems. The proof is verified by a <strong>Soroban smart contract on Stellar testnet</strong>. Guest scores are not ZK-verified and won't appear here.</div>
+        </div>
+    </div>
+</div>
+
+<script>
+const MOCK=[
+    {name:'NullVector',   addr:'GDQZK…F4AR',level:'F-L3', verified:true, avatar:'#f59e0b',init:'NV',days:1},
+    {name:'zkSatoshi',    addr:'GBWXM…2TPQ',level:'F-L3', verified:true, avatar:'#f97316',init:'ZS',days:2},
+    {name:'TxRelay99',    addr:'GCPAM…8RXE',level:'F-L2', verified:true, avatar:'#8b5cf6',init:'TR',days:3},
+    {name:'MempoolKing',  addr:'GD3YN…0VUQ',level:'F-L2', verified:true, avatar:'#ef4444',init:'MK',days:4},
+    {name:'FeeHunter',    addr:'GBXTN…J7WS',level:'S3-L3',verified:true, avatar:'#22c55e',init:'FH',days:5},
+    {name:'LedgerRacer',  addr:'GCMVD…R9KA',level:'S3-L2',verified:true, avatar:'#3b82f6',init:'LR',days:6},
+    {name:'AnonTx_7741',  addr:'GBQ2A…0PEZ',level:'S3-L1',verified:true, avatar:'#f59e0b',init:'AT',days:7},
+    {name:'Soroban_Dev',  addr:'GDNXP…8WQY',level:'S2-L3',verified:true, avatar:'#8b5cf6',init:'SD',days:8},
+    {name:'ProofRunner',  addr:'GC4YH…MK2T',level:'S2-L2',verified:true, avatar:'#f97316',init:'PR',days:9},
+    {name:'ValidatorX',   addr:'GBZQR…6TNA',level:'S2-L1',verified:true, avatar:'#22c55e',init:'VX',days:10},
+    {name:'GuestPlayer_1',addr:'N/A',        level:'S1-L3',verified:false,avatar:'#4a6070',init:'G1',days:3},
+    {name:'StellarSurfer',addr:'GDMJK…9PLQ',level:'S1-L3',verified:true, avatar:'#ef4444',init:'SS',days:11},
+    {name:'BlockSkipper', addr:'GBY3P…V5RN',level:'S1-L2',verified:true, avatar:'#3b82f6',init:'BS',days:12},
+    {name:'CryptoNewbie', addr:'N/A',        level:'S1-L1',verified:false,avatar:'#4a6070',init:'CN',days:2},
+    {name:'HashRunner',   addr:'GCQTP…2XVW',level:'S1-L1',verified:true, avatar:'#f59e0b',init:'HR',days:14},
+];
+const MEDALS=['🥇','🥈','🥉'];
+let currentFilter='all';
+
+function setFilter(f,btn){
+    currentFilter=f;
+    document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');renderTable();
+}
+
+function getData(){
+    let d=[...MOCK];
+    if(currentFilter==='weekly')d=d.filter(p=>p.days<=7);
+    else if(currentFilter==='verified')d=d.filter(p=>p.verified);
+    return d;
+}
+
+function renderTable(){
+    const d=getData();
+    const vf=d.filter(p=>p.verified);
+    document.getElementById('statPlayers').textContent=d.length;
+    document.getElementById('statTop').textContent=d.length?d[0].level:'—';
+    document.getElementById('statProofs').textContent=vf.length;
+    const body=document.getElementById('lbBody');
+    if(!d.length){body.innerHTML='<div class="lb-empty">No entries match this filter.</div>';return}
+    body.innerHTML=d.map((p,i)=>{
+        const rc=i<3?`rank-${i+1}`:'';
+        const bar=i<3?'<div class="e-bar"></div>':'';
+        const medal=MEDALS[i]||`#${i+1}`;
+        return `<div class="lb-entry ${rc}">
+            ${bar}
+            <div class="e-rank">${medal}</div>
+            <div class="e-player">
+                <div class="e-avatar" style="background:${p.avatar}22;border:1px solid ${p.avatar}44;color:${p.avatar}">${p.init}</div>
+                <div><div class="e-name">${p.name}</div><div class="e-addr">${p.addr!=='N/A'?p.addr:'guest'}</div></div>
+            </div>
+            <div class="e-level">${p.level}</div>
+            <div class="e-proof"><span class="proof-badge ${p.verified?'verified':'guest'}">${p.verified?'✓ ZK':'guest'}</span></div>
+        </div>`;
+    }).join('');
+}
+
+function countUp(el,target,dur=900){
+    const start=Date.now();
+    const tick=()=>{
+        const t=Math.min(1,(Date.now()-start)/dur);
+        const e=1-Math.pow(1-t,3);
+        el.textContent=Math.round(e*target);
+        if(t<1)requestAnimationFrame(tick);
+    };tick();
+}
+
+renderTable();
+setTimeout(()=>{
+    const d=getData();
+    countUp(document.getElementById('statPlayers'),d.length);
+    countUp(document.getElementById('statProofs'),d.filter(p=>p.verified).length);
+},100);
+</script>
+</body>
+</html>
