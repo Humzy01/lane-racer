@@ -8,484 +8,258 @@
     <script src="stellar-sdk.min.js"></script>
     <style>
         :root {
-            --cyan: #00d4ff;
-            --purple: #6b4aff;
-            --green: #00ff88;
-            --red: #ff4466;
-            --gold: #ffd700;
-            --orange: #ff8c00;
-            --dark: #05050f;
-            --card: #0d0d1f;
-            --border: #2a2a4a;
+            --cyan:#00d4ff; --purple:#6b4aff; --green:#00ff88;
+            --red:#ff4466; --gold:#ffd700; --orange:#ff8c00;
+            --dark:#05050f; --card:#0d0d1f; --border:#2a2a4a;
         }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        *{margin:0;padding:0;box-sizing:border-box;}
+        html,body{height:100%;overflow:hidden;}
+        body{font-family:'Orbitron',sans-serif;background:var(--dark);
+            display:flex;justify-content:center;align-items:center;color:#fff;}
+        body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+            background:radial-gradient(circle at 15% 50%,rgba(107,74,255,.08) 0%,transparent 50%),
+                       radial-gradient(circle at 85% 50%,rgba(0,212,255,.08) 0%,transparent 50%);}
 
-        body {
-            font-family: 'Orbitron', sans-serif;
-            background: var(--dark);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            overflow-x: hidden;
-            overflow-y: auto;
-            color: #fff;
-        }
+        /* MENU */
+        .menu-toggle{position:fixed;top:12px;left:12px;z-index:1001;width:34px;height:34px;
+            background:rgba(13,13,31,.95);border:1.5px solid var(--border);border-radius:8px;
+            cursor:pointer;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:5px;transition:all .3s;}
+        .menu-toggle:hover{border-color:var(--purple);}
+        .menu-toggle span{width:15px;height:1.5px;background:var(--cyan);border-radius:2px;transition:all .3s;}
+        .menu-toggle.active span:nth-child(1){transform:rotate(45deg) translate(4.5px,4.5px);}
+        .menu-toggle.active span:nth-child(2){opacity:0;}
+        .menu-toggle.active span:nth-child(3){transform:rotate(-45deg) translate(4.5px,-4.5px);}
 
-        body::before {
-            content: '';
-            position: fixed;
-            inset: 0;
-            background:
-                radial-gradient(circle at 15% 50%, rgba(107,74,255,0.08) 0%, transparent 50%),
-                radial-gradient(circle at 85% 50%, rgba(0,212,255,0.08) 0%, transparent 50%);
-            pointer-events: none;
-            z-index: 0;
-        }
+        /* OVERLAY — only covers right of sidebar */
+        .sidebar-overlay{display:none;position:fixed;top:0;left:260px;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:998;cursor:pointer;}
+        .sidebar-overlay.active{display:block;}
 
-        /* MENU TOGGLE */
-        .menu-toggle {
-            position: fixed; top: 14px; left: 14px; z-index: 1001;
-            width: 32px; height: 32px;
-            background: rgba(13,13,31,0.95);
-            border: 1.5px solid var(--border);
-            border-radius: 8px; cursor: pointer;
-            display: flex; flex-direction: column;
-            justify-content: center; align-items: center; gap: 5px;
-            transition: all 0.3s;
-        }
-        .menu-toggle:hover { border-color: var(--purple); background: rgba(107,74,255,0.15); }
-        .menu-toggle span { width: 15px; height: 1.5px; background: var(--cyan); border-radius: 2px; transition: all 0.3s; }
-        .menu-toggle.active span:nth-child(1) { transform: rotate(45deg) translate(4.5px, 4.5px); }
-        .menu-toggle.active span:nth-child(2) { opacity: 0; }
-        .menu-toggle.active span:nth-child(3) { transform: rotate(-45deg) translate(4.5px, -4.5px); }
-
-        .sidebar-overlay { display: none; position: fixed; top: 0; left: 280px; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 998; cursor: pointer; }
-        .sidebar-overlay.active { display: block; }
-
-        /* MAIN LAYOUT */
-        .main-container {
-            display: flex; gap: 0; position: relative; z-index: 1;
-            min-height: 100vh; width: 100%;
-            max-width: 1100px;
-        }
+        /* LAYOUT */
+        .main-container{position:relative;z-index:1;width:100%;height:100vh;display:flex;align-items:center;justify-content:center;}
 
         /* SIDEBAR */
-        .sidebar {
-            width: 280px; min-width: 280px;
-            background: var(--card);
-            border-right: 1px solid var(--border);
-            padding: 20px 16px;
-            display: flex; flex-direction: column; gap: 20px;
-            position: fixed; left: -300px; top: 0; bottom: 0;
-            z-index: 1000; overflow-y: auto;
-            transition: left 0.3s ease;
-        }
-        .sidebar.open { left: 0; }
+        .sidebar{width:260px;background:var(--card);border-right:1px solid var(--border);
+            padding:54px 12px 12px;display:flex;flex-direction:column;gap:10px;
+            position:fixed;left:-270px;top:0;bottom:0;z-index:1000;overflow-y:auto;transition:left .3s ease;}
+        .sidebar.open{left:0;}
+        .sidebar::-webkit-scrollbar{width:3px;}
+        .sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
 
         /* WALLET */
-        .wallet-section {
-            background: rgba(107,74,255,0.08);
-            border: 1px solid rgba(107,74,255,0.3);
-            border-radius: 12px; padding: 16px;
-        }
-        .wallet-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
-        .stellar-logo {
-            width: 28px; height: 28px; border-radius: 50%;
-            background: linear-gradient(135deg, var(--cyan), var(--purple));
-            display: flex; align-items: center; justify-content: center;
-            font-weight: 900; font-size: 13px;
-        }
-        .wallet-title { font-size: 11px; font-weight: 700; color: var(--cyan); letter-spacing: 1px; text-transform: uppercase; }
-        .wallet-status {
-            font-size: 10px; color: #666; margin-bottom: 10px;
-            font-family: 'Share Tech Mono', monospace;
-        }
-        .wallet-status.connected { color: var(--green); }
-        .connect-wallet-btn {
-            width: 100%; padding: 10px;
-            background: linear-gradient(135deg, var(--purple), var(--cyan));
-            border: none; border-radius: 8px; color: #fff;
-            font-family: 'Orbitron', sans-serif; font-size: 10px;
-            font-weight: 700; cursor: pointer; letter-spacing: 1px;
-            transition: all 0.3s; text-transform: uppercase;
-        }
-        .connect-wallet-btn:hover { opacity: 0.85; transform: translateY(-1px); }
+        .wallet-section{background:rgba(107,74,255,.08);border:1px solid rgba(107,74,255,.3);border-radius:10px;padding:12px;}
+        .wallet-header{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+        .stellar-logo{width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--cyan),var(--purple));
+            display:flex;align-items:center;justify-content:center;font-weight:900;font-size:11px;flex-shrink:0;}
+        .wallet-title{font-size:10px;font-weight:700;color:var(--cyan);letter-spacing:1px;text-transform:uppercase;}
+        .wallet-status{font-size:9px;color:#666;margin-bottom:8px;font-family:'Share Tech Mono',monospace;}
+        .wallet-status.connected{color:var(--green);}
+        .connect-wallet-btn{width:100%;padding:8px;background:linear-gradient(135deg,var(--purple),var(--cyan));
+            border:none;border-radius:7px;color:#fff;font-family:'Orbitron',sans-serif;font-size:9px;
+            font-weight:700;cursor:pointer;letter-spacing:1px;transition:all .3s;text-transform:uppercase;}
+        .connect-wallet-btn:hover{opacity:.85;}
 
-        /* PRESTIGE SECTION */
-        .prestige-section {
-            background: rgba(255,215,0,0.06);
-            border: 1px solid rgba(255,215,0,0.25);
-            border-radius: 12px; padding: 14px;
-        }
-        .prestige-title { font-size: 10px; color: var(--gold); font-weight: 700; letter-spacing: 1px; margin-bottom: 8px; text-transform: uppercase; }
-        .prestige-info { font-size: 9px; color: #888; font-family: 'Share Tech Mono', monospace; line-height: 1.8; }
-        .prestige-btn {
-            width: 100%; margin-top: 10px; padding: 8px;
-            background: linear-gradient(135deg, #7a6000, var(--gold));
-            border: none; border-radius: 6px; color: #000;
-            font-family: 'Orbitron', sans-serif; font-size: 9px;
-            font-weight: 900; cursor: pointer; letter-spacing: 1px;
-            transition: all 0.3s; text-transform: uppercase;
-            opacity: 0.4;
-        }
-        .prestige-btn.available { opacity: 1; animation: glow-gold 1.5s ease-in-out infinite; }
-        @keyframes glow-gold {
-            0%,100% { box-shadow: 0 0 10px rgba(255,215,0,0.3); }
-            50% { box-shadow: 0 0 25px rgba(255,215,0,0.7); }
-        }
+        /* PRESTIGE */
+        .prestige-section{background:rgba(255,215,0,.06);border:1px solid rgba(255,215,0,.25);border-radius:10px;padding:12px;}
+        .prestige-title{font-size:10px;color:var(--gold);font-weight:700;letter-spacing:1px;margin-bottom:6px;text-transform:uppercase;}
+        .prestige-info{font-size:8px;color:#666;font-family:'Share Tech Mono',monospace;line-height:1.9;}
+        .prestige-info span{color:var(--gold);}
+        .prestige-btn{width:100%;margin-top:8px;padding:7px;background:linear-gradient(135deg,#7a6000,var(--gold));
+            border:none;border-radius:6px;color:#000;font-family:'Orbitron',sans-serif;font-size:8px;
+            font-weight:900;cursor:pointer;text-transform:uppercase;opacity:.4;transition:all .3s;}
+        .prestige-btn.available{opacity:1;animation:glow-gold 1.5s ease-in-out infinite;}
+        @keyframes glow-gold{0%,100%{box-shadow:0 0 10px rgba(255,215,0,.3)}50%{box-shadow:0 0 25px rgba(255,215,0,.7)}}
 
-        /* UPGRADE SHOP */
-        .shop-section {
-            background: rgba(0,255,136,0.05);
-            border: 1px solid rgba(0,255,136,0.2);
-            border-radius: 12px; padding: 14px;
-        }
-        .shop-title { font-size: 10px; color: var(--green); font-weight: 700; letter-spacing: 1px; margin-bottom: 10px; text-transform: uppercase; }
-        .upgrade-item {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 7px 8px; border-radius: 6px; margin-bottom: 6px;
-            background: rgba(255,255,255,0.03); border: 1px solid var(--border);
-            cursor: pointer; transition: all 0.2s;
-        }
-        .upgrade-item:hover { border-color: var(--green); background: rgba(0,255,136,0.05); }
-        .upgrade-item.owned { border-color: rgba(0,255,136,0.4); background: rgba(0,255,136,0.08); }
-        .upgrade-item.maxed { opacity: 0.5; cursor: not-allowed; }
-        .upgrade-name { font-size: 9px; font-weight: 700; color: #ccc; }
-        .upgrade-desc { font-size: 8px; color: #666; font-family: 'Share Tech Mono', monospace; margin-top: 2px; }
-        .upgrade-cost { font-size: 9px; color: var(--gold); font-weight: 700; white-space: nowrap; }
-        .upgrade-level { font-size: 8px; color: var(--green); }
+        /* SHOP */
+        .shop-section{background:rgba(0,255,136,.05);border:1px solid rgba(0,255,136,.2);border-radius:10px;padding:12px;}
+        .shop-title{font-size:10px;color:var(--green);font-weight:700;letter-spacing:1px;margin-bottom:8px;text-transform:uppercase;}
+        .upgrade-item{display:flex;justify-content:space-between;align-items:center;
+            padding:6px 7px;border-radius:5px;margin-bottom:4px;background:rgba(255,255,255,.03);
+            border:1px solid var(--border);cursor:pointer;transition:all .2s;}
+        .upgrade-item:hover{border-color:var(--green);}
+        .upgrade-item.owned{border-color:rgba(0,255,136,.4);background:rgba(0,255,136,.06);}
+        .upgrade-item.maxed{opacity:.5;cursor:not-allowed;}
+        .upgrade-name{font-size:8px;font-weight:700;color:#ccc;}
+        .upgrade-desc{font-size:7px;color:#555;font-family:'Share Tech Mono',monospace;margin-top:1px;}
+        .upgrade-cost{font-size:8px;color:var(--gold);font-weight:700;white-space:nowrap;}
+        .upgrade-level{font-size:7px;color:var(--green);}
 
         /* LEADERBOARD */
-        .leaderboard-section {
-            background: rgba(0,212,255,0.05);
-            border: 1px solid rgba(0,212,255,0.2);
-            border-radius: 12px; padding: 14px;
-            flex: 1;
-        }
-        .leaderboard-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .leaderboard-title { font-size: 10px; color: var(--cyan); font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
-        .zk-badge {
-            font-size: 8px; padding: 2px 7px;
-            background: rgba(0,255,136,0.15); border: 1px solid var(--green);
-            border-radius: 10px; color: var(--green); font-weight: 700;
-        }
-        .leaderboard-list { max-height: 220px; overflow-y: auto; }
-        .leaderboard-entry {
-            display: flex; align-items: center; gap: 8px;
-            padding: 7px 8px; border-radius: 6px; margin-bottom: 4px;
-            background: rgba(255,255,255,0.02); border: 1px solid transparent;
-            font-size: 9px;
-        }
-        .leaderboard-entry.top-1 { border-color: rgba(255,215,0,0.4); background: rgba(255,215,0,0.06); }
-        .leaderboard-entry.top-2 { border-color: rgba(192,192,192,0.4); background: rgba(192,192,192,0.04); }
-        .leaderboard-entry.top-3 { border-color: rgba(205,127,50,0.4); background: rgba(205,127,50,0.04); }
-        .entry-rank { width: 22px; font-weight: 900; color: var(--gold); }
-        .entry-address { flex: 1; font-family: 'Share Tech Mono', monospace; color: #aaa; }
-        .entry-score { color: var(--cyan); font-weight: 700; }
-        .entry-prestige { font-size: 8px; color: var(--gold); }
-        .empty-leaderboard { font-size: 9px; color: #555; text-align: center; padding: 20px 0; font-family: 'Share Tech Mono', monospace; }
+        .leaderboard-section{background:rgba(0,212,255,.05);border:1px solid rgba(0,212,255,.2);border-radius:10px;padding:12px;}
+        .leaderboard-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+        .leaderboard-title{font-size:10px;color:var(--cyan);font-weight:700;letter-spacing:1px;text-transform:uppercase;}
+        .zk-badge{font-size:7px;padding:2px 6px;background:rgba(0,255,136,.15);border:1px solid var(--green);border-radius:10px;color:var(--green);font-weight:700;}
+        .leaderboard-list{max-height:150px;overflow-y:auto;}
+        .leaderboard-entry{display:flex;align-items:center;gap:6px;padding:5px 6px;border-radius:5px;margin-bottom:3px;
+            background:rgba(255,255,255,.02);border:1px solid transparent;font-size:8px;}
+        .leaderboard-entry.top-1{border-color:rgba(255,215,0,.4);background:rgba(255,215,0,.06);}
+        .leaderboard-entry.top-2{border-color:rgba(192,192,192,.4);}
+        .leaderboard-entry.top-3{border-color:rgba(205,127,50,.4);}
+        .entry-rank{width:18px;font-weight:900;color:var(--gold);}
+        .entry-address{flex:1;font-family:'Share Tech Mono',monospace;color:#aaa;}
+        .entry-score{color:var(--cyan);font-weight:700;}
+        .entry-prestige{font-size:7px;color:var(--gold);}
+        .empty-leaderboard{font-size:8px;color:#555;text-align:center;padding:14px 0;font-family:'Share Tech Mono',monospace;}
 
-        /* GAME CONTAINER */
-        .game-container {
-            flex: 1; display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
-            padding: 20px; position: relative;
-            min-height: 100vh;
+        /* GAME AREA */
+        .game-container{display:flex;flex-direction:column;align-items:center;justify-content:center;
+            width:100%;height:100vh;position:relative;gap:3px;padding:8px;}
+
+        /* RESPONSIVE CANVAS WRAPPER */
+        .canvas-scale-wrapper{
+            position:relative;
+            width:min(600px, calc(100vw - 40px));
+            height:min(600px, calc(100vw - 40px));
+            max-height:calc(100vh - 120px);
+            flex-shrink:1;
         }
+        canvas{display:block;width:100%;height:100%;border:2px solid var(--border);border-radius:4px;
+            box-shadow:0 0 30px rgba(107,74,255,.2),0 0 60px rgba(0,212,255,.1);}
+        canvas.danger{animation:lowHealth .5s ease-in-out infinite;border-color:var(--red) !important;}
+        @keyframes lowHealth{0%,100%{box-shadow:0 0 0 0 rgba(255,68,102,0)}50%{box-shadow:0 0 0 6px rgba(255,68,102,.5)}}
 
         /* HUD */
-        .game-hud {
-            display: flex; justify-content: space-between; align-items: center;
-            width: 600px; padding: 8px 12px; margin-bottom: 8px;
-            background: rgba(13,13,31,0.9); border: 1px solid var(--border);
-            border-radius: 10px; backdrop-filter: blur(10px);
-        }
-        .hud-item { text-align: center; }
-        .hud-label { font-size: 8px; color: #555; letter-spacing: 1px; text-transform: uppercase; }
-        .hud-value { font-size: 14px; font-weight: 700; color: var(--cyan); font-family: 'Share Tech Mono', monospace; }
-        .hud-value.fees { color: var(--gold); }
-        .hud-value.block { color: var(--green); }
-        .hud-value.priority { color: var(--purple); }
+        .game-hud{display:flex;justify-content:space-around;align-items:center;
+            width:min(600px, calc(100vw - 40px));padding:6px 10px;
+            background:rgba(13,13,31,.9);border:1px solid var(--border);border-radius:8px;flex-shrink:0;}
+        .hud-item{text-align:center;}
+        .hud-label{font-size:clamp(6px,1.5vw,8px);color:#555;letter-spacing:1px;text-transform:uppercase;}
+        .hud-value{font-size:clamp(11px,2.5vw,14px);font-weight:700;color:var(--cyan);font-family:'Share Tech Mono',monospace;}
+        .hud-value.fees{color:var(--gold);}
+        .hud-value.block{color:var(--green);}
+        .hud-value.priority{color:var(--purple);}
 
-        canvas {
-            display: block; border: 2px solid var(--border);
-            border-radius: 4px;
-            box-shadow: 0 0 40px rgba(107,74,255,0.2), 0 0 80px rgba(0,212,255,0.1);
-        }
+        /* FEE PROGRESS */
+        #feeProgressBar{width:min(600px, calc(100vw - 40px)) !important;}
+        #feeProgressLabel{width:min(600px, calc(100vw - 40px)) !important;font-size:8px;color:#555;text-align:center;font-family:'Share Tech Mono',monospace;}
+
+        /* ZK BAR */
+        .zk-live-bar{width:min(600px, calc(100vw - 40px));background:rgba(0,255,136,.04);
+            border:1px solid rgba(0,255,136,.15);border-radius:5px;padding:4px 10px;
+            display:none;align-items:center;gap:8px;font-family:'Share Tech Mono',monospace;font-size:8px;flex-shrink:0;}
+        .zk-dot{width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0;animation:zkPulse 1.5s ease-in-out infinite;}
+        @keyframes zkPulse{0%,100%{opacity:1}50%{opacity:.4}}
+        .zk-live-text{color:#00ff88;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+        .zk-live-actions,.zk-live-seed{color:#444;font-size:7px;white-space:nowrap;}
 
         /* TOOLTIP */
-        .tooltip {
-            position: absolute; top: 80px; left: 50%; transform: translateX(-50%);
-            background: rgba(13,13,31,0.95); border: 1px solid var(--cyan);
-            border-radius: 8px; padding: 10px 16px; max-width: 300px;
-            font-size: 10px; color: var(--cyan); text-align: center;
-            font-family: 'Share Tech Mono', monospace; line-height: 1.6;
-            z-index: 100; opacity: 0; transition: opacity 0.3s;
-            pointer-events: none;
-        }
-        .tooltip.show { opacity: 1; }
-        .tooltip.warning { border-color: var(--red); color: var(--red); }
-        .tooltip.reward { border-color: var(--gold); color: var(--gold); }
+        .tooltip{position:absolute;top:6px;left:50%;transform:translateX(-50%);
+            background:rgba(13,13,31,.95);border:1px solid var(--cyan);border-radius:7px;
+            padding:6px 12px;max-width:90%;font-size:9px;color:var(--cyan);text-align:center;
+            font-family:'Share Tech Mono',monospace;line-height:1.5;z-index:100;
+            opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;}
+        .tooltip.show{opacity:1;}
+        .tooltip.warning{border-color:var(--red);color:var(--red);}
+        .tooltip.reward{border-color:var(--gold);color:var(--gold);}
+
+        /* ALL OVERLAYS */
+        .start-screen,.game-over-screen,.level-complete-screen,.countdown-overlay{
+            position:absolute;inset:0;display:flex;flex-direction:column;
+            align-items:center;justify-content:center;border-radius:4px;
+            padding:16px;text-align:center;overflow-y:auto;gap:10px;}
+        .start-screen{background:rgba(5,5,15,.97);z-index:50;}
+        .start-screen.hidden{display:none;}
+        .game-over-screen{background:rgba(5,5,15,.96);z-index:50;opacity:0;pointer-events:none;transition:opacity .3s;}
+        .game-over-screen.active{opacity:1;pointer-events:all;}
+        .level-complete-screen{background:rgba(5,5,15,.97);z-index:60;opacity:0;pointer-events:none;transition:opacity .35s;}
+        .level-complete-screen.active{opacity:1;pointer-events:all;}
+        .countdown-overlay{background:rgba(5,5,15,.82);z-index:70;opacity:0;pointer-events:none;transition:opacity .2s;}
+        .countdown-overlay.active{opacity:1;}
 
         /* START SCREEN */
-        .start-screen {
-            position: absolute; inset: 0;
-            display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
-            background: rgba(5,5,15,0.97);
-            border-radius: 4px; z-index: 50;
-            padding: 30px; text-align: center;
-        }
-        .start-screen.hidden { display: none; }
-
-        .game-title {
-            font-size: 28px; font-weight: 900;
-            background: linear-gradient(135deg, var(--cyan), var(--purple));
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            letter-spacing: 3px; margin-bottom: 6px;
-        }
-        .game-subtitle {
-            font-size: 10px; color: #666; letter-spacing: 3px;
-            text-transform: uppercase; margin-bottom: 24px;
-            font-family: 'Share Tech Mono', monospace;
-        }
-        .narrative-box {
-            background: rgba(107,74,255,0.08); border: 1px solid rgba(107,74,255,0.3);
-            border-radius: 10px; padding: 16px; margin-bottom: 20px;
-            max-width: 440px; text-align: left;
-        }
-        .narrative-title { font-size: 10px; color: var(--purple); font-weight: 700; letter-spacing: 1px; margin-bottom: 10px; text-transform: uppercase; }
-        .narrative-text { font-size: 9px; color: #888; font-family: 'Share Tech Mono', monospace; line-height: 2; }
-        .narrative-text span { color: var(--cyan); }
-
-        .lane-info {
-            display: flex; gap: 10px; margin-bottom: 20px;
-        }
-        .lane-tag {
-            padding: 6px 12px; border-radius: 6px; font-size: 9px; font-weight: 700;
-            border: 1px solid; letter-spacing: 1px; text-transform: uppercase;
-        }
-        .lane-slow { color: var(--green); border-color: var(--green); background: rgba(0,255,136,0.08); }
-        .lane-med { color: var(--gold); border-color: var(--gold); background: rgba(255,215,0,0.08); }
-        .lane-fast { color: var(--red); border-color: var(--red); background: rgba(255,68,102,0.08); }
-
-        .start-instructions {
-            font-size: 9px; color: #555; line-height: 2.2; margin-bottom: 24px;
-            font-family: 'Share Tech Mono', monospace;
-        }
-        .start-btn {
-            font-family: 'Orbitron', sans-serif; font-size: 14px; font-weight: 700;
-            padding: 16px 48px;
-            background: linear-gradient(135deg, var(--purple), var(--cyan));
-            border: none; border-radius: 8px; color: #fff; cursor: pointer;
-            text-transform: uppercase; letter-spacing: 3px;
-            box-shadow: 0 6px 30px rgba(107,74,255,0.5);
-            animation: bounce 1.2s ease-in-out infinite;
-            transition: all 0.3s;
-        }
-        .start-btn:hover { animation: none; transform: translateY(-3px); box-shadow: 0 10px 40px rgba(107,74,255,0.8); }
-        @keyframes bounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+        .game-title{font-size:clamp(16px,5vw,26px);font-weight:900;
+            background:linear-gradient(135deg,var(--cyan),var(--purple));
+            -webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:2px;}
+        .game-subtitle{font-size:8px;color:#555;letter-spacing:2px;text-transform:uppercase;font-family:'Share Tech Mono',monospace;}
+        .narrative-box{background:rgba(107,74,255,.08);border:1px solid rgba(107,74,255,.3);
+            border-radius:8px;padding:12px 14px;max-width:360px;width:100%;text-align:left;}
+        .narrative-title{font-size:9px;color:var(--purple);font-weight:700;letter-spacing:1px;margin-bottom:6px;text-transform:uppercase;}
+        .narrative-text{font-size:9px;color:#888;font-family:'Share Tech Mono',monospace;line-height:1.9;}
+        .narrative-text span{color:var(--cyan);}
+        .lane-info{display:flex;gap:8px;}
+        .lane-tag{padding:5px 10px;border-radius:5px;font-size:8px;font-weight:700;border:1px solid;letter-spacing:1px;text-transform:uppercase;}
+        .lane-slow{color:var(--green);border-color:var(--green);background:rgba(0,255,136,.08);}
+        .lane-med{color:var(--gold);border-color:var(--gold);background:rgba(255,215,0,.08);}
+        .lane-fast{color:var(--red);border-color:var(--red);background:rgba(255,68,102,.08);}
+        .start-instructions{font-size:8px;color:#555;line-height:2;font-family:'Share Tech Mono',monospace;}
+        .start-btn{font-family:'Orbitron',sans-serif;font-size:13px;font-weight:700;padding:13px 40px;
+            background:linear-gradient(135deg,var(--purple),var(--cyan));border:none;border-radius:8px;
+            color:#fff;cursor:pointer;text-transform:uppercase;letter-spacing:3px;
+            box-shadow:0 6px 30px rgba(107,74,255,.5);animation:bounce 1.2s ease-in-out infinite;transition:all .3s;}
+        .start-btn:hover{animation:none;transform:translateY(-3px);}
+        @keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
 
         /* GAME OVER */
-        .game-over-screen {
-            position: absolute; inset: 0;
-            display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
-            background: rgba(5,5,15,0.97); border-radius: 4px;
-            z-index: 50; padding: 30px; text-align: center;
-            opacity: 0; pointer-events: none; transition: opacity 0.4s;
-        }
-        .game-over-screen.active { opacity: 1; pointer-events: all; }
-        .game-over-title { font-size: 32px; font-weight: 900; color: var(--red); letter-spacing: 4px; margin-bottom: 8px; }
-        .block-result {
-            font-size: 10px; color: #555; font-family: 'Share Tech Mono', monospace;
-            margin-bottom: 20px; letter-spacing: 2px;
-        }
-        .score-breakdown {
-            background: rgba(107,74,255,0.08); border: 1px solid rgba(107,74,255,0.3);
-            border-radius: 10px; padding: 16px; margin-bottom: 20px; width: 100%;
-        }
-        .score-row { display: flex; justify-content: space-between; font-size: 10px; padding: 4px 0; font-family: 'Share Tech Mono', monospace; }
-        .score-row .label { color: #666; }
-        .score-row .val { color: var(--cyan); font-weight: 700; }
-        .score-row.total .label { color: var(--gold); font-weight: 700; }
-        .score-row.total .val { color: var(--gold); font-size: 14px; }
+        .game-over-title{font-size:clamp(22px,5vw,32px);font-weight:900;color:var(--red);letter-spacing:4px;}
+        .block-result{font-size:9px;color:#555;font-family:'Share Tech Mono',monospace;letter-spacing:1px;}
+        .score-breakdown{background:rgba(107,74,255,.08);border:1px solid rgba(107,74,255,.3);
+            border-radius:8px;padding:12px;width:100%;max-width:340px;}
+        .score-row{display:flex;justify-content:space-between;font-size:9px;padding:3px 0;font-family:'Share Tech Mono',monospace;}
+        .score-row .label{color:#666;}.score-row .val{color:var(--cyan);font-weight:700;}
+        .score-row.total .label{color:var(--gold);font-weight:700;}.score-row.total .val{color:var(--gold);font-size:13px;}
+        .zk-proof-status{font-size:9px;padding:8px 14px;border-radius:7px;
+            background:rgba(0,255,136,.08);border:1px solid rgba(0,255,136,.3);
+            color:var(--green);width:100%;max-width:340px;font-family:'Share Tech Mono',monospace;display:none;}
+        .zk-proof-status.generating{animation:pulse-green 1s infinite;}
+        @keyframes pulse-green{0%,100%{border-color:rgba(0,255,136,.3)}50%{border-color:var(--green)}}
+        .prestige-available-banner{background:rgba(255,215,0,.1);border:1px solid var(--gold);
+            border-radius:7px;padding:8px 14px;font-size:9px;color:var(--gold);display:none;
+            font-family:'Share Tech Mono',monospace;max-width:340px;}
+        .game-over-buttons{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;}
+        .restart-btn{padding:10px 20px;background:rgba(107,74,255,.2);border:1px solid var(--purple);
+            border-radius:7px;color:var(--purple);font-family:'Orbitron',sans-serif;font-size:9px;
+            font-weight:700;cursor:pointer;letter-spacing:1px;transition:all .3s;}
+        .restart-btn:hover{background:rgba(107,74,255,.4);}
+        .submit-score-btn{padding:10px 20px;background:linear-gradient(135deg,var(--green),#00aa55);
+            border:none;border-radius:7px;color:#000;font-family:'Orbitron',sans-serif;font-size:9px;
+            font-weight:900;cursor:pointer;letter-spacing:1px;transition:all .3s;}
+        .submit-score-btn:hover{transform:translateY(-2px);}
+        .submit-score-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+        .prestige-action-btn{padding:10px 20px;background:linear-gradient(135deg,#7a6000,var(--gold));
+            border:none;border-radius:7px;color:#000;font-family:'Orbitron',sans-serif;font-size:9px;
+            font-weight:900;cursor:pointer;letter-spacing:1px;transition:all .3s;display:none;}
 
-        .zk-proof-status {
-            font-size: 10px; padding: 10px 20px; border-radius: 8px;
-            background: rgba(0,255,136,0.08); border: 1px solid rgba(0,255,136,0.3);
-            color: var(--green); margin-bottom: 16px; width: 100%;
-            font-family: 'Share Tech Mono', monospace; display: none;
-        }
-        .zk-proof-status.generating { animation: pulse-green 1s infinite; }
-        @keyframes pulse-green { 0%,100% { border-color: rgba(0,255,136,0.3); } 50% { border-color: var(--green); } }
+        /* LEVEL COMPLETE */
+        .lc-badge{font-size:9px;font-weight:700;letter-spacing:2px;padding:3px 12px;border-radius:20px;text-transform:uppercase;}
+        .lc-badge.green{color:var(--green);border:1px solid var(--green);background:rgba(0,255,136,.1);}
+        .lc-badge.gold{color:var(--gold);border:1px solid var(--gold);background:rgba(255,215,0,.1);}
+        .lc-badge.purple{color:var(--purple);border:1px solid var(--purple);background:rgba(107,74,255,.1);}
+        .lc-badge.red{color:var(--red);border:1px solid var(--red);background:rgba(255,68,102,.1);}
+        .lc-title{font-size:clamp(16px,4vw,24px);font-weight:900;letter-spacing:2px;
+            background:linear-gradient(135deg,var(--cyan),var(--purple));
+            -webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+        .lc-subtitle{font-size:8px;color:#666;letter-spacing:1px;font-family:'Share Tech Mono',monospace;}
+        .lc-lesson-box{background:rgba(0,212,255,.06);border:1px solid rgba(0,212,255,.25);
+            border-radius:10px;padding:12px 14px;max-width:400px;width:100%;text-align:left;}
+        .lc-lesson-title{font-size:9px;color:var(--cyan);font-weight:700;letter-spacing:1px;margin-bottom:6px;text-transform:uppercase;}
+        .lc-lesson-text{font-size:9px;color:#888;font-family:'Share Tech Mono',monospace;line-height:1.8;}
+        .lc-lesson-text span{color:var(--cyan);}.lc-lesson-text strong{color:var(--gold);}
+        .lc-next-box{background:rgba(107,74,255,.08);border:1px solid rgba(107,74,255,.3);
+            border-radius:10px;padding:10px 14px;max-width:400px;width:100%;text-align:left;}
+        .lc-next-title{font-size:9px;color:var(--purple);font-weight:700;letter-spacing:1px;margin-bottom:6px;text-transform:uppercase;}
+        .lc-next-stats{display:flex;gap:14px;flex-wrap:wrap;}
+        .lc-stat{font-size:8px;font-family:'Share Tech Mono',monospace;}
+        .lc-stat .stat-label{color:#555;margin-bottom:1px;}.lc-stat .stat-val{color:var(--purple);font-weight:700;font-size:12px;}
+        .lc-continue-btn{font-family:'Orbitron',sans-serif;font-size:11px;font-weight:700;padding:12px 36px;
+            background:linear-gradient(135deg,var(--purple),var(--cyan));border:none;border-radius:8px;
+            color:#fff;cursor:pointer;text-transform:uppercase;letter-spacing:2px;
+            box-shadow:0 6px 25px rgba(107,74,255,.5);animation:bounce 1.2s ease-in-out infinite;}
+        .lc-continue-btn:hover{animation:none;transform:translateY(-2px);}
 
-        .prestige-available-banner {
-            background: rgba(255,215,0,0.1); border: 1px solid var(--gold);
-            border-radius: 8px; padding: 10px 16px; margin-bottom: 16px;
-            font-size: 10px; color: var(--gold); display: none;
-            font-family: 'Share Tech Mono', monospace;
-        }
-
-        .game-over-buttons { display: flex; gap: 12px; }
-        .restart-btn {
-            padding: 12px 24px; background: rgba(107,74,255,0.2);
-            border: 1px solid var(--purple); border-radius: 8px; color: var(--purple);
-            font-family: 'Orbitron', sans-serif; font-size: 10px; font-weight: 700;
-            cursor: pointer; letter-spacing: 1px; transition: all 0.3s;
-        }
-        .restart-btn:hover { background: rgba(107,74,255,0.4); }
-        .submit-score-btn {
-            padding: 12px 24px;
-            background: linear-gradient(135deg, var(--green), #00aa55);
-            border: none; border-radius: 8px; color: #000;
-            font-family: 'Orbitron', sans-serif; font-size: 10px; font-weight: 900;
-            cursor: pointer; letter-spacing: 1px; transition: all 0.3s;
-        }
-        .submit-score-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,255,136,0.4); }
-        .submit-score-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-        .prestige-action-btn {
-            padding: 12px 24px;
-            background: linear-gradient(135deg, #7a6000, var(--gold));
-            border: none; border-radius: 8px; color: #000;
-            font-family: 'Orbitron', sans-serif; font-size: 10px; font-weight: 900;
-            cursor: pointer; letter-spacing: 1px; transition: all 0.3s; display: none;
-        }
-
-        /* LEVEL COMPLETE INTERSTITIAL */
-        .level-complete-screen {
-            position: absolute; inset: 0;
-            display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
-            background: rgba(5,5,15,0.97); border-radius: 4px;
-            z-index: 60; padding: 28px; text-align: center;
-            opacity: 0; pointer-events: none;
-            transition: opacity 0.35s;
-        }
-        .level-complete-screen.active { opacity: 1; pointer-events: all; }
-
-        .lc-badge {
-            font-size: 11px; font-weight: 700; letter-spacing: 2px;
-            padding: 4px 14px; border-radius: 20px; margin-bottom: 10px;
-            text-transform: uppercase;
-        }
-        .lc-badge.green  { color: var(--green);  border: 1px solid var(--green);  background: rgba(0,255,136,0.1); }
-        .lc-badge.gold   { color: var(--gold);   border: 1px solid var(--gold);   background: rgba(255,215,0,0.1); }
-        .lc-badge.purple { color: var(--purple); border: 1px solid var(--purple); background: rgba(107,74,255,0.1); }
-        .lc-badge.red    { color: var(--red);    border: 1px solid var(--red);    background: rgba(255,68,102,0.1); }
-
-        .lc-title {
-            font-size: 26px; font-weight: 900; letter-spacing: 3px; margin-bottom: 6px;
-            background: linear-gradient(135deg, var(--cyan), var(--purple));
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        }
-        .lc-subtitle { font-size: 10px; color: #666; letter-spacing: 2px; margin-bottom: 18px; font-family: 'Share Tech Mono', monospace; }
-
-        .lc-lesson-box {
-            background: rgba(0,212,255,0.06); border: 1px solid rgba(0,212,255,0.25);
-            border-radius: 12px; padding: 16px 20px; margin-bottom: 16px;
-            max-width: 460px; text-align: left;
-        }
-        .lc-lesson-title { font-size: 10px; color: var(--cyan); font-weight: 700; letter-spacing: 1px; margin-bottom: 10px; text-transform: uppercase; }
-        .lc-lesson-text  { font-size: 10px; color: #999; font-family: 'Share Tech Mono', monospace; line-height: 2; }
-        .lc-lesson-text span { color: var(--cyan); }
-        .lc-lesson-text strong { color: var(--gold); }
-
-        .lc-next-box {
-            background: rgba(107,74,255,0.08); border: 1px solid rgba(107,74,255,0.3);
-            border-radius: 12px; padding: 14px 20px; margin-bottom: 20px;
-            max-width: 460px; width: 100%; text-align: left;
-        }
-        .lc-next-title { font-size: 10px; color: var(--purple); font-weight: 700; letter-spacing: 1px; margin-bottom: 8px; text-transform: uppercase; }
-        .lc-next-stats {
-            display: flex; gap: 20px; flex-wrap: wrap;
-        }
-        .lc-stat { font-size: 9px; font-family: 'Share Tech Mono', monospace; }
-        .lc-stat .stat-label { color: #555; margin-bottom: 2px; }
-        .lc-stat .stat-val { color: var(--purple); font-weight: 700; font-size: 13px; }
-
-        .lc-continue-btn {
-            font-family: 'Orbitron', sans-serif; font-size: 12px; font-weight: 700;
-            padding: 14px 44px;
-            background: linear-gradient(135deg, var(--purple), var(--cyan));
-            border: none; border-radius: 8px; color: #fff; cursor: pointer;
-            text-transform: uppercase; letter-spacing: 3px;
-            box-shadow: 0 6px 30px rgba(107,74,255,0.5);
-            animation: bounce 1.2s ease-in-out infinite;
-            transition: all 0.3s;
-        }
-        .lc-continue-btn:hover { animation: none; transform: translateY(-3px); }
-
-        /* COUNTDOWN OVERLAY */
-        .countdown-overlay {
-            position: absolute; inset: 0;
-            display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
-            background: rgba(5,5,15,0.82);
-            border-radius: 4px; z-index: 70;
-            pointer-events: none;
-            opacity: 0; transition: opacity 0.2s;
-        }
-        .countdown-overlay.active { opacity: 1; }
-        .countdown-num {
-            font-size: 120px; font-weight: 900;
-            font-family: 'Orbitron', sans-serif;
-            background: linear-gradient(135deg, var(--cyan), var(--purple));
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            animation: countPop 0.9s ease-out;
-            line-height: 1;
-        }
-        .countdown-num.go {
-            font-size: 72px;
-            background: linear-gradient(135deg, var(--green), var(--cyan));
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        }
-        .countdown-sub { font-size: 11px; color: #555; letter-spacing: 3px; margin-top: 16px; font-family: 'Share Tech Mono', monospace; }
-        @keyframes countPop {
-            0%   { transform: scale(2.5); opacity: 0; }
-            40%  { transform: scale(0.9); opacity: 1; }
-            70%  { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-
-        /* ZK LIVE STATUS BAR */
-        .zk-live-bar {
-            width: 600px; display: none;
-            background: rgba(0,255,136,0.04);
-            border: 1px solid rgba(0,255,136,0.15);
-            border-radius: 6px; padding: 5px 12px;
-            margin-bottom: 4px;
-            display: flex; align-items: center; gap: 10px;
-            font-family: 'Share Tech Mono', monospace; font-size: 9px;
-        }
-        .zk-dot {
-            width: 7px; height: 7px; border-radius: 50%;
-            background: var(--green); flex-shrink: 0;
-            animation: zkPulse 1.5s ease-in-out infinite;
-        }
-        @keyframes zkPulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.7)} }
-        .zk-live-text { color: #00ff88; flex: 1; }
-        .zk-live-seed { color: #444; font-size: 8px; }
-        .zk-live-actions { color: #555; font-size: 8px; white-space: nowrap; }
-
-        /* LOW HEALTH WARNING */
-        @keyframes lowHealth {
-            0%,100% { box-shadow: 0 0 0 0 rgba(255,68,102,0); }
-            50% { box-shadow: 0 0 0 6px rgba(255,68,102,0.5); }
-        }
-        canvas.danger { animation: lowHealth 0.5s ease-in-out infinite; border-color: var(--red) !important; }
+        /* COUNTDOWN */
+        .countdown-num{font-size:clamp(60px,20vw,120px);font-weight:900;font-family:'Orbitron',sans-serif;
+            background:linear-gradient(135deg,var(--cyan),var(--purple));
+            -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+            animation:countPop .9s ease-out;line-height:1;}
+        .countdown-num.go{font-size:clamp(40px,12vw,72px);background:linear-gradient(135deg,var(--green),var(--cyan));
+            -webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+        .countdown-sub{font-size:10px;color:#555;letter-spacing:2px;font-family:'Share Tech Mono',monospace;}
+        @keyframes countPop{0%{transform:scale(2.5);opacity:0}40%{transform:scale(.9);opacity:1}100%{transform:scale(1)}}
 
         /* FOOTER */
-        .stellar-footer {
-            position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%);
-            font-size: 9px; color: #444; display: flex; align-items: center; gap: 8px;
-            z-index: 10; font-family: 'Share Tech Mono', monospace;
-        }
-        .stellar-footer-logo {
-            width: 14px; height: 14px; border-radius: 50%;
-            background: linear-gradient(135deg, var(--cyan), var(--purple));
-        }
+        .stellar-footer{position:fixed;bottom:8px;left:50%;transform:translateX(-50%);
+            font-size:8px;color:#333;display:flex;align-items:center;gap:6px;z-index:10;
+            font-family:'Share Tech Mono',monospace;pointer-events:none;}
+        .stellar-footer-logo{width:12px;height:12px;border-radius:50%;background:linear-gradient(135deg,var(--cyan),var(--purple));}
     </style>
 </head>
 <body>
@@ -512,10 +286,9 @@
         <div class="prestige-section">
             <div class="prestige-title">⚡ Validator Prestige</div>
             <div class="prestige-info" id="prestigeInfo">
-                Prestige Level: <span id="prestigeLevel" style="color:var(--gold)">0</span><br>
-                Multiplier: <span id="prestigeMult" style="color:var(--cyan)">1.0x</span><br>
-                Total Fees: <span id="totalFees" style="color:var(--gold)">0</span><br>
-                Need 5000 fees to prestige
+                Level: <span id="prestigeLevel">0</span> &nbsp;·&nbsp;
+                Mult: <span id="prestigeMult">1.0x</span><br>
+                Fees: <span id="totalFees">0</span> / 5000
             </div>
             <button class="prestige-btn" id="prestigeBtn">BECOME VALIDATOR</button>
         </div>
@@ -578,7 +351,7 @@
         <!-- Tooltip -->
         <div class="tooltip" id="tooltip"></div>
 
-        <div style="position:relative; width:600px;">
+        <div class="canvas-scale-wrapper">
             <!-- Canvas -->
             <canvas id="gameCanvas" width="600" height="600"></canvas>
 
@@ -594,26 +367,22 @@
                 <div class="game-subtitle">ZK Transaction Racing on Stellar</div>
 
                 <div class="narrative-box">
-                    <div class="narrative-title">📡 Mission Briefing</div>
+                    <div class="narrative-title">📡 You Are a Stellar TX</div>
                     <div class="narrative-text">
-                        You are a <span>Stellar transaction</span> racing through the mempool.<br>
-                        Dodge <span>double-spends</span>, <span>network congestion</span> &amp; <span>MEV bots</span>.<br>
-                        Collect <span>fee gems</span> to boost your block priority.<br>
-                        Reach confirmation — then submit your <span>ZK proof</span> to the ledger.
+                        Race through the <span>mempool</span>. Collect <span>fee gems</span>.<br>
+                        Dodge threats — each one teaches real blockchain concepts.<br>
+                        Reach block confirmation. Submit your <span>ZK proof</span>.
                     </div>
                 </div>
 
                 <div class="lane-info">
-                    <div class="lane-tag lane-slow">← Slow Fee</div>
-                    <div class="lane-tag lane-med">Medium Fee</div>
-                    <div class="lane-tag lane-fast">Fast Fee →</div>
+                    <div class="lane-tag lane-slow">Slow</div>
+                    <div class="lane-tag lane-med">Medium</div>
+                    <div class="lane-tag lane-fast">Fast</div>
                 </div>
 
                 <div class="start-instructions">
-                    ← → Arrow Keys to switch lanes<br>
-                    Collect 💎 Fee Gems • Dodge ⛔ Threats<br>
-                    Speed increases every 15 blocks confirmed<br>
-                    Upgrade your Tx in the shop • Prestige to Validator
+                    ← → to switch lanes &nbsp;·&nbsp; 💎 Collect gems &nbsp;·&nbsp; ⛔ Dodge threats
                 </div>
                 <button class="start-btn" id="startBtn">BROADCAST TX</button>
             </div>
@@ -646,15 +415,15 @@
                     <div class="score-row"><span class="label">Blocks Confirmed</span><span class="val" id="finalBlocks">0</span></div>
                     <div class="score-row"><span class="label">Threats Dodged</span><span class="val" id="finalDodged">0</span></div>
                     <div class="score-row"><span class="label">Prestige Multiplier</span><span class="val" id="finalMult">1.0x</span></div>
-                    <div class="score-row" id="finalZKRow" style="border-top:1px solid rgba(0,255,136,0.15);margin-top:6px;padding-top:6px;">
-                        <span class="label" style="color:var(--green)">🔐 ZK Proof Data</span>
-                        <span class="val" style="color:var(--green);font-size:9px;">—</span>
+                    <div class="score-row" id="finalZKRow" style="border-top:1px solid rgba(0,255,136,.15);margin-top:4px;padding-top:4px;">
+                        <span class="label" style="color:var(--green)">🔐 ZK Proof</span>
+                        <span class="val" style="color:var(--green);font-size:8px;">Ready</span>
                     </div>
                     <div class="score-row total"><span class="label">Total Fees</span><span class="val" id="finalScore">0</span></div>
                 </div>
 
                 <div class="prestige-available-banner" id="prestigeBanner">
-                    ⚡ You've earned enough fees to Prestige! Become a Validator for a permanent multiplier.
+                    ⚡ Enough fees to Prestige! Become a Validator →
                 </div>
 
                 <div class="zk-proof-status" id="zkProofStatus">Generating ZK Proof...</div>
@@ -671,7 +440,7 @@
 
 <div class="stellar-footer">
     <div class="stellar-footer-logo"></div>
-    <span>Stellar Chain Speedway — ZK Gaming on Stellar Protocol 25</span>
+    <span>Stellar Chain Speedway · Protocol 25</span>
 </div>
 
 <script>
@@ -1136,8 +905,8 @@ const LEVEL_LESSONS = {
         badge: 'green', title: 'FEE PRIORITY UNLOCKED',
         subtitle: 'S1-L1 Complete · Fees Collected',
         lessonTitle: '💎 Lesson: Transaction Fee Basics',
-        lesson: `Every blockchain transaction competes for block space.\nOn <span>Stellar</span>, you attach a <strong>base fee</strong> (min 100 stroops).\nValidators pick the <span>highest-fee txs</span> first — exactly like you just raced.\nLow fees = slow confirmation. You learned that the hard way.`,
-        nextTitle: '▶ NEXT: S1-L2 — Higher Fee Targets',
+        lesson: `Stellar transactions pay fees in <span>stroops</span> to get included in a block.\nValidators pick <span>highest-fee transactions first</span> — exactly like you just raced.`,
+        nextTitle: '▶ Next Level',
         nextStats: [
             { label: 'SPEED', val: '1.0x (same)' },
             { label: 'FEE TARGET', val: '500 fees' },
@@ -1149,8 +918,8 @@ const LEVEL_LESSONS = {
         badge: 'green', title: 'BLOCK CONFIRMED',
         subtitle: 'S1-L2 Complete · Standard Fee Lane Cleared',
         lessonTitle: '📦 Lesson: Fee Markets & Block Space',
-        lesson: `Stellar processes up to <span>1,000 ops per ledger</span> every ~5 seconds.\nWhen the network is congested, <strong>fees spike</strong> — validators use a\n<span>surge pricing</span> model. The mempool is literally a fee auction.\nYou've been living inside that auction.`,
-        nextTitle: '▶ NEXT: S1-L3 — High Priority Finale',
+        lesson: `When the network is busy, <span>fees surge</span> — validators run a fee auction.\nYou've been living inside that auction.`,
+        nextTitle: '▶ Next Level',
         nextStats: [
             { label: 'SPEED', val: '1.0x' },
             { label: 'FEE TARGET', val: '800 fees' },
@@ -1162,8 +931,8 @@ const LEVEL_LESSONS = {
         badge: 'gold', title: 'SET 1 MASTERED!',
         subtitle: 'Fee Wars Complete · Entering Speed Dimension',
         lessonTitle: '🌐 Lesson: L1 vs L2 — Why Speed Matters',
-        lesson: `You mastered <span>L1 fee mechanics</span>. But L1 has a ceiling.\n<strong>Layer 2 networks</strong> (rollups, state channels) batch txs off-chain,\nsubmitting only a <span>compressed proof</span> to L1. This means:\n• <strong>10-100x lower fees</strong> • <strong>Near-instant settlement</strong>\nStellar's <span>Protocol 25</span> adds ZK infrastructure to enable exactly this.`,
-        nextTitle: '▶ ENTERING SET 2 — Speed & Fees Change',
+        lesson: `<strong>Layer 2 networks</strong> batch transactions off-chain and submit one <span>compressed proof</span> to L1.\nStellar <span>Protocol 25</span> adds ZK infrastructure to make this possible.`,
+        nextTitle: '▶ Entering Set 2',
         nextStats: [
             { label: 'SPEED', val: '1.6x 🔺' },
             { label: 'FEE TARGET', val: '450 fees' },
@@ -1175,8 +944,8 @@ const LEVEL_LESSONS = {
         badge: 'gold', title: 'L2 ENTRY CLEARED',
         subtitle: 'S2-L1 Complete · Rollup Lane Open',
         lessonTitle: '⚡ Lesson: Rollups & Transaction Batching',
-        lesson: `<span>Optimistic rollups</span> assume txs are valid and challenge later.\n<span>ZK rollups</span> generate a <strong>validity proof</strong> instantly — no waiting period.\nStellar's architecture is built for <span>ZK-native finality</span>:\n5-second ledger close means proofs settle faster than any EVM chain.`,
-        nextTitle: '▶ NEXT: S2-L2 — Rollup Speed Increases',
+        lesson: `<span>ZK rollups</span> prove transaction validity instantly — no waiting period.\nStellar's <span>5-second ledger close</span> means ZK proofs settle faster than any EVM chain.`,
+        nextTitle: '▶ Next Level',
         nextStats: [
             { label: 'SPEED', val: '2.1x 🔺🔺' },
             { label: 'FEE TARGET', val: '800 fees' },
@@ -1188,8 +957,8 @@ const LEVEL_LESSONS = {
         badge: 'gold', title: 'ROLLUP LANE CLEARED',
         subtitle: 'S2-L2 Complete · Cross-Chain Bridge Ahead',
         lessonTitle: '🔗 Lesson: Cross-Chain Bridges & Settlement',
-        lesson: `Moving value <span>cross-chain</span> today requires bridges — and bridges are slow.\nMost take <strong>7-day fraud windows</strong> (optimistic) or minutes (ZK).\nStellar's <span>Soroban smart contracts</span> + ZK proofs enable <strong>atomic cross-chain\nswaps</strong> with cryptographic certainty — no 7-day wait. That's the edge.`,
-        nextTitle: '▶ NEXT: S2-L3 — Bridge Speed Final',
+        lesson: `Most bridges have <strong>7-day fraud windows</strong>. ZK bridges settle in minutes.\nStellar <span>Soroban</span> + ZK proofs enable atomic cross-chain swaps — no waiting.`,
+        nextTitle: '▶ Next Level',
         nextStats: [
             { label: 'SPEED', val: '2.7x 🔺🔺🔺' },
             { label: 'FEE TARGET', val: '1200 fees' },
@@ -1201,8 +970,8 @@ const LEVEL_LESSONS = {
         badge: 'purple', title: 'SET 2 CONQUERED!',
         subtitle: 'Speed & Fees Mastered · ZK Layer Unlocked',
         lessonTitle: '🔐 Lesson: Zero-Knowledge Proofs — What Are They?',
-        lesson: `A <span>ZK proof</span> lets you prove you know something <strong>without revealing it</strong>.\nIn blockchain: prove a tx is valid <span>without exposing the data</span>.\nTwo types: <strong>ZK-SNARKs</strong> (small proofs, fast verify) and\n<strong>ZK-STARKs</strong> (no trusted setup, quantum-resistant).\nThis game uses ZK to verify your score on-chain. That's real.`,
-        nextTitle: '▶ ENTERING SET 3 — ZK PRESSURE',
+        lesson: `A <span>ZK proof</span> proves you know something <strong>without revealing it</strong>.\nThis game uses ZK to verify your score on-chain — that's real.`,
+        nextTitle: '▶ Entering Set 3',
         nextStats: [
             { label: 'SPEED', val: '2.2x (resets)' },
             { label: 'FEE TARGET', val: '700 fees' },
@@ -1214,8 +983,8 @@ const LEVEL_LESSONS = {
         badge: 'purple', title: 'PROOF LOAD SURVIVED',
         subtitle: 'S3-L1 Complete · Prover Cost Ahead',
         lessonTitle: '⚙️ Lesson: Proof Generation Costs',
-        lesson: `Generating a ZK proof is <strong>computationally expensive</strong>.\nA <span>SNARK prover</span> can take seconds to minutes depending on circuit size.\nThis is why L2 operators charge fees — they're paying GPU farms to\n<span>generate proofs continuously</span>. The bottleneck isn't consensus. It's proving.`,
-        nextTitle: '▶ NEXT: S3-L2 — Prover Cost Level',
+        lesson: `Generating a ZK proof takes real compute — seconds to minutes.\nL2 operators charge fees because they're <span>paying for proof generation</span>.`,
+        nextTitle: '▶ Next Level',
         nextStats: [
             { label: 'SPEED', val: '3.0x 🔺' },
             { label: 'FEE TARGET', val: '1200 fees' },
@@ -1227,8 +996,8 @@ const LEVEL_LESSONS = {
         badge: 'purple', title: 'PROVER COST CLEARED',
         subtitle: 'S3-L2 Complete · Aggregation Layer Ahead',
         lessonTitle: '🧩 Lesson: Proof Aggregation & Recursive ZK',
-        lesson: `Instead of one proof per tx, <span>recursive ZK</span> lets you\n<strong>prove a proof</strong> — aggregating thousands of txs into one tiny proof.\n<span>RISC Zero</span> (what this game uses) enables this with\n<strong>zkVM</strong>: run any Rust program, get a proof it ran correctly.\nStellar + RISC Zero = verifiable game logic on-chain.`,
-        nextTitle: '▶ NEXT: S3-L3 — Aggregation Finale',
+        lesson: `<span>Recursive ZK</span> lets you prove thousands of transactions in one tiny proof.\n<span>RISC Zero zkVM</span> runs this game's logic and proves it was correct — on-chain.`,
+        nextTitle: '▶ Next Level',
         nextStats: [
             { label: 'SPEED', val: '3.8x 🔺🔺' },
             { label: 'FEE TARGET', val: '1800 fees' },
@@ -1240,8 +1009,8 @@ const LEVEL_LESSONS = {
         badge: 'red', title: 'ZK LAYER MASTERED!',
         subtitle: 'The Final Mempool Awaits You',
         lessonTitle: '⚔️ Lesson: Validator Economics & MEV',
-        lesson: `<strong>Validators</strong> earn by ordering transactions. This creates\n<span>MEV (Maximal Extractable Value)</span> — validators reorder, front-run,\nor sandwich txs to extract profit. ZK proofs fight this:\n<span>encrypted mempools</span> hide tx content until after ordering,\nmaking front-running <strong>cryptographically impossible</strong>.`,
-        nextTitle: '▶ ENTERING FINAL — VALIDATOR WARS',
+        lesson: `<span>MEV bots</span> reorder and front-run transactions to steal fees.\n<strong>Encrypted mempools</strong> using ZK proofs make this cryptographically impossible.`,
+        nextTitle: '▶ Final Set',
         nextStats: [
             { label: 'SPEED', val: '2.8x (resets)' },
             { label: 'FEE TARGET', val: '1000 fees' },
@@ -1253,7 +1022,7 @@ const LEVEL_LESSONS = {
         badge: 'red', title: 'CONSENSUS SURVIVED',
         subtitle: 'F-L1 Complete · Validator Race Begins',
         lessonTitle: '🏁 Lesson: Stellar Consensus Protocol (SCP)',
-        lesson: `Stellar uses <span>Federated Byzantine Agreement (FBA)</span> — not PoW, not PoS.\nValidators choose who to trust via <strong>quorum slices</strong>.\nThis achieves <span>5-second finality</span> with no mining and no staking.\nYour score submission uses SCP to reach global consensus. That's real.`,
+        lesson: `Stellar uses <span>Federated Byzantine Agreement</span> — no mining, no staking.\nYour score submission just reached <span>global consensus in ~5 seconds</span>.`,
         nextTitle: '▶ NEXT: F-L2 — Validator Race',
         nextStats: [
             { label: 'SPEED', val: '3.8x 🔺' },
