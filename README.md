@@ -1,4 +1,4 @@
-# ⚡ Stellar Chain Speedway
+# ⚡ ChainWay - Stellar Chain Speedway
 ### Road to ZK Validator — ZK Gaming on Stellar Protocol 25
 
 You are a Stellar transaction. Race through the mempool, dodge threats,
