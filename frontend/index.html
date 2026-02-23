@@ -60,7 +60,7 @@
         .menu-toggle.active span:nth-child(2) { opacity: 0; }
         .menu-toggle.active span:nth-child(3) { transform: rotate(-45deg) translate(4.5px, -4.5px); }
 
-        .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 999; }
+        .sidebar-overlay { display: none; position: fixed; top: 0; left: 280px; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 998; cursor: pointer; }
         .sidebar-overlay.active { display: block; }
 
         /* MAIN LAYOUT */
@@ -697,8 +697,9 @@ function toggleSidebar() {
     sidebarOverlay.classList.toggle('active');
     menuToggle.classList.toggle('active');
 }
-menuToggle.addEventListener('click', toggleSidebar);
+menuToggle.addEventListener('click', (e) => { e.stopPropagation(); toggleSidebar(); });
 sidebarOverlay.addEventListener('click', toggleSidebar);
+sidebar.addEventListener('click', (e) => e.stopPropagation());
 document.addEventListener('keydown', e => {
     if (e.key === 'Escape' && sidebar.classList.contains('open')) toggleSidebar();
 });
